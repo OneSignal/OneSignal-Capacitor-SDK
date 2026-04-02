@@ -1,0 +1,74 @@
+{
+  "version": "1.0.0",
+  "name": "onesignal-capacitor-plugin",
+  "files": [
+    "dist",
+    "ios",
+    "android",
+    "Package.swift",
+    "OneSignalCapacitorPlugin.podspec"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OneSignal/OneSignal-Capacitor-SDK.git"
+  },
+  "main": "dist/plugin.cjs.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "unpkg": "dist/plugin.js",
+  "scripts": {
+    "build": "vp pack",
+    "format": "vp fmt",
+    "format:check": "vp fmt --check",
+    "lint": "vp lint",
+    "lint:fix": "vp lint --fix",
+    "test": "vp test",
+    "test:coverage": "vp test run --coverage",
+    "check": "vp check",
+    "verify": "vp build && vp test run && vp lint",
+    "docgen": "docgen --api OneSignalCapacitorPlugin --output-readme README.md --output-json dist/docs.json"
+  },
+  "peerDependencies": {
+    "@capacitor/core": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/docgen": "^0.2.2",
+    "@types/bun": "latest",
+    "@vitest/coverage-v8": "^4.0.2",
+    "happy-dom": "^20.0.8",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12",
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^4.0.2"
+  },
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    },
+    "android": {
+      "src": "android"
+    }
+  },
+  "bugs": {
+    "url": "https://github.com/OneSignal/OneSignal-Capacitor-SDK/issues"
+  },
+  "description": "OneSignal is a high volume Push Notification service for mobile apps. This is the pure Capacitor plugin for OneSignal, providing push notifications, in-app messaging, and more.",
+  "homepage": "https://github.com/OneSignal/OneSignal-Capacitor-SDK#readme",
+  "keywords": [
+    "capacitor",
+    "plugin",
+    "native",
+    "push",
+    "notification",
+    "push notification",
+    "push notifications",
+    "apns",
+    "fcm",
+    "onesignal"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}

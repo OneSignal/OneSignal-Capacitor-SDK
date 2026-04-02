@@ -1,0 +1,15 @@
+node_modules
+dist
+coverage
+*.tgz
+
+.DS_Store
+.idea
+
+# Gradle
+.gradle/
+build/
+
+# Android
+**/capacitor.build.gradle
+*.orig
