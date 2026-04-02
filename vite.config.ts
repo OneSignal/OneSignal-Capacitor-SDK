@@ -12,6 +12,14 @@ export default defineConfig({
   },
   lint: {
     options: { typeAware: true, typeCheck: true },
+    overrides: [
+      {
+        files: ['**/*.test.ts', '**/*.test.tsx'],
+        rules: {
+          'typescript/unbound-method': 'off',
+        },
+      },
+    ],
   },
   pack: {
     entry: 'src/index.ts',
