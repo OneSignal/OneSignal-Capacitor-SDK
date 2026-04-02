@@ -71,7 +71,6 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
         CAPPluginMethod(name: "startDefaultLiveActivity", returnType: CAPPluginReturnPromise),
     ]
 
-    private let implementation = OneSignalCapacitor()
     private var notificationWillDisplayCache = [String: OSNotificationWillDisplayEvent]()
     private var preventDefaultCache = [String: OSNotificationWillDisplayEvent]()
     private var pendingClickEvent: OSNotificationClickEvent?
@@ -83,7 +82,9 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
             call.reject("appId is required")
             return
         }
-        implementation.initialize(appId)
+        OneSignalWrapper.sdkType = "capacitor"
+        OneSignalWrapper.sdkVersion = "010000"
+        OneSignal.initialize(appId, withLaunchOptions: nil)
         OneSignal.Notifications.addPermissionObserver(self)
         OneSignal.Notifications.addForegroundLifecycleListener(self)
         OneSignal.Notifications.addClickListener(self)
@@ -104,24 +105,24 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
             call.reject("externalId is required")
             return
         }
-        implementation.login(externalId)
+        OneSignal.login(externalId)
         call.resolve()
     }
 
     @objc func logout(_ call: CAPPluginCall) {
-        implementation.logout()
+        OneSignal.logout()
         call.resolve()
     }
 
     @objc func setConsentRequired(_ call: CAPPluginCall) {
         let required = call.getBool("required") ?? false
-        implementation.setConsentRequired(required)
+        OneSignal.setConsentRequired(required)
         call.resolve()
     }
 
     @objc func setConsentGiven(_ call: CAPPluginCall) {
         let granted = call.getBool("granted") ?? false
-        implementation.setConsentGiven(granted)
+        OneSignal.setConsentGiven(granted)
         call.resolve()
     }
 
@@ -129,13 +130,13 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
 
     @objc func setLogLevel(_ call: CAPPluginCall) {
         let level = call.getInt("logLevel") ?? 0
-        implementation.setLogLevel(level)
+        OneSignal.Debug.setLogLevel(ONE_S_LOG_LEVEL(rawValue: UInt32(level))!)
         call.resolve()
     }
 
     @objc func setAlertLevel(_ call: CAPPluginCall) {
         let level = call.getInt("logLevel") ?? 0
-        implementation.setAlertLevel(level)
+        OneSignal.Debug.setAlertLevel(ONE_S_LOG_LEVEL(rawValue: UInt32(level))!)
         call.resolve()
     }
 

@@ -5,13 +5,28 @@ node_modules
 dist/
 coverage/
 
+# macOS
 .DS_Store
-.idea
 
-# Gradle
-.gradle/
-build/
+# IDE
+.idea
+*.iml
+
+# iOS
+Pods/
+Podfile.lock
+Package.resolved
+DerivedData/
+xcuserdata/
+/.build
+.swiftpm/
 
 # Android
+.gradle/
+build/
+local.properties
 **/capacitor.build.gradle
 *.orig
+*.apk
+*.dex
+*.class
