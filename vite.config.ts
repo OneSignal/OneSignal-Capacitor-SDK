@@ -1,22 +1,17 @@
-import { defineConfig } from 'vitest/config';
-import dts from 'vite-plugin-dts';
+import { defineConfig } from 'vite-plus';
 
 export default defineConfig({
-  plugins: [dts({ exclude: ['**/*.test.ts', 'mocks/**'], rollupTypes: true })],
-  build: {
-    outDir: 'dist',
-    emptyOutDir: true,
-    lib: {
-      entry: 'src/index.ts',
-      formats: ['es'],
-      fileName: 'index',
+  fmt: {
+    singleQuote: true,
+    sortImports: {
+      enabled: true,
     },
-    rollupOptions: {
-      external: ['@capacitor/core'],
-      output: {
-        exports: 'named',
-      },
-    },
+  },
+  pack: {
+    entry: 'src/index.ts',
+    dts: true,
+    format: 'es',
+    outExtensions: () => ({ js: '.js', dts: '.d.ts' }),
   },
   test: {
     clearMocks: true,
