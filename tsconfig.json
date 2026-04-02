@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-    "outDir": "dist/esm",
+    "outDir": "dist",
     "target": "es2020",
-    "module": "es2020",
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "noImplicitAny": true,
     "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "declaration": true,
-    "declarationDir": "dist/esm",
+    "declarationDir": "dist",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "strict": true,

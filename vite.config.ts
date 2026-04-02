@@ -8,17 +8,13 @@ export default defineConfig({
     emptyOutDir: true,
     lib: {
       entry: 'src/index.ts',
-      formats: ['es', 'cjs'],
-      fileName: (format) =>
-        format === 'es' ? 'esm/index.js' : 'plugin.cjs.js',
+      formats: ['es'],
+      fileName: 'index',
     },
     rollupOptions: {
       external: ['@capacitor/core'],
       output: {
         exports: 'named',
-        globals: {
-          '@capacitor/core': 'capacitorExports',
-        },
       },
     },
   },
