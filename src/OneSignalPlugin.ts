@@ -1,5 +1,5 @@
-import type { OneSignalCapacitorPlugin } from './definitions';
 import Debug from './DebugNamespace';
+import type { OneSignalCapacitorPlugin } from './definitions';
 import InAppMessages from './InAppMessagesNamespace';
 import LiveActivities from './LiveActivitiesNamespace';
 import Location from './LocationNamespace';

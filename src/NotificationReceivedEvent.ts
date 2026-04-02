@@ -3,9 +3,7 @@ import { OSNotification } from './OSNotification';
 
 let _pluginRef: OneSignalCapacitorPlugin | undefined;
 
-export function _setNotificationEventPlugin(
-  plugin: OneSignalCapacitorPlugin,
-): void {
+export function _setNotificationEventPlugin(plugin: OneSignalCapacitorPlugin): void {
   _pluginRef = plugin;
 }
 

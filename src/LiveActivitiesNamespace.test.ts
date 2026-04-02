@@ -1,7 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 
-import { SUB_TOKEN } from '../mocks/constants';
 import { createMockPlugin } from '../mocks/capacitor';
+import { SUB_TOKEN } from '../mocks/constants';
 import LiveActivities from './LiveActivitiesNamespace';
 import type { LiveActivitySetupOptions } from './types/LiveActivities';
 
@@ -44,9 +44,7 @@ describe('LiveActivities', () => {
 
     test('should call onFailure callback on error', async () => {
       const onFailure = vi.fn();
-      mockPlugin.enterLiveActivity.mockRejectedValue(
-        new Error('Enter failed'),
-      );
+      mockPlugin.enterLiveActivity.mockRejectedValue(new Error('Enter failed'));
 
       liveActivities.enter(ACTIVITY_ID, SUB_TOKEN, undefined, onFailure);
 
@@ -113,9 +111,7 @@ describe('LiveActivities', () => {
     test('should call plugin for setupDefault without options', () => {
       liveActivities.setupDefault();
 
-      expect(mockPlugin.setupDefaultLiveActivity).toHaveBeenCalledWith(
-        undefined,
-      );
+      expect(mockPlugin.setupDefaultLiveActivity).toHaveBeenCalledWith(undefined);
     });
 
     test('should call plugin for setupDefault with options', () => {
@@ -126,9 +122,7 @@ describe('LiveActivities', () => {
 
       liveActivities.setupDefault(options);
 
-      expect(mockPlugin.setupDefaultLiveActivity).toHaveBeenCalledWith(
-        options,
-      );
+      expect(mockPlugin.setupDefaultLiveActivity).toHaveBeenCalledWith(options);
     });
   });
 

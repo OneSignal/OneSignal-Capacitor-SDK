@@ -12,30 +12,17 @@ import type {
 
 export default class InAppMessages {
   private _plugin: OneSignalCapacitorPlugin;
-  private _inAppMessageClickListeners: ((
-    action: InAppMessageClickEvent,
-  ) => void)[] = [];
-  private _willDisplayInAppMessageListeners: ((
-    event: InAppMessageWillDisplayEvent,
-  ) => void)[] = [];
-  private _didDisplayInAppMessageListeners: ((
-    event: InAppMessageDidDisplayEvent,
-  ) => void)[] = [];
-  private _willDismissInAppMessageListeners: ((
-    event: InAppMessageWillDismissEvent,
-  ) => void)[] = [];
-  private _didDismissInAppMessageListeners: ((
-    event: InAppMessageDidDismissEvent,
-  ) => void)[] = [];
+  private _inAppMessageClickListeners: ((action: InAppMessageClickEvent) => void)[] = [];
+  private _willDisplayInAppMessageListeners: ((event: InAppMessageWillDisplayEvent) => void)[] = [];
+  private _didDisplayInAppMessageListeners: ((event: InAppMessageDidDisplayEvent) => void)[] = [];
+  private _willDismissInAppMessageListeners: ((event: InAppMessageWillDismissEvent) => void)[] = [];
+  private _didDismissInAppMessageListeners: ((event: InAppMessageDidDismissEvent) => void)[] = [];
 
   constructor(plugin: OneSignalCapacitorPlugin) {
     this._plugin = plugin;
   }
 
-  private _processFunctionList<T>(
-    array: ((event: T) => void)[],
-    param: T,
-  ): void {
+  private _processFunctionList<T>(array: ((event: T) => void)[], param: T): void {
     for (let i = 0; i < array.length; i++) {
       array[i](param);
     }
@@ -52,15 +39,10 @@ export default class InAppMessages {
     listener: (event: InAppMessageEventTypeMap[K]) => void,
   ): void {
     if (event === 'click') {
-      this._inAppMessageClickListeners.push(
-        listener as (event: InAppMessageClickEvent) => void,
-      );
-      void this._plugin.addListener(
-        'inAppMessageClick',
-        (json: InAppMessageClickEvent) => {
-          this._processFunctionList(this._inAppMessageClickListeners, json);
-        },
-      );
+      this._inAppMessageClickListeners.push(listener as (event: InAppMessageClickEvent) => void);
+      void this._plugin.addListener('inAppMessageClick', (json: InAppMessageClickEvent) => {
+        this._processFunctionList(this._inAppMessageClickListeners, json);
+      });
     } else if (event === 'willDisplay') {
       this._willDisplayInAppMessageListeners.push(
         listener as (event: InAppMessageWillDisplayEvent) => void,
@@ -68,10 +50,7 @@ export default class InAppMessages {
       void this._plugin.addListener(
         'inAppMessageWillDisplay',
         (event: InAppMessageWillDisplayEvent) => {
-          this._processFunctionList(
-            this._willDisplayInAppMessageListeners,
-            event,
-          );
+          this._processFunctionList(this._willDisplayInAppMessageListeners, event);
         },
       );
     } else if (event === 'didDisplay') {
@@ -81,10 +60,7 @@ export default class InAppMessages {
       void this._plugin.addListener(
         'inAppMessageDidDisplay',
         (event: InAppMessageDidDisplayEvent) => {
-          this._processFunctionList(
-            this._didDisplayInAppMessageListeners,
-            event,
-          );
+          this._processFunctionList(this._didDisplayInAppMessageListeners, event);
         },
       );
     } else if (event === 'willDismiss') {
@@ -94,10 +70,7 @@ export default class InAppMessages {
       void this._plugin.addListener(
         'inAppMessageWillDismiss',
         (event: InAppMessageWillDismissEvent) => {
-          this._processFunctionList(
-            this._willDismissInAppMessageListeners,
-            event,
-          );
+          this._processFunctionList(this._willDismissInAppMessageListeners, event);
         },
       );
     } else if (event === 'didDismiss') {
@@ -107,10 +80,7 @@ export default class InAppMessages {
       void this._plugin.addListener(
         'inAppMessageDidDismiss',
         (event: InAppMessageDidDismissEvent) => {
-          this._processFunctionList(
-            this._didDismissInAppMessageListeners,
-            event,
-          );
+          this._processFunctionList(this._didDismissInAppMessageListeners, event);
         },
       );
     }
@@ -180,9 +150,7 @@ export default class InAppMessages {
    */
   removeTriggers(keys: string[]): void {
     if (!Array.isArray(keys)) {
-      console.error(
-        'OneSignal: removeTriggers: argument must be of type Array',
-      );
+      console.error('OneSignal: removeTriggers: argument must be of type Array');
     }
 
     void this._plugin.removeTriggers({ keys });

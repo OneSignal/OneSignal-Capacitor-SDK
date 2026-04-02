@@ -22,21 +22,14 @@ export type OSNotificationPermission =
 export default class Notifications {
   private _plugin: OneSignalCapacitorPlugin;
   private _permissionObserverList: ((event: boolean) => void)[] = [];
-  private _notificationClickedListeners: ((
-    event: NotificationClickEvent,
-  ) => void)[] = [];
-  private _notificationWillDisplayListeners: ((
-    event: NotificationWillDisplayEvent,
-  ) => void)[] = [];
+  private _notificationClickedListeners: ((event: NotificationClickEvent) => void)[] = [];
+  private _notificationWillDisplayListeners: ((event: NotificationWillDisplayEvent) => void)[] = [];
 
   constructor(plugin: OneSignalCapacitorPlugin) {
     this._plugin = plugin;
   }
 
-  private _processFunctionList<T>(
-    array: ((event: T) => void)[],
-    param: T,
-  ): void {
+  private _processFunctionList<T>(array: ((event: T) => void)[], param: T): void {
     for (let i = 0; i < array.length; i++) {
       array[i](param);
     }
@@ -115,14 +108,10 @@ export default class Notifications {
    * @param  {(response: boolean)=>void} handler
    * @returns void
    */
-  registerForProvisionalAuthorization(
-    handler?: (response: boolean) => void,
-  ): void {
-    void this._plugin
-      .registerForProvisionalAuthorization()
-      .then((result) => {
-        handler?.(result.accepted);
-      });
+  registerForProvisionalAuthorization(handler?: (response: boolean) => void): void {
+    void this._plugin.registerForProvisionalAuthorization().then((result) => {
+      handler?.(result.accepted);
+    });
   }
 
   /**
@@ -136,15 +125,10 @@ export default class Notifications {
     listener: (event: NotificationEventTypeMap[K]) => void,
   ): void {
     if (event === 'click') {
-      this._notificationClickedListeners.push(
-        listener as (event: NotificationClickEvent) => void,
-      );
-      void this._plugin.addListener(
-        'notificationClick',
-        (json: NotificationClickEvent) => {
-          this._processFunctionList(this._notificationClickedListeners, json);
-        },
-      );
+      this._notificationClickedListeners.push(listener as (event: NotificationClickEvent) => void);
+      void this._plugin.addListener('notificationClick', (json: NotificationClickEvent) => {
+        this._processFunctionList(this._notificationClickedListeners, json);
+      });
     } else if (event === 'foregroundWillDisplay') {
       this._notificationWillDisplayListeners.push(
         listener as (event: NotificationWillDisplayEvent) => void,
@@ -162,15 +146,9 @@ export default class Notifications {
       );
     } else if (event === 'permissionChange') {
       this._permissionObserverList.push(listener as (event: boolean) => void);
-      void this._plugin.addListener(
-        'permissionChange',
-        (state: { permission: boolean }) => {
-          this._processFunctionList(
-            this._permissionObserverList,
-            state.permission,
-          );
-        },
-      );
+      void this._plugin.addListener('permissionChange', (state: { permission: boolean }) => {
+        this._processFunctionList(this._permissionObserverList, state.permission);
+      });
     }
   }
 
@@ -195,10 +173,7 @@ export default class Notifications {
         listener as (event: NotificationWillDisplayEvent) => void,
       );
     } else if (event === 'permissionChange') {
-      removeListener(
-        this._permissionObserverList,
-        listener as (event: boolean) => void,
-      );
+      removeListener(this._permissionObserverList, listener as (event: boolean) => void);
     }
   }
 

@@ -2,11 +2,9 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 
 import { createMockPlugin } from '../mocks/capacitor';
 import { mockNotification, mockNotificationClickEvent } from '../mocks/data';
-import { NotificationWillDisplayEvent } from './NotificationReceivedEvent';
 import * as helpers from './helpers';
-import Notifications, {
-  OSNotificationPermission,
-} from './NotificationsNamespace';
+import { NotificationWillDisplayEvent } from './NotificationReceivedEvent';
+import Notifications, { OSNotificationPermission } from './NotificationsNamespace';
 
 describe('Notifications', () => {
   let mockPlugin: ReturnType<typeof createMockPlugin>;
@@ -43,9 +41,7 @@ describe('Notifications', () => {
       const mockError = new Error('Permission check failed');
       mockPlugin.getPermission.mockRejectedValue(mockError);
 
-      await expect(notifications.getPermissionAsync()).rejects.toThrow(
-        mockError.message,
-      );
+      await expect(notifications.getPermissionAsync()).rejects.toThrow(mockError.message);
     });
   });
 
@@ -75,9 +71,7 @@ describe('Notifications', () => {
       const mockError = new Error('Permission check failed');
       mockPlugin.permissionNative.mockRejectedValue(mockError);
 
-      await expect(notifications.permissionNative()).rejects.toThrow(
-        mockError.message,
-      );
+      await expect(notifications.permissionNative()).rejects.toThrow(mockError.message);
     });
   });
 
@@ -128,9 +122,7 @@ describe('Notifications', () => {
       const mockError = new Error('Permission check failed');
       mockPlugin.canRequestPermission.mockRejectedValue(mockError);
 
-      await expect(notifications.canRequestPermission()).rejects.toThrow(
-        mockError.message,
-      );
+      await expect(notifications.canRequestPermission()).rejects.toThrow(mockError.message);
     });
   });
 
@@ -138,9 +130,7 @@ describe('Notifications', () => {
     test('should call plugin', () => {
       notifications.registerForProvisionalAuthorization();
 
-      expect(
-        mockPlugin.registerForProvisionalAuthorization,
-      ).toHaveBeenCalled();
+      expect(mockPlugin.registerForProvisionalAuthorization).toHaveBeenCalled();
     });
 
     test('should call handler with result', async () => {
@@ -199,9 +189,7 @@ describe('Notifications', () => {
       const callback = mockPlugin.addListener.mock.calls[0][1];
       callback(notificationData);
 
-      expect(mockListener).toHaveBeenCalledWith(
-        expect.any(NotificationWillDisplayEvent),
-      );
+      expect(mockListener).toHaveBeenCalledWith(expect.any(NotificationWillDisplayEvent));
       expect(mockPlugin.proceedWithWillDisplay).toHaveBeenCalledWith({
         notificationId: notificationData.notificationId,
       });
@@ -211,10 +199,7 @@ describe('Notifications', () => {
       const mockListener = vi.fn();
       notifications.addEventListener('permissionChange', mockListener);
 
-      expect(mockPlugin.addListener).toHaveBeenCalledWith(
-        'permissionChange',
-        expect.any(Function),
-      );
+      expect(mockPlugin.addListener).toHaveBeenCalledWith('permissionChange', expect.any(Function));
     });
 
     test('should call all permissionChange listeners when event fires', () => {
@@ -240,19 +225,18 @@ describe('Notifications', () => {
   });
 
   describe('removeEventListener', () => {
-    test.each([
-      ['click'],
-      ['foregroundWillDisplay'],
-      ['permissionChange'],
-    ] as const)('should remove %s event listener', (eventType) => {
-      const mockListener = vi.fn();
-      notifications.addEventListener(eventType, mockListener);
-      notifications.removeEventListener(eventType, mockListener);
+    test.each([['click'], ['foregroundWillDisplay'], ['permissionChange']] as const)(
+      'should remove %s event listener',
+      (eventType) => {
+        const mockListener = vi.fn();
+        notifications.addEventListener(eventType, mockListener);
+        notifications.removeEventListener(eventType, mockListener);
 
-      const callback = mockPlugin.addListener.mock.calls[0][1];
-      callback('some-data');
-      expect(mockListener).not.toHaveBeenCalled();
-    });
+        const callback = mockPlugin.addListener.mock.calls[0][1];
+        callback('some-data');
+        expect(mockListener).not.toHaveBeenCalled();
+      },
+    );
 
     test('should not remove listener for unknown event type', () => {
       vi.spyOn(helpers, 'removeListener').mockImplementation(() => {});

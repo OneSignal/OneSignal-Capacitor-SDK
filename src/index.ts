@@ -3,8 +3,7 @@ import { registerPlugin } from '@capacitor/core';
 import type { OneSignalCapacitorPlugin } from './definitions';
 import { OneSignalPlugin } from './OneSignalPlugin';
 
-const OneSignalCapacitor =
-  registerPlugin<OneSignalCapacitorPlugin>('OneSignalCapacitor');
+const OneSignalCapacitor = registerPlugin<OneSignalCapacitorPlugin>('OneSignalCapacitor');
 
 const OneSignal = new OneSignalPlugin(OneSignalCapacitor);
 
@@ -19,10 +18,7 @@ export type {
   PushSubscriptionState,
 } from './PushSubscriptionNamespace';
 
-export type {
-  NotificationClickEvent,
-  NotificationClickResult,
-} from './types/NotificationClicked';
+export type { NotificationClickEvent, NotificationClickResult } from './types/NotificationClicked';
 
 export type {
   InAppMessageActionUrlType,

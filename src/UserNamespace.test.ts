@@ -210,10 +210,7 @@ describe('User', () => {
       const mockListener = vi.fn();
       user.addEventListener('change', mockListener);
 
-      expect(mockPlugin.addListener).toHaveBeenCalledWith(
-        'userStateChange',
-        expect.any(Function),
-      );
+      expect(mockPlugin.addListener).toHaveBeenCalledWith('userStateChange', expect.any(Function));
     });
 
     test('should call all listeners when user state changes', () => {
@@ -277,13 +274,9 @@ describe('User', () => {
     });
 
     test('should reject Promise when plugin fails', async () => {
-      mockPlugin.getOnesignalId.mockRejectedValue(
-        new Error('Failed to get onesignal id'),
-      );
+      mockPlugin.getOnesignalId.mockRejectedValue(new Error('Failed to get onesignal id'));
 
-      await expect(user.getOnesignalId()).rejects.toThrow(
-        'Failed to get onesignal id',
-      );
+      await expect(user.getOnesignalId()).rejects.toThrow('Failed to get onesignal id');
     });
   });
 
@@ -303,13 +296,9 @@ describe('User', () => {
     });
 
     test('should reject Promise when plugin fails', async () => {
-      mockPlugin.getExternalId.mockRejectedValue(
-        new Error('Failed to get external id'),
-      );
+      mockPlugin.getExternalId.mockRejectedValue(new Error('Failed to get external id'));
 
-      await expect(user.getExternalId()).rejects.toThrow(
-        'Failed to get external id',
-      );
+      await expect(user.getExternalId()).rejects.toThrow('Failed to get external id');
     });
   });
 
@@ -336,30 +325,22 @@ describe('User', () => {
       const eventName = 'purchase';
       const circularObj: Record<string, unknown> = { name: 'test' };
       circularObj.self = circularObj;
-      const consoleSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       user.trackEvent(eventName, circularObj);
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Properties must be a JSON-serializable object',
-      );
+      expect(consoleSpy).toHaveBeenCalledWith('Properties must be a JSON-serializable object');
       expect(mockPlugin.trackEvent).not.toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
 
     test('should not call plugin when properties is an array', () => {
       const eventName = 'purchase';
-      const consoleSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       user.trackEvent(eventName, ['item1', 'item2'] as unknown as object);
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Properties must be a JSON-serializable object',
-      );
+      expect(consoleSpy).toHaveBeenCalledWith('Properties must be a JSON-serializable object');
       expect(mockPlugin.trackEvent).not.toHaveBeenCalled();
       consoleSpy.mockRestore();
     });

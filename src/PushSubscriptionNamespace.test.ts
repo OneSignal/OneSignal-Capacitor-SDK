@@ -1,15 +1,8 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 
-import {
-  PREV_SUB_ID,
-  PREV_SUB_TOKEN,
-  SUB_ID,
-  SUB_TOKEN,
-} from '../mocks/constants';
 import { createMockPlugin } from '../mocks/capacitor';
-import PushSubscription, {
-  type PushSubscriptionChangedState,
-} from './PushSubscriptionNamespace';
+import { PREV_SUB_ID, PREV_SUB_TOKEN, SUB_ID, SUB_TOKEN } from '../mocks/constants';
+import PushSubscription, { type PushSubscriptionChangedState } from './PushSubscriptionNamespace';
 
 const SUB_CHANGED_STATE: PushSubscriptionChangedState = {
   current: { id: SUB_ID, token: SUB_TOKEN, optedIn: true },
@@ -114,9 +107,7 @@ describe('PushSubscription', () => {
       const mockError = new Error('Failed to get subscription ID');
       mockPlugin.getPushSubscriptionId.mockRejectedValue(mockError);
 
-      await expect(pushSubscription.getIdAsync()).rejects.toThrow(
-        mockError.message,
-      );
+      await expect(pushSubscription.getIdAsync()).rejects.toThrow(mockError.message);
     });
   });
 
@@ -140,9 +131,7 @@ describe('PushSubscription', () => {
       const mockError = new Error('Failed to get push token');
       mockPlugin.getPushSubscriptionToken.mockRejectedValue(mockError);
 
-      await expect(pushSubscription.getTokenAsync()).rejects.toThrow(
-        mockError.message,
-      );
+      await expect(pushSubscription.getTokenAsync()).rejects.toThrow(mockError.message);
     });
   });
 
@@ -165,9 +154,7 @@ describe('PushSubscription', () => {
       const mockError = new Error('Failed to get opted in status');
       mockPlugin.getPushSubscriptionOptedIn.mockRejectedValue(mockError);
 
-      await expect(pushSubscription.getOptedInAsync()).rejects.toThrow(
-        mockError.message,
-      );
+      await expect(pushSubscription.getOptedInAsync()).rejects.toThrow(mockError.message);
     });
   });
 

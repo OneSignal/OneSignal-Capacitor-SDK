@@ -37,9 +37,7 @@ export function createMockPlugin(): MockPlugin {
     permissionNative: vi.fn().mockResolvedValue({ permission: 0 }),
     requestPermission: vi.fn().mockResolvedValue({ permission: false }),
     canRequestPermission: vi.fn().mockResolvedValue({ canRequest: true }),
-    registerForProvisionalAuthorization: vi
-      .fn()
-      .mockResolvedValue({ accepted: false }),
+    registerForProvisionalAuthorization: vi.fn().mockResolvedValue({ accepted: false }),
     clearAllNotifications: vi.fn().mockResolvedValue(undefined),
     removeNotification: vi.fn().mockResolvedValue(undefined),
     removeGroupedNotifications: vi.fn().mockResolvedValue(undefined),

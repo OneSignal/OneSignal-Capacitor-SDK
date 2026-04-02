@@ -1,6 +1,28 @@
 {
-  "version": "1.0.0",
   "name": "onesignal-capacitor-plugin",
+  "version": "1.0.0",
+  "description": "OneSignal is a high volume Push Notification service for mobile apps. This is the pure Capacitor plugin for OneSignal, providing push notifications, in-app messaging, and more.",
+  "keywords": [
+    "apns",
+    "capacitor",
+    "fcm",
+    "native",
+    "notification",
+    "onesignal",
+    "plugin",
+    "push",
+    "push notification",
+    "push notifications"
+  ],
+  "homepage": "https://github.com/OneSignal/OneSignal-Capacitor-SDK#readme",
+  "bugs": {
+    "url": "https://github.com/OneSignal/OneSignal-Capacitor-SDK/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OneSignal/OneSignal-Capacitor-SDK.git"
+  },
   "files": [
     "dist",
     "ios",
@@ -8,10 +30,6 @@
     "Package.swift",
     "OneSignalCapacitorPlugin.podspec"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/OneSignal/OneSignal-Capacitor-SDK.git"
-  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -34,9 +52,6 @@
     "verify": "vp build && vitest run && vp lint",
     "docgen": "docgen --api OneSignalCapacitorPlugin --output-readme README.md --output-json dist/docs.json"
   },
-  "peerDependencies": {
-    "@capacitor/core": "^7.0.0"
-  },
   "devDependencies": {
     "@capacitor/core": "^7.0.0",
     "@capacitor/docgen": "^0.2.2",
@@ -45,8 +60,15 @@
     "typescript": "^5.9.3",
     "vite": "npm:@voidzero-dev/vite-plus-core@latest",
     "vite-plus": "0.1.15"
-
   },
+  "peerDependencies": {
+    "@capacitor/core": "^7.0.0"
+  },
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@latest",
+    "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
+  },
+  "packageManager": "bun@1.3.11",
   "capacitor": {
     "ios": {
       "src": "ios"
@@ -54,28 +76,5 @@
     "android": {
       "src": "android"
     }
-  },
-  "bugs": {
-    "url": "https://github.com/OneSignal/OneSignal-Capacitor-SDK/issues"
-  },
-  "description": "OneSignal is a high volume Push Notification service for mobile apps. This is the pure Capacitor plugin for OneSignal, providing push notifications, in-app messaging, and more.",
-  "homepage": "https://github.com/OneSignal/OneSignal-Capacitor-SDK#readme",
-  "keywords": [
-    "capacitor",
-    "plugin",
-    "native",
-    "push",
-    "notification",
-    "push notification",
-    "push notifications",
-    "apns",
-    "fcm",
-    "onesignal"
-  ],
-  "license": "MIT",
-  "overrides": {
-    "vite": "npm:@voidzero-dev/vite-plus-core@latest",
-    "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
-  },
-  "packageManager": "bun@1.3.11"
+  }
 }

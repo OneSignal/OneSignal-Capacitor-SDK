@@ -172,17 +172,11 @@ export default class User {
    * @param  {(event: UserChangedState)=>void} listener
    * @returns void
    */
-  addEventListener(
-    _event: 'change',
-    listener: (event: UserChangedState) => void,
-  ) {
+  addEventListener(_event: 'change', listener: (event: UserChangedState) => void) {
     this._userStateObserverList.push(listener);
-    void this._plugin.addListener(
-      'userStateChange',
-      (state: UserChangedState) => {
-        this._processFunctionList(this._userStateObserverList, state);
-      },
-    );
+    void this._plugin.addListener('userStateChange', (state: UserChangedState) => {
+      this._processFunctionList(this._userStateObserverList, state);
+    });
   }
 
   /**
@@ -190,10 +184,7 @@ export default class User {
    * @param  {(event: UserChangedState)=>void} listener
    * @returns void
    */
-  removeEventListener(
-    _event: 'change',
-    listener: (event: UserChangedState) => void,
-  ) {
+  removeEventListener(_event: 'change', listener: (event: UserChangedState) => void) {
     removeListener(this._userStateObserverList, listener);
   }
 

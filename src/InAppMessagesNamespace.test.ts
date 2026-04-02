@@ -49,22 +49,16 @@ describe('InAppMessages', () => {
       ['didDisplay', 'inAppMessageDidDisplay', messageData.didDisplay],
       ['willDismiss', 'inAppMessageWillDismiss', messageData.willDismiss],
       ['didDismiss', 'inAppMessageDidDismiss', messageData.didDismiss],
-    ] as const)(
-      'should call addListener for %s event',
-      (eventType, listenerName, data) => {
-        const mockListener = vi.fn();
-        inAppMessages.addEventListener(eventType, mockListener);
+    ] as const)('should call addListener for %s event', (eventType, listenerName, data) => {
+      const mockListener = vi.fn();
+      inAppMessages.addEventListener(eventType, mockListener);
 
-        expect(mockPlugin.addListener).toHaveBeenCalledWith(
-          listenerName,
-          expect.any(Function),
-        );
+      expect(mockPlugin.addListener).toHaveBeenCalledWith(listenerName, expect.any(Function));
 
-        const callback = mockPlugin.addListener.mock.calls[0][1];
-        callback(data);
-        expect(mockListener).toHaveBeenCalledWith(data);
-      },
-    );
+      const callback = mockPlugin.addListener.mock.calls[0][1];
+      callback(data);
+      expect(mockListener).toHaveBeenCalledWith(data);
+    });
 
     test('should not add listener for unknown event type', () => {
       const mockListener = vi.fn();
@@ -153,9 +147,7 @@ describe('InAppMessages', () => {
     });
 
     test('should handle non-array input gracefully', () => {
-      const consoleSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       inAppMessages.removeTriggers('not-an-array' as any);
 
@@ -176,16 +168,13 @@ describe('InAppMessages', () => {
   });
 
   describe('setPaused', () => {
-    test.each([[true], [false]])(
-      'should call plugin for setPaused with %s',
-      (pauseValue) => {
-        inAppMessages.setPaused(pauseValue);
+    test.each([[true], [false]])('should call plugin for setPaused with %s', (pauseValue) => {
+      inAppMessages.setPaused(pauseValue);
 
-        expect(mockPlugin.setPaused).toHaveBeenCalledWith({
-          pause: pauseValue,
-        });
-      },
-    );
+      expect(mockPlugin.setPaused).toHaveBeenCalledWith({
+        pause: pauseValue,
+      });
+    });
   });
 
   describe('getPaused', () => {

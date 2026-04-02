@@ -25,16 +25,13 @@ describe('Location', () => {
   });
 
   describe('setShared', () => {
-    test.each([[true], [false]])(
-      'should call plugin for setShared with %s',
-      (sharedValue) => {
-        location.setShared(sharedValue);
+    test.each([[true], [false]])('should call plugin for setShared with %s', (sharedValue) => {
+      location.setShared(sharedValue);
 
-        expect(mockPlugin.setLocationShared).toHaveBeenCalledWith({
-          shared: sharedValue,
-        });
-      },
-    );
+      expect(mockPlugin.setLocationShared).toHaveBeenCalledWith({
+        shared: sharedValue,
+      });
+    });
   });
 
   describe('isShared', () => {

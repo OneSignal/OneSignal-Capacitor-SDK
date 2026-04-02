@@ -24,16 +24,13 @@ describe('Debug', () => {
     [LogLevel.Info, 4],
     [LogLevel.Debug, 5],
     [LogLevel.Verbose, 6],
-  ])(
-    'should call plugin for setLogLevel with %s',
-    (logLevel, logLevelValue) => {
-      debug.setLogLevel(logLevel);
+  ])('should call plugin for setLogLevel with %s', (logLevel, logLevelValue) => {
+    debug.setLogLevel(logLevel);
 
-      expect(mockPlugin.setLogLevel).toHaveBeenCalledWith({
-        logLevel: logLevelValue,
-      });
-    },
-  );
+    expect(mockPlugin.setLogLevel).toHaveBeenCalledWith({
+      logLevel: logLevelValue,
+    });
+  });
 
   test.each([
     [LogLevel.None, 0],
@@ -43,14 +40,11 @@ describe('Debug', () => {
     [LogLevel.Info, 4],
     [LogLevel.Debug, 5],
     [LogLevel.Verbose, 6],
-  ])(
-    'should call plugin for setAlertLevel with %s',
-    (logLevel, logLevelValue) => {
-      debug.setAlertLevel(logLevel);
+  ])('should call plugin for setAlertLevel with %s', (logLevel, logLevelValue) => {
+    debug.setAlertLevel(logLevel);
 
-      expect(mockPlugin.setAlertLevel).toHaveBeenCalledWith({
-        logLevel: logLevelValue,
-      });
-    },
-  );
+    expect(mockPlugin.setAlertLevel).toHaveBeenCalledWith({
+      logLevel: logLevelValue,
+    });
+  });
 });

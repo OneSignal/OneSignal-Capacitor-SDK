@@ -6,9 +6,7 @@ export type ReceivedEvent = Omit<OSNotification, 'display' | 'rawPayload'> & {
 
 let _pluginRef: OneSignalCapacitorPlugin | undefined;
 
-export function _setOSNotificationPlugin(
-  plugin: OneSignalCapacitorPlugin,
-): void {
+export function _setOSNotificationPlugin(plugin: OneSignalCapacitorPlugin): void {
   _pluginRef = plugin;
 }
 
@@ -105,10 +103,7 @@ export class OSNotification {
     if (receivedEvent.androidNotificationId) {
       this.androidNotificationId = receivedEvent.androidNotificationId;
     }
-    if (
-      receivedEvent.groupedNotifications &&
-      receivedEvent.groupedNotifications.length
-    ) {
+    if (receivedEvent.groupedNotifications && receivedEvent.groupedNotifications.length) {
       this.groupedNotifications = receivedEvent.groupedNotifications;
     }
 

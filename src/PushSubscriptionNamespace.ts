@@ -18,9 +18,7 @@ export default class PushSubscription {
   private _token?: string | null;
   private _optedIn?: boolean;
 
-  private _subscriptionObserverList: ((
-    event: PushSubscriptionChangedState,
-  ) => void)[] = [];
+  private _subscriptionObserverList: ((event: PushSubscriptionChangedState) => void)[] = [];
 
   constructor(plugin: OneSignalCapacitorPlugin) {
     this._plugin = plugin;
@@ -40,23 +38,17 @@ export default class PushSubscription {
    * This internal method is kept to support the deprecated methods {@link id}, {@link token}, {@link optedIn}.
    */
   _setPropertiesAndObserver(): void {
-    void this._plugin
-      .getPushSubscriptionId()
-      .then((result) => {
-        this._id = result.id;
-      });
+    void this._plugin.getPushSubscriptionId().then((result) => {
+      this._id = result.id;
+    });
 
-    void this._plugin
-      .getPushSubscriptionToken()
-      .then((result) => {
-        this._token = result.token;
-      });
+    void this._plugin.getPushSubscriptionToken().then((result) => {
+      this._token = result.token;
+    });
 
-    void this._plugin
-      .getPushSubscriptionOptedIn()
-      .then((result) => {
-        this._optedIn = result.optedIn;
-      });
+    void this._plugin.getPushSubscriptionOptedIn().then((result) => {
+      this._optedIn = result.optedIn;
+    });
 
     this.addEventListener('change', (subscriptionChange) => {
       this._id = subscriptionChange.current.id;
@@ -130,10 +122,7 @@ export default class PushSubscription {
    * @param  {(event: PushSubscriptionChangedState)=>void} listener
    * @returns void
    */
-  addEventListener(
-    _event: 'change',
-    listener: (event: PushSubscriptionChangedState) => void,
-  ) {
+  addEventListener(_event: 'change', listener: (event: PushSubscriptionChangedState) => void) {
     this._subscriptionObserverList.push(listener);
     void this._plugin.addListener(
       'pushSubscriptionChange',
@@ -148,10 +137,7 @@ export default class PushSubscription {
    * @param  {(event: PushSubscriptionChangedState)=>void} listener
    * @returns void
    */
-  removeEventListener(
-    _event: 'change',
-    listener: (event: PushSubscriptionChangedState) => void,
-  ) {
+  removeEventListener(_event: 'change', listener: (event: PushSubscriptionChangedState) => void) {
     removeListener(this._subscriptionObserverList, listener);
   }
 

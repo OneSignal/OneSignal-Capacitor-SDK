@@ -2,9 +2,7 @@ import { OSNotification, type ReceivedEvent } from '../src/OSNotification';
 import type { NotificationClickEvent } from '../src/types/NotificationClicked';
 import { deepMerge } from './deepmerge';
 
-export const mockNotification = (
-  props: Partial<ReceivedEvent> = {},
-): OSNotification => {
+export const mockNotification = (props: Partial<ReceivedEvent> = {}): OSNotification => {
   return new OSNotification(
     deepMerge<ReceivedEvent>(
       {

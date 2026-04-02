@@ -1,4 +1,5 @@
 import type { Plugin } from '@capacitor/core';
+
 import type { OSNotificationPermission } from './NotificationsNamespace';
 
 export interface OneSignalCapacitorPlugin extends Plugin {
@@ -26,10 +27,7 @@ export interface OneSignalCapacitorPlugin extends Plugin {
   getTags(): Promise<{ tags: Record<string, string> }>;
   getOnesignalId(): Promise<{ onesignalId: string | null }>;
   getExternalId(): Promise<{ externalId: string | null }>;
-  trackEvent(options: {
-    name: string;
-    properties?: Record<string, unknown>;
-  }): Promise<void>;
+  trackEvent(options: { name: string; properties?: Record<string, unknown> }): Promise<void>;
 
   // Push Subscription
   getPushSubscriptionId(): Promise<{ id: string | null }>;
@@ -41,27 +39,18 @@ export interface OneSignalCapacitorPlugin extends Plugin {
   // Notifications
   getPermission(): Promise<{ permission: boolean }>;
   permissionNative(): Promise<{ permission: OSNotificationPermission }>;
-  requestPermission(options: {
-    fallbackToSettings: boolean;
-  }): Promise<{ permission: boolean }>;
+  requestPermission(options: { fallbackToSettings: boolean }): Promise<{ permission: boolean }>;
   canRequestPermission(): Promise<{ canRequest: boolean }>;
   registerForProvisionalAuthorization(): Promise<{ accepted: boolean }>;
   clearAllNotifications(): Promise<void>;
   removeNotification(options: { id: number }): Promise<void>;
   removeGroupedNotifications(options: { id: string }): Promise<void>;
-  preventDefault(options: {
-    notificationId: string;
-    discard: boolean;
-  }): Promise<void>;
-  proceedWithWillDisplay(options: {
-    notificationId: string;
-  }): Promise<void>;
+  preventDefault(options: { notificationId: string; discard: boolean }): Promise<void>;
+  proceedWithWillDisplay(options: { notificationId: string }): Promise<void>;
   displayNotification(options: { notificationId: string }): Promise<void>;
 
   // In-App Messages
-  addTriggers(options: {
-    triggers: Record<string, string>;
-  }): Promise<void>;
+  addTriggers(options: { triggers: Record<string, string> }): Promise<void>;
   removeTriggers(options: { keys: string[] }): Promise<void>;
   clearTriggers(): Promise<void>;
   setPaused(options: { pause: boolean }): Promise<void>;
@@ -70,10 +59,7 @@ export interface OneSignalCapacitorPlugin extends Plugin {
   // Session / Outcomes
   addOutcome(options: { name: string }): Promise<void>;
   addUniqueOutcome(options: { name: string }): Promise<void>;
-  addOutcomeWithValue(options: {
-    name: string;
-    value: number;
-  }): Promise<void>;
+  addOutcomeWithValue(options: { name: string; value: number }): Promise<void>;
 
   // Location
   requestLocationPermission(): Promise<void>;
@@ -81,18 +67,10 @@ export interface OneSignalCapacitorPlugin extends Plugin {
   isLocationShared(): Promise<{ shared: boolean }>;
 
   // Live Activities
-  enterLiveActivity(options: {
-    activityId: string;
-    token: string;
-  }): Promise<void>;
+  enterLiveActivity(options: { activityId: string; token: string }): Promise<void>;
   exitLiveActivity(options: { activityId: string }): Promise<void>;
-  setPushToStartToken(options: {
-    activityType: string;
-    token: string;
-  }): Promise<void>;
-  removePushToStartToken(options: {
-    activityType: string;
-  }): Promise<void>;
+  setPushToStartToken(options: { activityType: string; token: string }): Promise<void>;
+  removePushToStartToken(options: { activityType: string }): Promise<void>;
   setupDefaultLiveActivity(options?: {
     enablePushToStart: boolean;
     enablePushToUpdate: boolean;
