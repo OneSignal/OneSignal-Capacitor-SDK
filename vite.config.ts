@@ -9,6 +9,9 @@ export default defineConfig({
     sortImports: {
       enabled: true,
     },
+    sortPackageJson: {
+      sortScripts: true,
+    },
   },
   lint: {
     options: { typeAware: true, typeCheck: true },
