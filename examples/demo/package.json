@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "android": "bash ../run-android.sh",
+    "build": "vp build",
     "clean:android": "rm -rf android/app/build android/app/.cxx android/build",
     "clean:ios": "rm -rf ios/App/Pods ios/App/build",
     "ios": "bash ../run-ios.sh",

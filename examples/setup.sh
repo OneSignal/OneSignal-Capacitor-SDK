@@ -20,11 +20,5 @@ bun remove onesignal-capacitor-plugin
 bun add file:../../onesignal-capacitor-plugin.tgz
 
 # Build the web app and sync native projects
-npx vite build
-npx cap sync
-
-# Fix pod name casing (Capacitor derives "Onesignal" but podspec uses "OneSignal")
-if [ -f ios/App/Podfile ]; then
-  sed -i '' 's/OnesignalCapacitorPlugin/OneSignalCapacitorPlugin/g' ios/App/Podfile
-  cd ios/App && pod install && cd ../..
-fi
+bun run build
+bunx cap sync
