@@ -179,7 +179,12 @@ export function useOneSignal(): UseOneSignalReturn {
 
     const handleForegroundWillDisplay = (e: NotificationWillDisplayEvent) => {
       log.i(TAG, `Notification foregroundWillDisplay: ${e.getNotification().title ?? ''}`);
-      e.getNotification().display();
+
+      // If you want to test preventDefault, you can uncomment the following line:
+      // e.preventDefault(); // prevent the notification from displaying immediately
+      // setTimeout(() => {
+      //   e.getNotification().display(); // display the notification after 5 seconds (overrides the preventDefault)
+      // }, 5000);
     };
 
     const pushSubHandler = async () => {

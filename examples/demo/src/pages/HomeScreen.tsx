@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { IonContent, IonPage, IonToast } from '@ionic/react';
 import { useEffect, useMemo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
@@ -271,22 +272,24 @@ const HomeScreen: React.FC = () => {
               }
             />
 
-            <LiveActivitySection
-              onStart={(activityId, attributes, content) =>
-                runAction(`Started live activity: ${activityId}`, async () =>
-                  os.startDefaultLiveActivity(activityId, attributes, content),
-                )
-              }
-              onUpdate={async (activityId, eventUpdates) => {
-                await os.updateLiveActivity(activityId, eventUpdates);
-                showToast(`Updated live activity: ${activityId}`);
-              }}
-              onEnd={async (activityId) => {
-                await os.endLiveActivity(activityId);
-                showToast(`Ended live activity: ${activityId}`);
-              }}
-              hasApiKey={!!API_KEY}
-            />
+            {Capacitor.getPlatform() === 'ios' && (
+              <LiveActivitySection
+                onStart={(activityId, attributes, content) =>
+                  runAction(`Started live activity: ${activityId}`, async () =>
+                    os.startDefaultLiveActivity(activityId, attributes, content),
+                  )
+                }
+                onUpdate={async (activityId, eventUpdates) => {
+                  await os.updateLiveActivity(activityId, eventUpdates);
+                  showToast(`Updated live activity: ${activityId}`);
+                }}
+                onEnd={async (activityId) => {
+                  await os.endLiveActivity(activityId);
+                  showToast(`Ended live activity: ${activityId}`);
+                }}
+                hasApiKey={!!API_KEY}
+              />
+            )}
 
             <section className="section">
               <ActionButton type="button" onClick={() => history.push('/secondary')}>
