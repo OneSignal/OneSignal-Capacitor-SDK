@@ -290,7 +290,7 @@ const HomeScreen: React.FC = () => {
 
             <section className="section">
               <ActionButton type="button" onClick={() => history.push('/secondary')}>
-                NEXT ACTIVITY
+                NEXT SCREEN
               </ActionButton>
             </section>
           </main>
