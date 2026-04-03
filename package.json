@@ -28,7 +28,7 @@
     "ios",
     "android",
     "Package.swift",
-    "OnesignalCapacitorPlugin.podspec"
+    "OneSignalCapacitorPlugin.podspec"
   ],
   "type": "module",
   "main": "./dist/index.js",
