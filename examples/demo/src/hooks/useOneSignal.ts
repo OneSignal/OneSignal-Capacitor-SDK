@@ -446,7 +446,11 @@ export function useOneSignal(): UseOneSignalReturn {
 
   const removeEmail = (email: string) => {
     repository.removeEmail(email);
-    setEmailsList((prev) => prev.filter((e) => e !== email));
+    setEmailsList((prev) => {
+      const idx = prev.indexOf(email);
+      if (idx === -1) return prev;
+      return [...prev.slice(0, idx), ...prev.slice(idx + 1)];
+    });
     log.i(TAG, `Email removed: ${email}`);
   };
 
@@ -458,7 +462,11 @@ export function useOneSignal(): UseOneSignalReturn {
 
   const removeSms = (sms: string) => {
     repository.removeSms(sms);
-    setSmsNumbersList((prev) => prev.filter((s) => s !== sms));
+    setSmsNumbersList((prev) => {
+      const idx = prev.indexOf(sms);
+      if (idx === -1) return prev;
+      return [...prev.slice(0, idx), ...prev.slice(idx + 1)];
+    });
     log.i(TAG, `SMS removed: ${sms}`);
   };
 
