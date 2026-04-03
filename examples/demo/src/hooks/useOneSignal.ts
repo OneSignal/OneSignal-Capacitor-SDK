@@ -73,6 +73,16 @@ export type UseOneSignalReturn = {
   trackEvent: (name: string, properties?: Record<string, unknown>) => void;
   setLocationShared: (shared: boolean) => Promise<void>;
   requestLocationPermission: () => void;
+  startDefaultLiveActivity: (
+    activityId: string,
+    attributes: Record<string, unknown>,
+    content: Record<string, unknown>,
+  ) => void;
+  updateLiveActivity: (
+    activityId: string,
+    eventUpdates: Record<string, unknown>,
+  ) => Promise<boolean>;
+  endLiveActivity: (activityId: string) => Promise<boolean>;
   enterLiveActivity: (activityId: string, token: string) => void;
   exitLiveActivity: (activityId: string) => void;
 };
@@ -560,6 +570,34 @@ export function useOneSignal(): UseOneSignalReturn {
     repository.requestLocationPermission();
   };
 
+  const startDefaultLiveActivity = (
+    activityId: string,
+    attributes: Record<string, unknown>,
+    content: Record<string, unknown>,
+  ) => {
+    repository.startDefaultLiveActivity(activityId, attributes, content);
+    log.i(TAG, `Started live activity: ${activityId}`);
+  };
+
+  const updateLiveActivity = async (
+    activityId: string,
+    eventUpdates: Record<string, unknown>,
+  ): Promise<boolean> => {
+    const success = await repository.updateLiveActivity(activityId, 'update', eventUpdates);
+    const msg = success ? `Updated live activity: ${activityId}` : 'Failed to update live activity';
+    log.i(TAG, msg);
+    return success;
+  };
+
+  const endLiveActivity = async (activityId: string): Promise<boolean> => {
+    const success = await repository.updateLiveActivity(activityId, 'end', {
+      message: 'Ended Live Activity',
+    });
+    const msg = success ? `Ended live activity: ${activityId}` : 'Failed to end live activity';
+    log.i(TAG, msg);
+    return success;
+  };
+
   const enterLiveActivity = (activityId: string, token: string) => {
     repository.enterLiveActivity(activityId, token);
     log.i(TAG, `Entered live activity: ${activityId}`);
@@ -616,6 +654,9 @@ export function useOneSignal(): UseOneSignalReturn {
     trackEvent,
     setLocationShared,
     requestLocationPermission,
+    startDefaultLiveActivity,
+    updateLiveActivity,
+    endLiveActivity,
     enterLiveActivity,
     exitLiveActivity,
   };

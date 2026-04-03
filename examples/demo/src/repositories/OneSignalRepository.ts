@@ -195,6 +195,23 @@ export default class OneSignalRepository {
     return OneSignal.User.getOnesignalId();
   }
 
+  startDefaultLiveActivity(
+    activityId: string,
+    attributes: Record<string, unknown>,
+    content: Record<string, unknown>,
+  ): void {
+    if (!this.isNative()) return;
+    OneSignal.LiveActivities.startDefault(activityId, attributes, content);
+  }
+
+  async updateLiveActivity(
+    activityId: string,
+    event: 'update' | 'end',
+    eventUpdates?: Record<string, unknown>,
+  ): Promise<boolean> {
+    return this.apiService.updateLiveActivity(activityId, event, eventUpdates);
+  }
+
   enterLiveActivity(activityId: string, token: string): void {
     if (!this.isNative()) return;
     OneSignal.LiveActivities.enter(activityId, token);

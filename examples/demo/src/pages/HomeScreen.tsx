@@ -271,16 +271,19 @@ const HomeScreen: React.FC = () => {
             />
 
             <LiveActivitySection
-              onEnter={(activityId, token) =>
-                runAction(`Entered live activity: ${activityId}`, async () =>
-                  os.enterLiveActivity(activityId, token),
+              onStart={(activityId, attributes, content) =>
+                runAction(`Started live activity: ${activityId}`, async () =>
+                  os.startDefaultLiveActivity(activityId, attributes, content),
                 )
               }
-              onExit={(activityId) =>
-                runAction(`Exited live activity: ${activityId}`, async () =>
-                  os.exitLiveActivity(activityId),
-                )
-              }
+              onUpdate={async (activityId, eventUpdates) => {
+                await os.updateLiveActivity(activityId, eventUpdates);
+                showToast(`Updated live activity: ${activityId}`);
+              }}
+              onEnd={async (activityId) => {
+                await os.endLiveActivity(activityId);
+                showToast(`Ended live activity: ${activityId}`);
+              }}
             />
 
             <section className="section">
