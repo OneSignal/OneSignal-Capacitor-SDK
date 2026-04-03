@@ -41,10 +41,10 @@ App bar title set in `App.tsx`:
 </IonHeader>
 ```
 
-App icon generation:
+App icon generation uses `@capacitor/assets`. Place the OneSignal logo in `assets/icon-only.png`, then:
 
 ```bash
-bun examples/generate-icons.ts
+npx @capacitor/assets generate --ios --android --iconBackgroundColor '#ffffff' --splashBackgroundColor '#ffffff'
 ```
 
 Local SDK reference via packed tarball:
