@@ -1,61 +1,63 @@
-import { IonButton, IonInput, IonItem, IonLabel, IonToggle } from '@ionic/react';
-import OneSignal from 'onesignal-capacitor-plugin';
-import { useRef } from 'react';
+import { IonToggle } from '@ionic/react';
+import type { FC } from 'react';
 
-import SectionCard from '../SectionCard';
-
-export default function AppSection({
-  onInit,
-  onLog,
-}: {
-  onInit: (appId: string) => void;
-  onLog: (msg: string) => void;
-}) {
-  const appIdRef = useRef<HTMLIonInputElement>(null);
-
-  return (
-    <SectionCard title="App">
-      <IonItem>
-        <IonInput
-          ref={appIdRef}
-          label="App ID"
-          labelPlacement="stacked"
-          placeholder="YOUR_ONESIGNAL_APP_ID"
-        />
-      </IonItem>
-      <IonItem>
-        <IonButton
-          expand="block"
-          onClick={() => {
-            const val = String(appIdRef.current?.value ?? '').trim();
-            if (!val) return onLog('App ID is required');
-            onInit(val);
-          }}
-        >
-          Initialize
-        </IonButton>
-      </IonItem>
-      <IonItem>
-        <IonLabel>Consent Required</IonLabel>
-        <IonToggle
-          slot="end"
-          onIonChange={(e) => {
-            OneSignal.setConsentRequired(e.detail.checked);
-            onLog(`Consent required: ${e.detail.checked}`);
-          }}
-        />
-      </IonItem>
-      <IonItem>
-        <IonLabel>Privacy Consent</IonLabel>
-        <IonToggle
-          slot="end"
-          checked
-          onIonChange={(e) => {
-            OneSignal.setConsentGiven(e.detail.checked);
-            onLog(`Privacy consent: ${e.detail.checked}`);
-          }}
-        />
-      </IonItem>
-    </SectionCard>
-  );
+interface AppSectionProps {
+  appId: string;
+  consentRequired: boolean;
+  privacyConsentGiven: boolean;
+  onToggleConsent: (checked: boolean) => void;
+  onTogglePrivacyConsent: (checked: boolean) => void;
 }
+
+const AppSection: FC<AppSectionProps> = ({
+  appId,
+  consentRequired,
+  privacyConsentGiven,
+  onToggleConsent,
+  onTogglePrivacyConsent,
+}) => {
+  return (
+    <section className="section">
+      <h2>APP</h2>
+      <div className="card kv-card">
+        <div className="kv-row">
+          <span>App ID</span>
+          <span className="id-value">{appId}</span>
+        </div>
+      </div>
+      <div className="card tip-card">
+        <div>Add your own App ID, then rebuild to fully test all functionality.</div>
+        <div className="tip-link">Get your keys at onesignal.com</div>
+      </div>
+      <div className="card">
+        <div className="toggle-card">
+          <div>
+            <div className="label">Consent Required</div>
+            <div className="sub">Require consent before SDK processes data</div>
+          </div>
+          <IonToggle
+            checked={consentRequired}
+            onIonChange={(event) => onToggleConsent(event.detail.checked)}
+          />
+        </div>
+        {consentRequired ? (
+          <>
+            <div className="divider" />
+            <div className="toggle-card">
+              <div>
+                <div className="label">Privacy Consent</div>
+                <div className="sub">Consent given for data collection</div>
+              </div>
+              <IonToggle
+                checked={privacyConsentGiven}
+                onIonChange={(event) => onTogglePrivacyConsent(event.detail.checked)}
+              />
+            </div>
+          </>
+        ) : null}
+      </div>
+    </section>
+  );
+};
+
+export default AppSection;

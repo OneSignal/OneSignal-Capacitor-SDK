@@ -1,63 +1,42 @@
-import { IonButton, IonInput, IonItem, IonLabel, IonNote } from '@ionic/react';
-import OneSignal from 'onesignal-capacitor-plugin';
-import { useEffect, useRef, useState } from 'react';
+import type { FC } from 'react';
 
-import SectionCard from '../SectionCard';
+import ActionButton from '../ActionButton';
 
-export default function UserSection({ onLog }: { onLog: (msg: string) => void }) {
-  const externalIdRef = useRef<HTMLIonInputElement>(null);
-  const [onesignalId, setOnesignalId] = useState<string | null>(null);
-  const [externalId, setExternalId] = useState<string | null>(null);
+interface UserSectionProps {
+  externalUserId: string | undefined;
+  onLogin: () => void;
+  onLogout: () => void;
+}
 
-  useEffect(() => {
-    const refresh = () => {
-      void OneSignal.User.getOnesignalId().then(setOnesignalId);
-      void OneSignal.User.getExternalId().then(setExternalId);
-    };
-    refresh();
-    OneSignal.User.addEventListener('change', refresh);
-    return () => OneSignal.User.removeEventListener('change', refresh);
-  }, []);
+const UserSection: FC<UserSectionProps> = ({ externalUserId, onLogin, onLogout }) => {
+  const isLoggedIn = Boolean(externalUserId);
 
   return (
-    <SectionCard title="User">
-      <IonItem>
-        <IonLabel>OneSignal ID</IonLabel>
-        <IonNote slot="end">{onesignalId ?? 'null'}</IonNote>
-      </IonItem>
-      <IonItem>
-        <IonLabel>External ID</IonLabel>
-        <IonNote slot="end">{externalId ?? 'null'}</IonNote>
-      </IonItem>
-      <IonItem>
-        <IonInput
-          ref={externalIdRef}
-          label="External ID"
-          labelPlacement="stacked"
-          placeholder="Enter external ID"
-        />
-      </IonItem>
-      <IonItem>
-        <IonButton
-          onClick={() => {
-            const val = String(externalIdRef.current?.value ?? '').trim();
-            if (!val) return onLog('External ID is required');
-            OneSignal.login(val);
-            onLog(`Login: ${val}`);
-          }}
-        >
-          Login
-        </IonButton>
-        <IonButton
-          color="medium"
-          onClick={() => {
-            OneSignal.logout();
-            onLog('Logout');
-          }}
-        >
-          Logout
-        </IonButton>
-      </IonItem>
-    </SectionCard>
+    <section className="section">
+      <h2>USER</h2>
+      <div className="card kv-card">
+        <div className="kv-row">
+          <span>Status</span>
+          <span className={isLoggedIn ? 'text-success' : undefined}>
+            {isLoggedIn ? 'Logged In' : 'Anonymous'}
+          </span>
+        </div>
+        <div className="divider" />
+        <div className="kv-row">
+          <span>External ID</span>
+          <span className="id-value">{externalUserId ?? '–'}</span>
+        </div>
+      </div>
+      <ActionButton type="button" onClick={onLogin}>
+        {isLoggedIn ? 'SWITCH USER' : 'LOGIN USER'}
+      </ActionButton>
+      {isLoggedIn ? (
+        <ActionButton variant="outline" type="button" onClick={onLogout}>
+          LOGOUT USER
+        </ActionButton>
+      ) : null}
+    </section>
   );
-}
+};
+
+export default UserSection;

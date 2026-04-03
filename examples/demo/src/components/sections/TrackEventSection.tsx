@@ -1,34 +1,19 @@
-import { IonButton, IonInput, IonItem } from '@ionic/react';
-import OneSignal from 'onesignal-capacitor-plugin';
-import { useRef } from 'react';
+import type { FC } from 'react';
 
+import ActionButton from '../ActionButton';
 import SectionCard from '../SectionCard';
 
-export default function TrackEventSection({ onLog }: { onLog: (msg: string) => void }) {
-  const nameRef = useRef<HTMLIonInputElement>(null);
-
-  return (
-    <SectionCard title="Track Event">
-      <IonItem>
-        <IonInput
-          ref={nameRef}
-          label="Event Name"
-          labelPlacement="stacked"
-          placeholder="my_event"
-        />
-      </IonItem>
-      <IonItem>
-        <IonButton
-          onClick={() => {
-            const name = String(nameRef.current?.value ?? '').trim();
-            if (!name) return onLog('Event name is required');
-            OneSignal.User.trackEvent(name);
-            onLog(`Tracked event: ${name}`);
-          }}
-        >
-          Track
-        </IonButton>
-      </IonItem>
-    </SectionCard>
-  );
+interface TrackEventSectionProps {
+  onInfoTap: () => void;
+  onTrackEvent: () => void;
 }
+
+const TrackEventSection: FC<TrackEventSectionProps> = ({ onInfoTap, onTrackEvent }) => (
+  <SectionCard title="TRACK EVENT" onInfoTap={onInfoTap}>
+    <ActionButton type="button" onClick={onTrackEvent}>
+      TRACK EVENT
+    </ActionButton>
+  </SectionCard>
+);
+
+export default TrackEventSection;

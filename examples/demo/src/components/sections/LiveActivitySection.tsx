@@ -1,50 +1,66 @@
-import { IonButton, IonInput, IonItem } from '@ionic/react';
-import OneSignal from 'onesignal-capacitor-plugin';
-import { useRef } from 'react';
+import type { FC } from 'react';
+import { useState } from 'react';
 
+import ActionButton from '../ActionButton';
 import SectionCard from '../SectionCard';
 
-export default function LiveActivitySection({ onLog }: { onLog: (msg: string) => void }) {
-  const activityIdRef = useRef<HTMLIonInputElement>(null);
-  const tokenRef = useRef<HTMLIonInputElement>(null);
+interface LiveActivitySectionProps {
+  onEnter: (activityId: string, token: string) => void;
+  onExit: (activityId: string) => void;
+}
+
+const LiveActivitySection: FC<LiveActivitySectionProps> = ({ onEnter, onExit }) => {
+  const [activityId, setActivityId] = useState('');
+  const [token, setToken] = useState('');
 
   return (
-    <SectionCard title="Live Activities (iOS only)">
-      <IonItem>
-        <IonInput
-          ref={activityIdRef}
-          label="Activity ID"
-          labelPlacement="stacked"
-          placeholder="activity-id"
+    <SectionCard title="LIVE ACTIVITIES (IOS)">
+      <div className="card">
+        <input
+          className="outcome-input"
+          value={activityId}
+          onChange={(e) => setActivityId(e.target.value)}
+          placeholder="Activity ID"
+          autoCapitalize="off"
+          autoCorrect="off"
+          autoComplete="off"
+          spellCheck={false}
+          style={{ width: '100%', marginBottom: 8 }}
         />
-      </IonItem>
-      <IonItem>
-        <IonInput ref={tokenRef} label="Token" labelPlacement="stacked" placeholder="token" />
-      </IonItem>
-      <IonItem>
-        <IonButton
-          onClick={() => {
-            const id = String(activityIdRef.current?.value ?? '').trim();
-            const token = String(tokenRef.current?.value ?? '').trim();
-            if (!id || !token) return onLog('Activity ID and token are required');
-            OneSignal.LiveActivities.enter(id, token);
-            onLog(`Entered live activity: ${id}`);
-          }}
-        >
-          Enter
-        </IonButton>
-        <IonButton
-          color="medium"
-          onClick={() => {
-            const id = String(activityIdRef.current?.value ?? '').trim();
-            if (!id) return onLog('Activity ID is required');
-            OneSignal.LiveActivities.exit(id);
-            onLog(`Exited live activity: ${id}`);
-          }}
-        >
-          Exit
-        </IonButton>
-      </IonItem>
+        <input
+          className="outcome-input"
+          value={token}
+          onChange={(e) => setToken(e.target.value)}
+          placeholder="Token"
+          autoCapitalize="off"
+          autoCorrect="off"
+          autoComplete="off"
+          spellCheck={false}
+          style={{ width: '100%', marginBottom: 0 }}
+        />
+      </div>
+      <ActionButton
+        type="button"
+        onClick={() => {
+          const id = activityId.trim();
+          const t = token.trim();
+          if (id && t) onEnter(id, t);
+        }}
+      >
+        ENTER
+      </ActionButton>
+      <ActionButton
+        variant="outline"
+        type="button"
+        onClick={() => {
+          const id = activityId.trim();
+          if (id) onExit(id);
+        }}
+      >
+        EXIT
+      </ActionButton>
     </SectionCard>
   );
-}
+};
+
+export default LiveActivitySection;

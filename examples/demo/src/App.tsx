@@ -1,81 +1,51 @@
-import { IonApp, IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/react';
-import OneSignal, { LogLevel } from 'onesignal-capacitor-plugin';
-import { useEffect, useRef, useState } from 'react';
+import { Keyboard } from '@capacitor/keyboard';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react';
+import { IonReactRouter } from '@ionic/react-router';
+import { Redirect, Route } from 'react-router-dom';
 
-import HomeScreen from './screens/HomeScreen';
+import HomeScreen from './pages/HomeScreen';
+import Secondary from './pages/Secondary';
 
-const TAG = 'App';
+/* Core CSS required for Ionic components to work properly */
+import '@ionic/react/css/core.css';
+/* Basic CSS for apps built with Ionic */
+import '@ionic/react/css/normalize.css';
+import '@ionic/react/css/structure.css';
+import '@ionic/react/css/typography.css';
+/* Optional CSS utils that can be commented out */
+import '@ionic/react/css/display.css';
+import '@ionic/react/css/flex-utils.css';
+import '@ionic/react/css/float-elements.css';
+import '@ionic/react/css/padding.css';
+import '@ionic/react/css/text-alignment.css';
+import '@ionic/react/css/text-transformation.css';
+/* Ionic Dark Mode */
+import '@ionic/react/css/palettes/dark.system.css';
+/* Theme variables */
+import './theme/variables.css';
 
-export default function App() {
-  const [logs, setLogs] = useState<string[]>([]);
-  const initialized = useRef(false);
+StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+Keyboard.setAccessoryBarVisible({ isVisible: false }).catch(() => {});
 
-  function log(msg: string) {
-    setLogs((prev) => [...prev, `[${TAG}] ${msg}`]);
-    console.log(`[${TAG}] ${msg}`);
-  }
+setupIonicReact();
 
-  function initOneSignal(appId: string) {
-    if (initialized.current) {
-      log('Already initialized');
-      return;
-    }
-    initialized.current = true;
+const App: React.FC = () => (
+  <IonApp>
+    <IonReactRouter>
+      <IonRouterOutlet>
+        <Route exact path="/home">
+          <HomeScreen />
+        </Route>
+        <Route exact path="/secondary">
+          <Secondary />
+        </Route>
+        <Route exact path="/">
+          <Redirect to="/home" />
+        </Route>
+      </IonRouterOutlet>
+    </IonReactRouter>
+  </IonApp>
+);
 
-    OneSignal.Debug.setLogLevel(LogLevel.Verbose);
-    OneSignal.setConsentRequired(false);
-    OneSignal.setConsentGiven(true);
-    OneSignal.initialize(appId);
-
-    OneSignal.LiveActivities.setupDefault({
-      enablePushToStart: true,
-      enablePushToUpdate: true,
-    });
-
-    OneSignal.Notifications.addEventListener('click', (e) => {
-      log(`Notification click: ${e.notification.title ?? ''}`);
-    });
-
-    OneSignal.Notifications.addEventListener('foregroundWillDisplay', (e) => {
-      log(`Foreground notification: ${e.getNotification().title ?? ''}`);
-      e.getNotification().display();
-    });
-
-    OneSignal.Notifications.addEventListener('permissionChange', (granted) => {
-      log(`Permission changed: ${granted}`);
-    });
-
-    OneSignal.InAppMessages.addEventListener('click', (e) => {
-      log(`IAM click: ${e.result.actionId ?? 'unknown'}`);
-    });
-
-    OneSignal.User.addEventListener('change', (e) => {
-      log(`User changed: onesignalId=${e.current.onesignalId ?? 'null'}`);
-    });
-
-    OneSignal.User.pushSubscription.addEventListener('change', (e) => {
-      log(`Push sub changed: optedIn=${e.current.optedIn}`);
-    });
-
-    log(`Initialized with appId: ${appId}`);
-  }
-
-  useEffect(() => {
-    return () => {
-      initialized.current = false;
-    };
-  }, []);
-
-  return (
-    <IonApp>
-      <IonHeader>
-        <IonToolbar color="danger">
-          <IonTitle>OneSignal Capacitor</IonTitle>
-        </IonToolbar>
-      </IonHeader>
-      <IonContent>
-        <HomeScreen logs={logs} onInit={initOneSignal} onLog={log} />
-      </IonContent>
-    </IonApp>
-  );
-}
+export default App;
