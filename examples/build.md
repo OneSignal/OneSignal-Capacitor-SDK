@@ -131,10 +131,8 @@ The setup script performs:
 1. Builds the SDK from repo root (`bun run build`)
 2. Packs to `onesignal-capacitor-plugin.tgz`
 3. Reinstalls the tarball in the demo app
-4. Builds the React web app (`npx vite build`)
-5. Runs `npx cap sync`
-6. Fixes pod name casing (`OnesignalCapacitorPlugin` → `OneSignalCapacitorPlugin` in Podfile)
-7. Runs `pod install` under `ios/App/`
+4. Builds the React web app (`vp build`)
+5. Runs `bunx cap sync`
 
 ### Run Scripts
 
@@ -335,7 +333,11 @@ import '@ionic/react/css/typography.css';
 import App from './App';
 
 setupIonicReact();
-createRoot(document.getElementById('root')!).render(<App />);
+
+const root = document.getElementById('root');
+if (root) {
+  createRoot(root).render(<App />);
+}
 ```
 
 ### App Shell (`App.tsx`)
@@ -429,7 +431,7 @@ end
 
 - Capacitor setup with push notification entitlement and app groups
 - NSE and Widget extension targets in Xcode project
-- Podfile casing fix handled automatically by `setup.sh`
+- Podspec named `OnesignalCapacitorPlugin` to match Capacitor's derived pod name (Capacitor's `fixName` converts `onesignal-capacitor-plugin` → `OnesignalCapacitorPlugin`)
 
 ### Custom Notification Sound
 
@@ -444,7 +446,7 @@ Copy `vine_boom.wav` from [sdk-shared/assets](https://github.com/OneSignal/sdk-s
 
 ```
 examples/
-├── setup.sh              # Build SDK, pack, install, vite build, cap sync, pod fix
+├── setup.sh              # Build SDK, pack, install, vite build, cap sync
 ├── run-android.sh        # Device selection + cap run android
 ├── run-ios.sh            # Simulator selection + cap run ios
 ├── build.md              # This file
