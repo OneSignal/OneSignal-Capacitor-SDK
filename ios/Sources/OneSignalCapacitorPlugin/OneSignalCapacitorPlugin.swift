@@ -94,7 +94,7 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
         OneSignal.InAppMessages.addClickListener(self)
 
         if let pending = pendingClickEvent {
-            notifyListeners("notificationClick", data: pending.jsonRepresentation as? [String: Any] ?? [:])
+            sendNotificationClickEvent(pending)
             pendingClickEvent = nil
         }
         call.resolve()
@@ -570,9 +570,16 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
 
     public func onClick(event: OSNotificationClickEvent) {
         if bridge != nil {
-            notifyListeners("notificationClick", data: event.jsonRepresentation as? [String: Any] ?? [:])
+            sendNotificationClickEvent(event)
         } else {
             pendingClickEvent = event
+        }
+    }
+
+    private func sendNotificationClickEvent(_ event: OSNotificationClickEvent) {
+        if let data = event.stringify().data(using: .utf8),
+           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            notifyListeners("notificationClick", data: json)
         }
     }
 
