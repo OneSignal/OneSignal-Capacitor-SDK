@@ -72,7 +72,7 @@ export default class OneSignalRepository {
 
   async hasPermission(): Promise<boolean> {
     if (!this.isNative()) return false;
-    return OneSignal.Notifications.getPermissionAsync();
+    return OneSignal.Notifications.hasPermission();
   }
 
   requestPermission(fallbackToSettings = true): Promise<boolean> {

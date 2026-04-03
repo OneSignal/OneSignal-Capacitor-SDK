@@ -223,7 +223,7 @@ import OneSignal, { LogLevel } from 'onesignal-capacitor-plugin';
 | ClearAllNotifications()           | `OneSignal.Notifications.clearAll()`                        |
 | RemoveNotification(id)            | `OneSignal.Notifications.removeNotification(id)`            |
 | RemoveGroupedNotifications(id)    | `OneSignal.Notifications.removeGroupedNotifications(id)`    |
-| HasPermission()                   | `await OneSignal.Notifications.getPermissionAsync()`        |
+| HasPermission()                   | `await OneSignal.Notifications.hasPermission()`             |
 | RequestPermission(fallback)       | `await OneSignal.Notifications.requestPermission(fallback)` |
 | CanRequestPermission()            | `await OneSignal.Notifications.canRequestPermission()`      |
 | SetLocationShared(shared)         | `OneSignal.Location.setShared(shared)`                      |
@@ -626,5 +626,5 @@ examples/
 - **`useEffect` cleanup** for all SDK event listeners
 - **Vite+** (`vite-plus`) with `@vitejs/plugin-react` for bundling, linting, and formatting
 - **`cap sync`** after every dependency change to push web assets and native plugins
-- **Async getters** (`getIdAsync`, `getPermissionAsync`, etc.) over deprecated sync properties
+- **Async getters** (`getIdAsync`, `hasPermission`, etc.) over deprecated sync properties
 - **`handleApplicationNotifications: false`** in `capacitor.config.ts` so OneSignal controls notification lifecycle on iOS

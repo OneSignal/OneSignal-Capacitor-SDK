@@ -35,34 +35,11 @@ export default class Notifications {
     }
   }
 
-  private _permission?: boolean;
-
-  /**
-   * Sets initial permission value and adds observer for changes.
-   * This internal method is kept to support the deprecated method {@link hasPermission}.
-   */
-  _setPropertyAndObserver(): void {
-    void this._plugin.getPermission().then((result) => {
-      this._permission = result.permission;
-    });
-
-    this.addEventListener('permissionChange', (result) => {
-      this._permission = result;
-    });
-  }
-
-  /**
-   * @deprecated This method is deprecated. It has been replaced by {@link getPermissionAsync}.
-   */
-  hasPermission(): boolean {
-    return this._permission || false;
-  }
-
   /**
    * Whether this app has push notification permission. Returns true if the user has accepted permissions,
    * or if the app has ephemeral or provisional permission.
    */
-  async getPermissionAsync(): Promise<boolean> {
+  async hasPermission(): Promise<boolean> {
     const result = await this._plugin.getPermission();
     return result.permission;
   }
