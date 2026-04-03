@@ -48,6 +48,8 @@
     "lint": "vp check",
     "lint:fix": "vp check --fix",
     "test": "vp test",
+    "test:coverage": "vp test run --coverage",
+    "test:run": "vp test run",
     "verify": "vp build && vp test run && vp lint"
   },
   "devDependencies": {

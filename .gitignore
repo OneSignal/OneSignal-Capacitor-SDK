@@ -30,3 +30,20 @@ local.properties
 *.apk
 *.dex
 *.class
+
+# Examples
+examples/*/node_modules
+examples/*/bun.lock
+examples/*/dist
+examples/*/android/app/build
+examples/*/android/app/.cxx
+examples/*/android/.gradle
+examples/*/android/.idea
+examples/*/android/build
+examples/*/android/local.properties
+examples/*/android/capacitor.build.gradle
+examples/*/ios/App/Pods
+examples/*/ios/App/Podfile.lock
+examples/*/ios/App/App.xcworkspace/xcshareddata
+examples/*/ios/App/App.xcworkspace/xcuserdata
+examples/*/ios/App/DerivedData
