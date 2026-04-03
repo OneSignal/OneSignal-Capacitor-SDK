@@ -14,7 +14,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { NotificationType } from '../models/NotificationType';
 import OneSignalRepository from '../repositories/OneSignalRepository';
 import LogManager from '../services/LogManager';
-import OneSignalApiService from '../services/OneSignalApiService';
+import OneSignalApiService, { API_KEY } from '../services/OneSignalApiService';
 import PreferencesService from '../services/PreferencesService';
 
 const TAG = 'useOneSignal';
@@ -142,6 +142,9 @@ export function useOneSignal(): UseOneSignalReturn {
 
   useEffect(() => {
     mountedRef.current = true;
+    if (!API_KEY) {
+      log.w(TAG, 'VITE_ONESIGNAL_API_KEY not set in .env — Live Activity update/end will not work');
+    }
     return () => {
       mountedRef.current = false;
     };

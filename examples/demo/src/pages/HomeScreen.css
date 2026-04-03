@@ -510,6 +510,13 @@
   z-index: 60;
 }
 
+.hint-text {
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+  margin: 4px 0 0;
+}
+
 .la-inline-input {
   flex: 1;
   text-align: right;

@@ -1,9 +1,12 @@
+import { CapacitorHttp } from '@capacitor/core';
+
 import { NotificationType } from '../models/NotificationType';
 import { userDataFromJson } from '../models/UserData';
 import type { UserData } from '../models/UserData';
 import LogManager from './LogManager';
 
 const TAG = 'OneSignalApiService';
+export const API_KEY = import.meta.env.VITE_ONESIGNAL_API_KEY as string | undefined;
 
 class OneSignalApiService {
   private static instance: OneSignalApiService;
@@ -80,18 +83,20 @@ class OneSignalApiService {
         ...extra,
       };
 
-      const response = await fetch('https://onesignal.com/api/v1/notifications', {
-        method: 'POST',
+      const response = await CapacitorHttp.post({
+        url: 'https://onesignal.com/api/v1/notifications',
         headers: {
           Accept: 'application/vnd.onesignal.v1+json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(body),
+        data: body,
       });
 
-      if (!response.ok) {
-        const text = await response.text();
-        LogManager.getInstance().e(TAG, `Send notification failed: ${text}`);
+      if (response.status < 200 || response.status >= 300) {
+        LogManager.getInstance().e(
+          TAG,
+          `Send notification failed: ${JSON.stringify(response.data)}`,
+        );
         return false;
       }
 
@@ -120,17 +125,20 @@ class OneSignalApiService {
         payload.dismissal_date = Math.floor(Date.now() / 1000);
       }
 
-      const response = await fetch(url, {
-        method: 'POST',
+      const response = await CapacitorHttp.post({
+        url,
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Key ${API_KEY}`,
         },
-        body: JSON.stringify(payload),
+        data: payload,
       });
 
-      if (!response.ok) {
-        const text = await response.text();
-        LogManager.getInstance().e(TAG, `${event} live activity failed: ${text}`);
+      if (response.status < 200 || response.status >= 300) {
+        LogManager.getInstance().e(
+          TAG,
+          `${event} live activity failed: ${JSON.stringify(response.data)}`,
+        );
         return false;
       }
 
@@ -144,13 +152,12 @@ class OneSignalApiService {
   async fetchUser(onesignalId: string): Promise<UserData | null> {
     try {
       const url = `https://api.onesignal.com/apps/${this.appId}/users/by/onesignal_id/${onesignalId}`;
-      const response = await fetch(url);
-      if (!response.ok) {
+      const response = await CapacitorHttp.get({ url });
+      if (response.status < 200 || response.status >= 300) {
         LogManager.getInstance().w(TAG, `fetchUser failed: ${response.status}`);
         return null;
       }
-      const json = (await response.json()) as Record<string, unknown>;
-      return userDataFromJson(json);
+      return userDataFromJson(response.data as Record<string, unknown>);
     } catch (err) {
       LogManager.getInstance().e(TAG, `fetchUser error: ${String(err)}`);
       return null;

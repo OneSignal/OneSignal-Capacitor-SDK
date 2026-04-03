@@ -18,6 +18,7 @@ interface LiveActivitySectionProps {
   ) => void;
   onUpdate: (activityId: string, eventUpdates: Record<string, unknown>) => void | Promise<void>;
   onEnd: (activityId: string) => void | Promise<void>;
+  hasApiKey: boolean;
   onInfoTap?: () => void;
 }
 
@@ -25,6 +26,7 @@ const LiveActivitySection: FC<LiveActivitySectionProps> = ({
   onStart,
   onUpdate,
   onEnd,
+  hasApiKey,
   onInfoTap,
 }) => {
   const [activityId, setActivityId] = useState('order-1');
@@ -100,17 +102,24 @@ const LiveActivitySection: FC<LiveActivitySectionProps> = ({
       <ActionButton type="button" disabled={!activityId.trim()} onClick={handleStart}>
         START LIVE ACTIVITY
       </ActionButton>
-      <ActionButton type="button" disabled={!activityId.trim() || updating} onClick={handleUpdate}>
+      <ActionButton
+        type="button"
+        disabled={!activityId.trim() || updating || !hasApiKey}
+        onClick={handleUpdate}
+      >
         {`UPDATE → ${nextStatus.status.replace('_', ' ').toUpperCase()}`}
       </ActionButton>
       <ActionButton
         variant="outline"
         type="button"
-        disabled={!activityId.trim()}
+        disabled={!activityId.trim() || !hasApiKey}
         onClick={() => onEnd(activityId)}
       >
         END LIVE ACTIVITY
       </ActionButton>
+      {!hasApiKey && (
+        <p className="hint-text">Set VITE_ONESIGNAL_API_KEY in .env to enable update &amp; end</p>
+      )}
     </SectionCard>
   );
 };

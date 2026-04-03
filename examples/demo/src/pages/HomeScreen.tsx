@@ -31,6 +31,7 @@ import TriggersSection from '../components/sections/TriggersSection';
 import UserSection from '../components/sections/UserSection';
 import { useOneSignal } from '../hooks/useOneSignal';
 import { NotificationType } from '../models/NotificationType';
+import { API_KEY } from '../services/OneSignalApiService';
 import type { TooltipData } from '../services/TooltipHelper';
 import TooltipHelper from '../services/TooltipHelper';
 
@@ -284,6 +285,7 @@ const HomeScreen: React.FC = () => {
                 await os.endLiveActivity(activityId);
                 showToast(`Ended live activity: ${activityId}`);
               }}
+              hasApiKey={!!API_KEY}
             />
 
             <section className="section">

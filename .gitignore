@@ -31,6 +31,9 @@ local.properties
 *.dex
 *.class
 
+# Secrets
+.env
+
 # Examples
 examples/*/node_modules
 examples/*/bun.lock
