@@ -576,20 +576,32 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
         }
     }
 
+    @objc(onWillDisplayInAppMessage:)
     public func onWillDisplay(event: OSInAppMessageWillDisplayEvent) {
-        notifyListeners("inAppMessageWillDisplay", data: event.jsonRepresentation as? [String: Any] ?? [:])
+        notifyListeners("inAppMessageWillDisplay", data: [
+            "message": ["messageId": event.message.messageId]
+        ])
     }
 
+    @objc(onDidDisplayInAppMessage:)
     public func onDidDisplay(event: OSInAppMessageDidDisplayEvent) {
-        notifyListeners("inAppMessageDidDisplay", data: event.jsonRepresentation as? [String: Any] ?? [:])
+        notifyListeners("inAppMessageDidDisplay", data: [
+            "message": ["messageId": event.message.messageId]
+        ])
     }
 
+    @objc(onWillDismissInAppMessage:)
     public func onWillDismiss(event: OSInAppMessageWillDismissEvent) {
-        notifyListeners("inAppMessageWillDismiss", data: event.jsonRepresentation as? [String: Any] ?? [:])
+        notifyListeners("inAppMessageWillDismiss", data: [
+            "message": ["messageId": event.message.messageId]
+        ])
     }
 
+    @objc(onDidDismissInAppMessage:)
     public func onDidDismiss(event: OSInAppMessageDidDismissEvent) {
-        notifyListeners("inAppMessageDidDismiss", data: event.jsonRepresentation as? [String: Any] ?? [:])
+        notifyListeners("inAppMessageDidDismiss", data: [
+            "message": ["messageId": event.message.messageId]
+        ])
     }
 
     public func onClick(event: OSInAppMessageClickEvent) {
