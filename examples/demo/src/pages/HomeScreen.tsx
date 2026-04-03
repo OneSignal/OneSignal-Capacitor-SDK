@@ -305,12 +305,10 @@ const HomeScreen: React.FC = () => {
           placeholder="External User Id"
           confirmLabel="Login"
           onClose={closeDialog}
-          onSubmit={(value) =>
-            runAction(`Logged in as ${value}`, async () => {
-              await os.loginUser(value);
-              closeDialog();
-            })
-          }
+          onSubmit={(value) => {
+            closeDialog();
+            runAction(`Logged in as ${value}`, () => os.loginUser(value));
+          }}
         />
 
         <PairInputModal

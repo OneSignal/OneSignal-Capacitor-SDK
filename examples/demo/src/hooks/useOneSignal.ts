@@ -338,24 +338,16 @@ export function useOneSignal(): UseOneSignalReturn {
 
   const loginUser = async (nextExternalUserId: string) => {
     setIsLoading(true);
-    try {
-      repository.loginUser(nextExternalUserId);
-      preferences.setExternalUserId(nextExternalUserId);
-      if (mountedRef.current) {
-        setAliasesList([]);
-        setEmailsList([]);
-        setSmsNumbersList([]);
-        setTagsList([]);
-        setTriggersList([]);
-      }
-      log.i(TAG, `Logged in as: ${nextExternalUserId}`);
-      await fetchUserDataFromApi();
-    } catch (err) {
-      log.e(TAG, `Login error: ${String(err)}`);
-      if (mountedRef.current) {
-        setIsLoading(false);
-      }
+    repository.loginUser(nextExternalUserId);
+    preferences.setExternalUserId(nextExternalUserId);
+    if (mountedRef.current) {
+      setAliasesList([]);
+      setEmailsList([]);
+      setSmsNumbersList([]);
+      setTagsList([]);
+      setTriggersList([]);
     }
+    log.i(TAG, `Logged in as: ${nextExternalUserId}`);
   };
 
   const logoutUser = async () => {
@@ -369,7 +361,6 @@ export function useOneSignal(): UseOneSignalReturn {
       setSmsNumbersList([]);
       setTagsList([]);
       setTriggersList([]);
-      setIsLoading(false);
     }
     log.i(TAG, 'Logged out');
   };

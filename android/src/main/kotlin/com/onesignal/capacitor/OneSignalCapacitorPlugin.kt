@@ -182,7 +182,7 @@ class OneSignalCapacitorPlugin : Plugin(),
             return
         }
         val aliases = mutableMapOf<String, String>()
-        aliasesObj.keys().forEach { key -> aliases[key] = aliasesObj.getString(key) }
+        aliasesObj.keys().forEach { key -> aliasesObj.getString(key)?.let { aliases[key] = it } }
         OneSignal.User.addAliases(aliases)
         call.resolve()
     }
@@ -252,7 +252,7 @@ class OneSignalCapacitorPlugin : Plugin(),
             return
         }
         val tags = mutableMapOf<String, String>()
-        tagsObj.keys().forEach { key -> tags[key] = tagsObj.getString(key) }
+        tagsObj.keys().forEach { key -> tagsObj.getString(key)?.let { tags[key] = it } }
         OneSignal.User.addTags(tags)
         call.resolve()
     }
@@ -484,7 +484,7 @@ class OneSignalCapacitorPlugin : Plugin(),
             return
         }
         val triggers = mutableMapOf<String, String>()
-        triggersObj.keys().forEach { key -> triggers[key] = triggersObj.getString(key) }
+        triggersObj.keys().forEach { key -> triggersObj.getString(key)?.let { triggers[key] = it } }
         OneSignal.InAppMessages.addTriggers(triggers)
         call.resolve()
     }
