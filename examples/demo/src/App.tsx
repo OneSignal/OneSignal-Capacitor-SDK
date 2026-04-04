@@ -24,8 +24,6 @@ import '@ionic/react/css/palettes/dark.system.css';
 /* Theme variables */
 import './theme/variables.css';
 
-Keyboard.setAccessoryBarVisible({ isVisible: false }).catch(() => {});
-
 setupIonicReact();
 
 const App: React.FC = () => (
