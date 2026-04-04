@@ -16,15 +16,15 @@ Create a new Capacitor + React project at `examples/demo/` (relative to the SDK 
 ```bash
 mkdir -p examples/demo/src
 cd examples/demo
-npm init -y
-npm install @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android
-npm install @capacitor/keyboard @capacitor/status-bar
-npm install react react-dom @ionic/react @ionic/react-router ionicons react-icons
-npm install react-router react-router-dom
-npm install -D @vitejs/plugin-react @types/react @types/react-dom @types/react-router @types/react-router-dom typescript vite
-npx cap init "OneSignal Demo" com.onesignal.example --web-dir dist
-npx cap add ios
-npx cap add android
+bun init -y
+bun add @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android
+bun add @capacitor/keyboard @capacitor/status-bar
+bun add react react-dom @ionic/react @ionic/react-router ionicons react-icons
+bun add react-router react-router-dom
+bun add -d @vitejs/plugin-react @types/react @types/react-dom @types/react-router @types/react-router-dom typescript vite
+bunx cap init "OneSignal Demo" com.onesignal.example --web-dir dist
+bunx cap add ios
+bunx cap add android
 ```
 
 - TypeScript strict mode enabled
@@ -38,7 +38,17 @@ App branding uses a custom header in `HomeScreen.tsx` with the OneSignal logo an
 App icon generation uses `@capacitor/assets`. Place the OneSignal logo in `assets/icon-only.png`, then:
 
 ```bash
-npx @capacitor/assets generate --ios --android --iconBackgroundColor '#ffffff' --splashBackgroundColor '#ffffff'
+bunx @capacitor/assets generate --ios --android --iconBackgroundColor '#ffffff' --splashBackgroundColor '#ffffff'
+```
+
+After generating, remove the adaptive icon files so Android uses the generated PNGs directly (the adaptive icon XMLs reference the default Capacitor foreground and override them):
+
+```bash
+rm -rf android/app/src/main/res/mipmap-anydpi-v26 \
+       android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml \
+       android/app/src/main/res/drawable/ic_launcher_background.xml \
+       android/app/src/main/res/values/ic_launcher_background.xml \
+       android/app/src/main/res/mipmap-*/ic_launcher_foreground.png
 ```
 
 Local SDK reference via packed tarball:
@@ -138,8 +148,8 @@ The setup script performs:
 
 ### Run Scripts
 
-- `run-android.sh`: Lists connected ADB devices, prompts for selection if multiple, runs `npx cap run android --target <device>`
-- `run-ios.sh`: Lists booted iOS simulators, prompts for selection if multiple, runs `npx cap run ios --target <udid>`
+- `run-android.sh`: Lists connected ADB devices, prompts for selection if multiple, runs `bunx cap run android --target <device>`
+- `run-ios.sh`: Lists booted iOS simulators, prompts for selection if multiple, runs `bunx cap run ios --target <udid>`
 
 ---
 
