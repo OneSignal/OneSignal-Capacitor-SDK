@@ -1,5 +1,4 @@
 import { Keyboard } from '@capacitor/keyboard';
-import { StatusBar, Style } from '@capacitor/status-bar';
 import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { Redirect, Route } from 'react-router-dom';
@@ -25,7 +24,6 @@ import '@ionic/react/css/palettes/dark.system.css';
 /* Theme variables */
 import './theme/variables.css';
 
-StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
 Keyboard.setAccessoryBarVisible({ isVisible: false }).catch(() => {});
 
 setupIonicReact();
