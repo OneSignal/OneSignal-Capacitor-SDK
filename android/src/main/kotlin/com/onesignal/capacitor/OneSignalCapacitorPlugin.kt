@@ -26,6 +26,7 @@ import com.onesignal.user.subscriptions.PushSubscriptionChangedState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 import org.json.JSONObject
 
 @CapacitorPlugin(name = "OneSignalCapacitor")
@@ -303,16 +304,35 @@ class OneSignalCapacitorPlugin : Plugin(),
             return
         }
         val propertiesObj = call.getObject("properties")
-        val properties = if (propertiesObj != null) {
-            val map = mutableMapOf<String, Any>()
-            propertiesObj.keys().forEach { key ->
-                map[key] = propertiesObj.get(key)
-            }
-            map
-        } else null
+        val properties = propertiesObj?.let { jsonObjectToMap(it) }
 
         OneSignal.User.trackEvent(name, properties)
         call.resolve()
+    }
+
+    private fun jsonObjectToMap(jsonObject: JSONObject): Map<String, Any?> {
+        val map = mutableMapOf<String, Any?>()
+        jsonObject.keys().forEach { key ->
+            map[key] = convertJsonValue(jsonObject.get(key))
+        }
+        return map
+    }
+
+    private fun jsonArrayToList(jsonArray: JSONArray): List<Any?> {
+        val list = mutableListOf<Any?>()
+        for (i in 0 until jsonArray.length()) {
+            list.add(convertJsonValue(jsonArray.get(i)))
+        }
+        return list
+    }
+
+    private fun convertJsonValue(value: Any): Any? {
+        return when {
+            value == JSONObject.NULL -> null
+            value is JSONObject -> jsonObjectToMap(value)
+            value is JSONArray -> jsonArrayToList(value)
+            else -> value
+        }
     }
 
     // endregion
