@@ -87,7 +87,7 @@ const HomeScreen: React.FC = () => {
   };
 
   const runAction = (message: string, action: () => Promise<void>) => {
-    action().then(() => showToast(message));
+    void action().then(() => showToast(message));
   };
 
   const closeDialog = () => {
