@@ -99,8 +99,8 @@ describe('InAppMessages', () => {
   });
 
   describe('addTrigger', () => {
-    test('should call plugin for addTrigger', () => {
-      inAppMessages.addTrigger('key', 'value');
+    test('should call plugin for addTrigger', async () => {
+      await inAppMessages.addTrigger('key', 'value');
 
       expect(mockPlugin.addTriggers).toHaveBeenCalledWith({
         triggers: { key: 'value' },
@@ -109,18 +109,18 @@ describe('InAppMessages', () => {
   });
 
   describe('addTriggers', () => {
-    test('should call plugin for addTriggers with string values', () => {
+    test('should call plugin for addTriggers with string values', async () => {
       const triggers = { key1: 'value1', key2: 'value2' };
-      inAppMessages.addTriggers(triggers);
+      await inAppMessages.addTriggers(triggers);
 
       expect(mockPlugin.addTriggers).toHaveBeenCalledWith({ triggers });
     });
 
-    test('should convert non-string values to JSON strings', () => {
+    test('should convert non-string values to JSON strings', async () => {
       const triggers = { key1: 'value1', key2: 123, key3: true };
 
       // @ts-expect-error - testing non-string values
-      inAppMessages.addTriggers(triggers);
+      await inAppMessages.addTriggers(triggers);
 
       expect(mockPlugin.addTriggers).toHaveBeenCalledWith({
         triggers: { key1: 'value1', key2: '123', key3: 'true' },
@@ -129,8 +129,8 @@ describe('InAppMessages', () => {
   });
 
   describe('removeTrigger', () => {
-    test('should call plugin for removeTrigger', () => {
-      inAppMessages.removeTrigger('key');
+    test('should call plugin for removeTrigger', async () => {
+      await inAppMessages.removeTrigger('key');
 
       expect(mockPlugin.removeTriggers).toHaveBeenCalledWith({
         keys: ['key'],
@@ -139,17 +139,17 @@ describe('InAppMessages', () => {
   });
 
   describe('removeTriggers', () => {
-    test('should call plugin for removeTriggers with valid array', () => {
+    test('should call plugin for removeTriggers with valid array', async () => {
       const keys = ['key1', 'key2'];
-      inAppMessages.removeTriggers(keys);
+      await inAppMessages.removeTriggers(keys);
 
       expect(mockPlugin.removeTriggers).toHaveBeenCalledWith({ keys });
     });
 
-    test('should handle non-array input gracefully', () => {
+    test('should handle non-array input gracefully', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      inAppMessages.removeTriggers('not-an-array' as any);
+      await inAppMessages.removeTriggers('not-an-array' as any);
 
       expect(consoleSpy).toHaveBeenCalledWith(
         'OneSignal: removeTriggers: argument must be of type Array',
@@ -160,8 +160,8 @@ describe('InAppMessages', () => {
   });
 
   describe('clearTriggers', () => {
-    test('should call plugin for clearTriggers', () => {
-      inAppMessages.clearTriggers();
+    test('should call plugin for clearTriggers', async () => {
+      await inAppMessages.clearTriggers();
 
       expect(mockPlugin.clearTriggers).toHaveBeenCalled();
     });

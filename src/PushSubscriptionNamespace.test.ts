@@ -210,15 +210,15 @@ describe('PushSubscription', () => {
   });
 
   describe('optIn', () => {
-    test('should call plugin', () => {
-      pushSubscription.optIn();
+    test('should call plugin', async () => {
+      await pushSubscription.optIn();
       expect(mockPlugin.optInPushSubscription).toHaveBeenCalled();
     });
   });
 
   describe('optOut', () => {
-    test('should call plugin', () => {
-      pushSubscription.optOut();
+    test('should call plugin', async () => {
+      await pushSubscription.optOut();
       expect(mockPlugin.optOutPushSubscription).toHaveBeenCalled();
     });
   });

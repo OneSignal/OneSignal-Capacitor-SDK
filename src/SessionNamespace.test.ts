@@ -17,10 +17,10 @@ describe('Session', () => {
   });
 
   describe('addOutcome', () => {
-    test('should call plugin with correct parameters', () => {
+    test('should call plugin with correct parameters', async () => {
       const outcomeName = 'test_outcome';
 
-      session.addOutcome(outcomeName);
+      await session.addOutcome(outcomeName);
 
       expect(mockPlugin.addOutcome).toHaveBeenCalledWith({
         name: outcomeName,
@@ -29,10 +29,10 @@ describe('Session', () => {
   });
 
   describe('addUniqueOutcome', () => {
-    test('should call plugin with correct parameters', () => {
+    test('should call plugin with correct parameters', async () => {
       const outcomeName = 'unique_test_outcome';
 
-      session.addUniqueOutcome(outcomeName);
+      await session.addUniqueOutcome(outcomeName);
 
       expect(mockPlugin.addUniqueOutcome).toHaveBeenCalledWith({
         name: outcomeName,
@@ -41,11 +41,11 @@ describe('Session', () => {
   });
 
   describe('addOutcomeWithValue', () => {
-    test('should call plugin with correct parameters', () => {
+    test('should call plugin with correct parameters', async () => {
       const outcomeName = 'purchase_value';
       const outcomeValue = 99.99;
 
-      session.addOutcomeWithValue(outcomeName, outcomeValue);
+      await session.addOutcomeWithValue(outcomeName, outcomeValue);
 
       expect(mockPlugin.addOutcomeWithValue).toHaveBeenCalledWith({
         name: outcomeName,

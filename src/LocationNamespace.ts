@@ -9,10 +9,10 @@ export default class Location {
 
   /**
    * Prompts the user for location permissions to allow geotagging from the OneSignal dashboard.
-   * @returns void
+   * @returns Promise<void>
    */
-  requestPermission(): void {
-    void this._plugin.requestLocationPermission();
+  requestPermission(): Promise<void> {
+    return this._plugin.requestLocationPermission();
   }
 
   /**

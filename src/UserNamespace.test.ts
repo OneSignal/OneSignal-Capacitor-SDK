@@ -32,18 +32,18 @@ describe('User', () => {
   });
 
   describe('setLanguage', () => {
-    test('should call plugin with correct parameters', () => {
+    test('should call plugin with correct parameters', async () => {
       const language = 'en';
-      user.setLanguage(language);
+      await user.setLanguage(language);
 
       expect(mockPlugin.setLanguage).toHaveBeenCalledWith({ language });
     });
   });
 
   describe('addAlias', () => {
-    test('should call plugin with correct parameters', () => {
+    test('should call plugin with correct parameters', async () => {
       const id = '12345';
-      user.addAlias(LABEL, id);
+      await user.addAlias(LABEL, id);
 
       expect(mockPlugin.addAliases).toHaveBeenCalledWith({
         aliases: { [LABEL]: id },
@@ -52,24 +52,24 @@ describe('User', () => {
   });
 
   describe('addAliases', () => {
-    test('should call plugin with correct parameters', () => {
+    test('should call plugin with correct parameters', async () => {
       const aliases = { [LABEL]: '12345', custom_id: 'abc-123' };
-      user.addAliases(aliases);
+      await user.addAliases(aliases);
 
       expect(mockPlugin.addAliases).toHaveBeenCalledWith({ aliases });
     });
 
-    test('should handle empty aliases object', () => {
+    test('should handle empty aliases object', async () => {
       const aliases = {};
-      user.addAliases(aliases);
+      await user.addAliases(aliases);
 
       expect(mockPlugin.addAliases).toHaveBeenCalledWith({ aliases });
     });
   });
 
   describe('removeAlias', () => {
-    test('should call plugin with correct parameters', () => {
-      user.removeAlias(LABEL);
+    test('should call plugin with correct parameters', async () => {
+      await user.removeAlias(LABEL);
 
       expect(mockPlugin.removeAliases).toHaveBeenCalledWith({
         labels: [LABEL],
@@ -78,40 +78,40 @@ describe('User', () => {
   });
 
   describe('removeAliases', () => {
-    test('should call plugin with correct parameters', () => {
+    test('should call plugin with correct parameters', async () => {
       const labels = [LABEL, 'custom_id', 'external_id'];
-      user.removeAliases(labels);
+      await user.removeAliases(labels);
 
       expect(mockPlugin.removeAliases).toHaveBeenCalledWith({ labels });
     });
 
-    test('should handle empty array', () => {
+    test('should handle empty array', async () => {
       const labels: string[] = [];
-      user.removeAliases(labels);
+      await user.removeAliases(labels);
 
       expect(mockPlugin.removeAliases).toHaveBeenCalledWith({ labels });
     });
   });
 
   describe('addEmail', () => {
-    test('should call plugin with correct parameters', () => {
-      user.addEmail(EMAIL);
+    test('should call plugin with correct parameters', async () => {
+      await user.addEmail(EMAIL);
 
       expect(mockPlugin.addEmail).toHaveBeenCalledWith({ email: EMAIL });
     });
   });
 
   describe('removeEmail', () => {
-    test('should call plugin with correct parameters', () => {
-      user.removeEmail(EMAIL);
+    test('should call plugin with correct parameters', async () => {
+      await user.removeEmail(EMAIL);
 
       expect(mockPlugin.removeEmail).toHaveBeenCalledWith({ email: EMAIL });
     });
   });
 
   describe('addSms', () => {
-    test('should call plugin with correct parameters', () => {
-      user.addSms(SMS_NUMBER);
+    test('should call plugin with correct parameters', async () => {
+      await user.addSms(SMS_NUMBER);
 
       expect(mockPlugin.addSms).toHaveBeenCalledWith({
         smsNumber: SMS_NUMBER,
@@ -120,8 +120,8 @@ describe('User', () => {
   });
 
   describe('removeSms', () => {
-    test('should call plugin with correct parameters', () => {
-      user.removeSms(SMS_NUMBER);
+    test('should call plugin with correct parameters', async () => {
+      await user.removeSms(SMS_NUMBER);
 
       expect(mockPlugin.removeSms).toHaveBeenCalledWith({
         smsNumber: SMS_NUMBER,
@@ -130,10 +130,10 @@ describe('User', () => {
   });
 
   describe('addTag', () => {
-    test('should call plugin with correct parameters', () => {
+    test('should call plugin with correct parameters', async () => {
       const key = 'level';
       const value = 'premium';
-      user.addTag(key, value);
+      await user.addTag(key, value);
 
       expect(mockPlugin.addTags).toHaveBeenCalledWith({
         tags: { [key]: value },
@@ -142,16 +142,16 @@ describe('User', () => {
   });
 
   describe('addTags', () => {
-    test('should call plugin with correct parameters', () => {
+    test('should call plugin with correct parameters', async () => {
       const tags = { level: 'premium', status: 'active' };
-      user.addTags(tags);
+      await user.addTags(tags);
 
       expect(mockPlugin.addTags).toHaveBeenCalledWith({ tags });
     });
 
-    test('should convert non-string values to JSON strings', () => {
+    test('should convert non-string values to JSON strings', async () => {
       const tags = { count: 42, active: true, data: { nested: 'value' } };
-      user.addTags(tags);
+      await user.addTags(tags);
 
       expect(mockPlugin.addTags).toHaveBeenCalledWith({
         tags: { count: '42', active: 'true', data: '{"nested":"value"}' },
@@ -160,25 +160,25 @@ describe('User', () => {
   });
 
   describe('removeTag', () => {
-    test('should call plugin with correct parameters', () => {
+    test('should call plugin with correct parameters', async () => {
       const key = 'level';
-      user.removeTag(key);
+      await user.removeTag(key);
 
       expect(mockPlugin.removeTags).toHaveBeenCalledWith({ keys: [key] });
     });
   });
 
   describe('removeTags', () => {
-    test('should call plugin with correct parameters', () => {
+    test('should call plugin with correct parameters', async () => {
       const keys = ['level', 'status', 'premium'];
-      user.removeTags(keys);
+      await user.removeTags(keys);
 
       expect(mockPlugin.removeTags).toHaveBeenCalledWith({ keys });
     });
 
-    test('should handle empty array', () => {
+    test('should handle empty array', async () => {
       const keys: string[] = [];
-      user.removeTags(keys);
+      await user.removeTags(keys);
 
       expect(mockPlugin.removeTags).toHaveBeenCalledWith({ keys });
     });
@@ -303,17 +303,17 @@ describe('User', () => {
   });
 
   describe('trackEvent', () => {
-    test('should call plugin with only event name', () => {
+    test('should call plugin with only event name', async () => {
       const eventName = 'purchase';
-      user.trackEvent(eventName);
+      await user.trackEvent(eventName);
 
       expect(mockPlugin.trackEvent).toHaveBeenCalledWith({ name: eventName });
     });
 
-    test('should call plugin with event name and properties', () => {
+    test('should call plugin with event name and properties', async () => {
       const eventName = 'purchase';
       const properties = { amount: 99.99, currency: 'USD' };
-      user.trackEvent(eventName, properties);
+      await user.trackEvent(eventName, properties);
 
       expect(mockPlugin.trackEvent).toHaveBeenCalledWith({
         name: eventName,
@@ -321,24 +321,24 @@ describe('User', () => {
       });
     });
 
-    test('should not call plugin when properties are not serializable', () => {
+    test('should not call plugin when properties are not serializable', async () => {
       const eventName = 'purchase';
       const circularObj: Record<string, unknown> = { name: 'test' };
       circularObj.self = circularObj;
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      user.trackEvent(eventName, circularObj);
+      await user.trackEvent(eventName, circularObj);
 
       expect(consoleSpy).toHaveBeenCalledWith('Properties must be a JSON-serializable object');
       expect(mockPlugin.trackEvent).not.toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
 
-    test('should not call plugin when properties is an array', () => {
+    test('should not call plugin when properties is an array', async () => {
       const eventName = 'purchase';
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      user.trackEvent(eventName, ['item1', 'item2'] as unknown as object);
+      await user.trackEvent(eventName, ['item1', 'item2'] as unknown as object);
 
       expect(consoleSpy).toHaveBeenCalledWith('Properties must be a JSON-serializable object');
       expect(mockPlugin.trackEvent).not.toHaveBeenCalled();

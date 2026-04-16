@@ -143,17 +143,17 @@ export default class PushSubscription {
 
   /**
    * Call this method to receive push notifications on the device or to resume receiving of push notifications after calling optOut. If needed, this method will prompt the user for push notifications permission.
-   * @returns void
+   * @returns Promise<void>
    */
-  optIn(): void {
-    void this._plugin.optInPushSubscription();
+  optIn(): Promise<void> {
+    return this._plugin.optInPushSubscription();
   }
 
   /**
    * If at any point you want the user to stop receiving push notifications on the current device (regardless of system-level permission status), you can call this method to opt out.
-   * @returns void
+   * @returns Promise<void>
    */
-  optOut(): void {
-    void this._plugin.optOutPushSubscription();
+  optOut(): Promise<void> {
+    return this._plugin.optOutPushSubscription();
   }
 }

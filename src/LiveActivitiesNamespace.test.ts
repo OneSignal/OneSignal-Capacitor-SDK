@@ -87,8 +87,8 @@ describe('LiveActivities', () => {
   });
 
   describe('setPushToStartToken', () => {
-    test('should call plugin for setPushToStartToken', () => {
-      liveActivities.setPushToStartToken(ACTIVITY_TYPE, SUB_TOKEN);
+    test('should call plugin for setPushToStartToken', async () => {
+      await liveActivities.setPushToStartToken(ACTIVITY_TYPE, SUB_TOKEN);
 
       expect(mockPlugin.setPushToStartToken).toHaveBeenCalledWith({
         activityType: ACTIVITY_TYPE,
@@ -98,8 +98,8 @@ describe('LiveActivities', () => {
   });
 
   describe('removePushToStartToken', () => {
-    test('should call plugin for removePushToStartToken', () => {
-      liveActivities.removePushToStartToken(ACTIVITY_TYPE);
+    test('should call plugin for removePushToStartToken', async () => {
+      await liveActivities.removePushToStartToken(ACTIVITY_TYPE);
 
       expect(mockPlugin.removePushToStartToken).toHaveBeenCalledWith({
         activityType: ACTIVITY_TYPE,
@@ -108,30 +108,30 @@ describe('LiveActivities', () => {
   });
 
   describe('setupDefault', () => {
-    test('should call plugin for setupDefault without options', () => {
-      liveActivities.setupDefault();
+    test('should call plugin for setupDefault without options', async () => {
+      await liveActivities.setupDefault();
 
       expect(mockPlugin.setupDefaultLiveActivity).toHaveBeenCalledWith(undefined);
     });
 
-    test('should call plugin for setupDefault with options', () => {
+    test('should call plugin for setupDefault with options', async () => {
       const options: LiveActivitySetupOptions = {
         enablePushToStart: true,
         enablePushToUpdate: false,
       };
 
-      liveActivities.setupDefault(options);
+      await liveActivities.setupDefault(options);
 
       expect(mockPlugin.setupDefaultLiveActivity).toHaveBeenCalledWith(options);
     });
   });
 
   describe('startDefault', () => {
-    test('should call plugin for startDefault', () => {
+    test('should call plugin for startDefault', async () => {
       const attributes = { key1: 'value1', key2: 'value2' };
       const content = { title: 'Test Title', message: 'Test Message' };
 
-      liveActivities.startDefault(ACTIVITY_ID, attributes, content);
+      await liveActivities.startDefault(ACTIVITY_ID, attributes, content);
 
       expect(mockPlugin.startDefaultLiveActivity).toHaveBeenCalledWith({
         activityId: ACTIVITY_ID,

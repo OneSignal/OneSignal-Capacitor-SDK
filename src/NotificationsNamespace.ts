@@ -179,29 +179,29 @@ export default class Notifications {
 
   /**
    * Removes all OneSignal notifications.
-   * @returns void
+   * @returns Promise<void>
    */
-  clearAll(): void {
-    void this._plugin.clearAllNotifications();
+  clearAll(): Promise<void> {
+    return this._plugin.clearAllNotifications();
   }
 
   /**
    * Android only.
    * Cancels a single OneSignal notification based on its Android notification integer ID.
    * @param  {number} id - notification id to cancel
-   * @returns void
+   * @returns Promise<void>
    */
-  removeNotification(id: number): void {
-    void this._plugin.removeNotification({ id });
+  removeNotification(id: number): Promise<void> {
+    return this._plugin.removeNotification({ id });
   }
 
   /**
    * Android only.
    * Cancels a group of OneSignal notifications with the provided group key.
    * @param  {string} id - notification group id to cancel
-   * @returns void
+   * @returns Promise<void>
    */
-  removeGroupedNotifications(id: string): void {
-    void this._plugin.removeGroupedNotifications({ id });
+  removeGroupedNotifications(id: string): Promise<void> {
+    return this._plugin.removeGroupedNotifications({ id });
   }
 }

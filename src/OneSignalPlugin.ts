@@ -38,12 +38,12 @@ export class OneSignalPlugin {
   /**
    * Initializes the OneSignal SDK. This should be called during startup of the application.
    * @param  {string} appId
-   * @returns void
+   * @returns Promise<void>
    */
-  initialize(appId: string): void {
+  initialize(appId: string): Promise<void> {
     this._appID = appId;
 
-    void this._plugin.initialize({ appId: this._appID }).then(() => {
+    return this._plugin.initialize({ appId: this._appID }).then(() => {
       this.User.pushSubscription._setPropertiesAndObserver();
       this.Notifications._setPropertyAndObserver();
     });
@@ -52,18 +52,18 @@ export class OneSignalPlugin {
   /**
    * Login to OneSignal under the user identified by the [externalId] provided. The act of logging a user into the OneSignal SDK will switch the [user] context to that specific user.
    * @param  {string} externalId
-   * @returns void
+   * @returns Promise<void>
    */
-  login(externalId: string): void {
-    void this._plugin.login({ externalId });
+  login(externalId: string): Promise<void> {
+    return this._plugin.login({ externalId });
   }
 
   /**
    * Logout the user previously logged in via [login]. The [user] property now references a new device-scoped user.
-   * @returns void
+   * @returns Promise<void>
    */
-  logout(): void {
-    void this._plugin.logout();
+  logout(): Promise<void> {
+    return this._plugin.logout();
   }
 
   /**

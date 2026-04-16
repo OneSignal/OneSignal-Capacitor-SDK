@@ -28,7 +28,7 @@ describe('OneSignalPlugin', () => {
   });
 
   test('should initialize with appId', async () => {
-    plugin.initialize(APP_ID);
+    await plugin.initialize(APP_ID);
 
     expect(mockPlugin.initialize).toHaveBeenCalledWith({ appId: APP_ID });
 
@@ -37,15 +37,15 @@ describe('OneSignalPlugin', () => {
     });
   });
 
-  test('should call plugin for login', () => {
+  test('should call plugin for login', async () => {
     const externalId = 'test-user-123';
-    plugin.login(externalId);
+    await plugin.login(externalId);
 
     expect(mockPlugin.login).toHaveBeenCalledWith({ externalId });
   });
 
-  test('should call plugin for logout', () => {
-    plugin.logout();
+  test('should call plugin for logout', async () => {
+    await plugin.logout();
 
     expect(mockPlugin.logout).toHaveBeenCalled();
   });

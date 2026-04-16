@@ -60,8 +60,8 @@ export default class LiveActivities {
    * @param {string} activityType
    * @param {string} token
    */
-  setPushToStartToken(activityType: string, token: string) {
-    void this._plugin.setPushToStartToken({ activityType, token });
+  setPushToStartToken(activityType: string, token: string): Promise<void> {
+    return this._plugin.setPushToStartToken({ activityType, token });
   }
 
   /**
@@ -69,8 +69,8 @@ export default class LiveActivities {
    * for the `activityType`. Only applies to iOS.
    * @param {string} activityType
    */
-  removePushToStartToken(activityType: string) {
-    void this._plugin.removePushToStartToken({ activityType });
+  removePushToStartToken(activityType: string): Promise<void> {
+    return this._plugin.removePushToStartToken({ activityType });
   }
 
   /**
@@ -78,8 +78,8 @@ export default class LiveActivities {
    * Only applies to iOS.
    * @param {LiveActivitySetupOptions} options
    */
-  setupDefault(options?: LiveActivitySetupOptions) {
-    void this._plugin.setupDefaultLiveActivity(options);
+  setupDefault(options?: LiveActivitySetupOptions): Promise<void> {
+    return this._plugin.setupDefaultLiveActivity(options);
   }
 
   /**
@@ -93,8 +93,8 @@ export default class LiveActivities {
     activityId: string,
     attributes: Record<string, unknown>,
     content: Record<string, unknown>,
-  ) {
-    void this._plugin.startDefaultLiveActivity({
+  ): Promise<void> {
+    return this._plugin.startDefaultLiveActivity({
       activityId,
       attributes,
       content,

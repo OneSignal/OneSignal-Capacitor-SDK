@@ -249,17 +249,17 @@ describe('Notifications', () => {
   });
 
   describe('clearAll', () => {
-    test('should call plugin for clearAll', () => {
-      notifications.clearAll();
+    test('should call plugin for clearAll', async () => {
+      await notifications.clearAll();
 
       expect(mockPlugin.clearAllNotifications).toHaveBeenCalled();
     });
   });
 
   describe('removeNotification', () => {
-    test('should call plugin for removeNotification', () => {
+    test('should call plugin for removeNotification', async () => {
       const notificationId = 123;
-      notifications.removeNotification(notificationId);
+      await notifications.removeNotification(notificationId);
 
       expect(mockPlugin.removeNotification).toHaveBeenCalledWith({
         id: notificationId,
@@ -268,9 +268,9 @@ describe('Notifications', () => {
   });
 
   describe('removeGroupedNotifications', () => {
-    test('should call plugin for removeGroupedNotifications', () => {
+    test('should call plugin for removeGroupedNotifications', async () => {
       const groupId = 'test-group-id';
-      notifications.removeGroupedNotifications(groupId);
+      await notifications.removeGroupedNotifications(groupId);
 
       expect(mockPlugin.removeGroupedNotifications).toHaveBeenCalledWith({
         id: groupId,

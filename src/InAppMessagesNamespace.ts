@@ -113,55 +113,55 @@ export default class InAppMessages {
    * Add a trigger for the current user. Triggers are currently explicitly used to determine whether a specific IAM should be displayed to the user.
    * @param  {string} key
    * @param  {string} value
-   * @returns void
+   * @returns Promise<void>
    */
-  addTrigger(key: string, value: string): void {
-    this.addTriggers({ [key]: value });
+  addTrigger(key: string, value: string): Promise<void> {
+    return this.addTriggers({ [key]: value });
   }
 
   /**
    * Add multiple triggers for the current user.
    * @param  {[key: string]: string} triggers
-   * @returns void
+   * @returns Promise<void>
    */
-  addTriggers(triggers: { [key: string]: string }): void {
+  addTriggers(triggers: { [key: string]: string }): Promise<void> {
     Object.keys(triggers).forEach(function (key) {
       if (typeof triggers[key] !== 'string') {
         triggers[key] = JSON.stringify(triggers[key]);
       }
     });
 
-    void this._plugin.addTriggers({ triggers });
+    return this._plugin.addTriggers({ triggers });
   }
 
   /**
    * Remove the trigger with the provided key from the current user.
    * @param  {string} key
-   * @returns void
+   * @returns Promise<void>
    */
-  removeTrigger(key: string): void {
-    this.removeTriggers([key]);
+  removeTrigger(key: string): Promise<void> {
+    return this.removeTriggers([key]);
   }
 
   /**
    * Remove multiple triggers from the current user.
    * @param  {string[]} keys
-   * @returns void
+   * @returns Promise<void>
    */
-  removeTriggers(keys: string[]): void {
+  removeTriggers(keys: string[]): Promise<void> {
     if (!Array.isArray(keys)) {
       console.error('OneSignal: removeTriggers: argument must be of type Array');
     }
 
-    void this._plugin.removeTriggers({ keys });
+    return this._plugin.removeTriggers({ keys });
   }
 
   /**
    * Clear all triggers from the current user.
-   * @returns void
+   * @returns Promise<void>
    */
-  clearTriggers(): void {
-    void this._plugin.clearTriggers();
+  clearTriggers(): Promise<void> {
+    return this._plugin.clearTriggers();
   }
 
   /**

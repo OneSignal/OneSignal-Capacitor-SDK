@@ -10,28 +10,28 @@ export default class Session {
   /**
    * Add an outcome with the provided name, captured against the current session.
    * @param  {string} name
-   * @returns void
+   * @returns Promise<void>
    */
-  addOutcome(name: string): void {
-    void this._plugin.addOutcome({ name });
+  addOutcome(name: string): Promise<void> {
+    return this._plugin.addOutcome({ name });
   }
 
   /**
    * Add a unique outcome with the provided name, captured against the current session.
    * @param  {string} name
-   * @returns void
+   * @returns Promise<void>
    */
-  addUniqueOutcome(name: string): void {
-    void this._plugin.addUniqueOutcome({ name });
+  addUniqueOutcome(name: string): Promise<void> {
+    return this._plugin.addUniqueOutcome({ name });
   }
 
   /**
    * Add an outcome with the provided name and value, captured against the current session.
    * @param  {string} name
    * @param  {number} value
-   * @returns void
+   * @returns Promise<void>
    */
-  addOutcomeWithValue(name: string, value: number): void {
-    void this._plugin.addOutcomeWithValue({ name, value });
+  addOutcomeWithValue(name: string, value: number): Promise<void> {
+    return this._plugin.addOutcomeWithValue({ name, value });
   }
 }

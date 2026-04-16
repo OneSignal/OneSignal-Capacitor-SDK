@@ -17,8 +17,8 @@ describe('Location', () => {
   });
 
   describe('requestPermission', () => {
-    test('should call plugin for requestPermission', () => {
-      location.requestPermission();
+    test('should call plugin for requestPermission', async () => {
+      await location.requestPermission();
 
       expect(mockPlugin.requestLocationPermission).toHaveBeenCalled();
     });
