@@ -94,7 +94,7 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
         OneSignal.InAppMessages.addClickListener(self)
 
         if let pending = pendingClickEvent {
-            notifyListeners("notificationClick", data: pending.jsonRepresentation)
+            sendNotificationClickEvent(pending)
             pendingClickEvent = nil
         }
         call.resolve()
@@ -130,13 +130,13 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
 
     @objc func setLogLevel(_ call: CAPPluginCall) {
         let level = call.getInt("logLevel") ?? 0
-        OneSignal.Debug.setLogLevel(ONE_S_LOG_LEVEL(rawValue: UInt32(level))!)
+        OneSignal.Debug.setLogLevel(ONE_S_LOG_LEVEL(rawValue: UInt(level))!)
         call.resolve()
     }
 
     @objc func setAlertLevel(_ call: CAPPluginCall) {
         let level = call.getInt("logLevel") ?? 0
-        OneSignal.Debug.setAlertLevel(ONE_S_LOG_LEVEL(rawValue: UInt32(level))!)
+        OneSignal.Debug.setAlertLevel(ONE_S_LOG_LEVEL(rawValue: UInt(level))!)
         call.resolve()
     }
 
@@ -242,7 +242,7 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
             return
         }
         let properties = call.getObject("properties")
-        OneSignal.User.trackEvent(withName: name, properties: properties)
+        OneSignal.User.trackEvent(name: name, properties: properties)
         call.resolve()
     }
 
@@ -277,7 +277,7 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
     }
 
     @objc func permissionNative(_ call: CAPPluginCall) {
-        call.resolve(["permission": OneSignal.Notifications.permissionNative().rawValue])
+        call.resolve(["permission": OneSignal.Notifications.permissionNative.rawValue])
     }
 
     @objc func requestPermission(_ call: CAPPluginCall) {
@@ -413,7 +413,7 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
             return
         }
         let value = call.getFloat("value") ?? 0
-        OneSignal.Session.addOutcome(withValue: name, value: NSNumber(value: value))
+        OneSignal.Session.addOutcome(name, NSNumber(value: value))
         call.resolve()
     }
 
@@ -445,7 +445,7 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
         OneSignal.LiveActivities.enter(activityId, withToken: token, withSuccess: { _ in
             call.resolve()
         }, withFailure: { error in
-            call.reject(error.localizedDescription)
+            call.reject(error?.localizedDescription ?? "Unknown error")
         })
     }
 
@@ -457,7 +457,7 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
         OneSignal.LiveActivities.exit(activityId, withSuccess: { _ in
             call.resolve()
         }, withFailure: { error in
-            call.reject(error.localizedDescription)
+            call.reject(error?.localizedDescription ?? "Unknown error")
         })
     }
 
@@ -508,7 +508,7 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
                 laOptions?.enablePushToStart = enablePushToStart
                 laOptions?.enablePushToUpdate = enablePushToUpdate
             }
-            OneSignalLiveActivitiesManagerImpl.setupDefault(withOptions: laOptions)
+            OneSignalLiveActivitiesManagerImpl.setupDefault(options: laOptions)
         }
         #endif
         call.resolve()
@@ -536,31 +536,30 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
     }
 
     public func onPushSubscriptionDidChange(state: OSPushSubscriptionChangedState) {
-        var result: [String: Any] = [:]
-        result["previous"] = [
-            "id": state.previous.id ?? NSNull(),
-            "token": state.previous.token ?? NSNull(),
-            "optedIn": state.previous.optedIn
-        ]
-        result["current"] = [
-            "id": state.current.id ?? NSNull(),
-            "token": state.current.token ?? NSNull(),
-            "optedIn": state.current.optedIn
-        ]
-        notifyListeners("pushSubscriptionChange", data: result)
+        var previous: [String: Any] = ["optedIn": state.previous.optedIn]
+        if let id = state.previous.id { previous["id"] = id }
+        if let token = state.previous.token { previous["token"] = token }
+
+        var current: [String: Any] = ["optedIn": state.current.optedIn]
+        if let id = state.current.id { current["id"] = id }
+        if let token = state.current.token { current["token"] = token }
+
+        notifyListeners("pushSubscriptionChange", data: [
+            "previous": previous,
+            "current": current
+        ])
     }
 
     public func onUserStateDidChange(state: OSUserChangedState) {
-        var result: [String: Any] = [:]
-        result["current"] = [
-            "onesignalId": state.current.onesignalId ?? NSNull(),
-            "externalId": state.current.externalId ?? NSNull()
-        ]
-        notifyListeners("userStateChange", data: result)
+        var current: [String: Any] = [:]
+        if let onesignalId = state.current.onesignalId { current["onesignalId"] = onesignalId }
+        if let externalId = state.current.externalId { current["externalId"] = externalId }
+
+        notifyListeners("userStateChange", data: ["current": current])
     }
 
     public func onWillDisplay(event: OSNotificationWillDisplayEvent) {
-        let notificationId = event.notification.notificationId
+        guard let notificationId = event.notification.notificationId else { return }
         notificationWillDisplayCache[notificationId] = event
         event.preventDefault()
         if let data = event.notification.stringify().data(using: .utf8),
@@ -571,26 +570,45 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
 
     public func onClick(event: OSNotificationClickEvent) {
         if bridge != nil {
-            notifyListeners("notificationClick", data: event.jsonRepresentation)
+            sendNotificationClickEvent(event)
         } else {
             pendingClickEvent = event
         }
     }
 
+    private func sendNotificationClickEvent(_ event: OSNotificationClickEvent) {
+        if let data = event.stringify().data(using: .utf8),
+           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            notifyListeners("notificationClick", data: json)
+        }
+    }
+
+    @objc(onWillDisplayInAppMessage:)
     public func onWillDisplay(event: OSInAppMessageWillDisplayEvent) {
-        notifyListeners("inAppMessageWillDisplay", data: event.jsonRepresentation)
+        notifyListeners("inAppMessageWillDisplay", data: [
+            "message": ["messageId": event.message.messageId]
+        ])
     }
 
+    @objc(onDidDisplayInAppMessage:)
     public func onDidDisplay(event: OSInAppMessageDidDisplayEvent) {
-        notifyListeners("inAppMessageDidDisplay", data: event.jsonRepresentation)
+        notifyListeners("inAppMessageDidDisplay", data: [
+            "message": ["messageId": event.message.messageId]
+        ])
     }
 
+    @objc(onWillDismissInAppMessage:)
     public func onWillDismiss(event: OSInAppMessageWillDismissEvent) {
-        notifyListeners("inAppMessageWillDismiss", data: event.jsonRepresentation)
+        notifyListeners("inAppMessageWillDismiss", data: [
+            "message": ["messageId": event.message.messageId]
+        ])
     }
 
+    @objc(onDidDismissInAppMessage:)
     public func onDidDismiss(event: OSInAppMessageDidDismissEvent) {
-        notifyListeners("inAppMessageDidDismiss", data: event.jsonRepresentation)
+        notifyListeners("inAppMessageDidDismiss", data: [
+            "message": ["messageId": event.message.messageId]
+        ])
     }
 
     public func onClick(event: OSInAppMessageClickEvent) {
@@ -614,7 +632,7 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
         clickResult["urlTarget"] = urlTargetStr
 
         notifyListeners("inAppMessageClick", data: [
-            "message": event.message.jsonRepresentation,
+            "message": event.message.jsonRepresentation as? [String: Any] ?? [:],
             "result": clickResult
         ])
     }

@@ -18,6 +18,15 @@ import com.onesignal.notifications.INotificationClickEvent
 import com.onesignal.notifications.INotificationClickListener
 import com.onesignal.notifications.INotificationLifecycleListener
 import com.onesignal.notifications.INotificationWillDisplayEvent
+import com.onesignal.notifications.IPermissionObserver
+import com.onesignal.user.state.IUserStateObserver
+import com.onesignal.user.state.UserChangedState
+import com.onesignal.user.subscriptions.IPushSubscriptionObserver
+import com.onesignal.user.subscriptions.PushSubscriptionChangedState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.json.JSONArray
 import org.json.JSONObject
 
 @CapacitorPlugin(name = "OneSignalCapacitor")
@@ -45,48 +54,57 @@ class OneSignalCapacitorPlugin : Plugin(),
         OneSignalWrapper.sdkVersion = "010000"
         OneSignal.initWithContext(context, appId)
 
-        OneSignal.Notifications.addPermissionObserver { permission ->
-            val ret = JSObject()
-            ret.put("permission", permission)
-            notifyListeners("permissionChange", ret)
-        }
+        OneSignal.Notifications.addPermissionObserver(object : IPermissionObserver {
+            override fun onNotificationPermissionChange(permission: Boolean) {
+                val ret = JSObject()
+                ret.put("permission", permission)
+                notifyListeners("permissionChange", ret)
+            }
+        })
 
         OneSignal.Notifications.addForegroundLifecycleListener(this)
         OneSignal.Notifications.addClickListener(this)
 
-        OneSignal.User.pushSubscription.addObserver { state ->
-            val ret = JSObject()
-            val prev = JSObject()
-            prev.put("id", state.previous.id ?: JSONObject.NULL)
-            prev.put("token", state.previous.token ?: JSONObject.NULL)
-            prev.put("optedIn", state.previous.optedIn)
-            ret.put("previous", prev)
+        OneSignal.User.pushSubscription.addObserver(object : IPushSubscriptionObserver {
+            override fun onPushSubscriptionChange(state: PushSubscriptionChangedState) {
+                val ret = JSObject()
+                val prev = JSObject()
+                prev.put("id", state.previous.id.ifEmpty { JSONObject.NULL })
+                prev.put("token", state.previous.token.ifEmpty { JSONObject.NULL })
+                prev.put("optedIn", state.previous.optedIn)
+                ret.put("previous", prev)
 
-            val curr = JSObject()
-            curr.put("id", state.current.id ?: JSONObject.NULL)
-            curr.put("token", state.current.token ?: JSONObject.NULL)
-            curr.put("optedIn", state.current.optedIn)
-            ret.put("current", curr)
+                val curr = JSObject()
+                curr.put("id", state.current.id.ifEmpty { JSONObject.NULL })
+                curr.put("token", state.current.token.ifEmpty { JSONObject.NULL })
+                curr.put("optedIn", state.current.optedIn)
+                ret.put("current", curr)
 
-            notifyListeners("pushSubscriptionChange", ret)
-        }
+                notifyListeners("pushSubscriptionChange", ret)
+            }
+        })
 
-        OneSignal.User.addObserver { state ->
-            val ret = JSObject()
-            val curr = JSObject()
-            curr.put("onesignalId", state.current.onesignalId ?: JSONObject.NULL)
-            curr.put("externalId", state.current.externalId ?: JSONObject.NULL)
-            ret.put("current", curr)
-            notifyListeners("userStateChange", ret)
-        }
+        OneSignal.User.addObserver(object : IUserStateObserver {
+            override fun onUserStateChange(state: UserChangedState) {
+                val ret = JSObject()
+                val curr = JSObject()
+                curr.put("onesignalId", state.current.onesignalId.ifEmpty { JSONObject.NULL })
+                curr.put("externalId", state.current.externalId.ifEmpty { JSONObject.NULL })
+                ret.put("current", curr)
+                notifyListeners("userStateChange", ret)
+            }
+        })
 
         OneSignal.InAppMessages.addLifecycleListener(this)
         OneSignal.InAppMessages.addClickListener(this)
 
         pendingClickEvent?.let { event ->
             val ret = JSObject()
-            ret.put("result", JSObject(event.result.toJSONObject().toString()))
-            ret.put("notification", JSObject(event.notification.toJSONObject().toString()))
+            val clickResult = JSObject()
+            clickResult.put("actionId", event.result.actionId)
+            clickResult.put("url", event.result.url)
+            ret.put("result", clickResult)
+            ret.put("notification", JSObject(event.notification.rawPayload))
             notifyListeners("notificationClick", ret)
             pendingClickEvent = null
         }
@@ -114,14 +132,14 @@ class OneSignalCapacitorPlugin : Plugin(),
     @PluginMethod
     fun setConsentRequired(call: PluginCall) {
         val required = call.getBoolean("required") ?: false
-        OneSignal.setConsentRequired(required)
+        OneSignal.consentRequired = required
         call.resolve()
     }
 
     @PluginMethod
     fun setConsentGiven(call: PluginCall) {
         val granted = call.getBoolean("granted") ?: false
-        OneSignal.setConsentGiven(granted)
+        OneSignal.consentGiven = granted
         call.resolve()
     }
 
@@ -165,7 +183,7 @@ class OneSignalCapacitorPlugin : Plugin(),
             return
         }
         val aliases = mutableMapOf<String, String>()
-        aliasesObj.keys().forEach { key -> aliases[key] = aliasesObj.getString(key) }
+        aliasesObj.keys().forEach { key -> aliasesObj.getString(key)?.let { aliases[key] = it } }
         OneSignal.User.addAliases(aliases)
         call.resolve()
     }
@@ -235,7 +253,7 @@ class OneSignalCapacitorPlugin : Plugin(),
             return
         }
         val tags = mutableMapOf<String, String>()
-        tagsObj.keys().forEach { key -> tags[key] = tagsObj.getString(key) }
+        tagsObj.keys().forEach { key -> tagsObj.getString(key)?.let { tags[key] = it } }
         OneSignal.User.addTags(tags)
         call.resolve()
     }
@@ -267,14 +285,14 @@ class OneSignalCapacitorPlugin : Plugin(),
     @PluginMethod
     fun getOnesignalId(call: PluginCall) {
         val ret = JSObject()
-        ret.put("onesignalId", OneSignal.User.onesignalId ?: JSONObject.NULL)
+        ret.put("onesignalId", OneSignal.User.onesignalId.ifEmpty { JSONObject.NULL })
         call.resolve(ret)
     }
 
     @PluginMethod
     fun getExternalId(call: PluginCall) {
         val ret = JSObject()
-        ret.put("externalId", OneSignal.User.externalId ?: JSONObject.NULL)
+        ret.put("externalId", OneSignal.User.externalId.ifEmpty { JSONObject.NULL })
         call.resolve(ret)
     }
 
@@ -286,16 +304,35 @@ class OneSignalCapacitorPlugin : Plugin(),
             return
         }
         val propertiesObj = call.getObject("properties")
-        val properties = if (propertiesObj != null) {
-            val map = mutableMapOf<String, Any>()
-            propertiesObj.keys().forEach { key ->
-                map[key] = propertiesObj.get(key)
-            }
-            map
-        } else null
+        val properties = propertiesObj?.let { jsonObjectToMap(it) }
 
         OneSignal.User.trackEvent(name, properties)
         call.resolve()
+    }
+
+    private fun jsonObjectToMap(jsonObject: JSONObject): Map<String, Any?> {
+        val map = mutableMapOf<String, Any?>()
+        jsonObject.keys().forEach { key ->
+            map[key] = convertJsonValue(jsonObject.get(key))
+        }
+        return map
+    }
+
+    private fun jsonArrayToList(jsonArray: JSONArray): List<Any?> {
+        val list = mutableListOf<Any?>()
+        for (i in 0 until jsonArray.length()) {
+            list.add(convertJsonValue(jsonArray.get(i)))
+        }
+        return list
+    }
+
+    private fun convertJsonValue(value: Any): Any? {
+        return when {
+            value == JSONObject.NULL -> null
+            value is JSONObject -> jsonObjectToMap(value)
+            value is JSONArray -> jsonArrayToList(value)
+            else -> value
+        }
     }
 
     // endregion
@@ -356,7 +393,8 @@ class OneSignalCapacitorPlugin : Plugin(),
     @PluginMethod
     fun requestPermission(call: PluginCall) {
         val fallback = call.getBoolean("fallbackToSettings") ?: false
-        OneSignal.Notifications.requestPermission(fallback) { accepted ->
+        CoroutineScope(Dispatchers.Main).launch {
+            val accepted = OneSignal.Notifications.requestPermission(fallback)
             val ret = JSObject()
             ret.put("permission", accepted)
             call.resolve(ret)
@@ -466,7 +504,7 @@ class OneSignalCapacitorPlugin : Plugin(),
             return
         }
         val triggers = mutableMapOf<String, String>()
-        triggersObj.keys().forEach { key -> triggers[key] = triggersObj.getString(key) }
+        triggersObj.keys().forEach { key -> triggersObj.getString(key)?.let { triggers[key] = it } }
         OneSignal.InAppMessages.addTriggers(triggers)
         call.resolve()
     }
@@ -549,8 +587,10 @@ class OneSignalCapacitorPlugin : Plugin(),
 
     @PluginMethod
     fun requestLocationPermission(call: PluginCall) {
-        OneSignal.Location.requestPermission()
-        call.resolve()
+        CoroutineScope(Dispatchers.Main).launch {
+            OneSignal.Location.requestPermission()
+            call.resolve()
+        }
     }
 
     @PluginMethod
@@ -606,18 +646,21 @@ class OneSignalCapacitorPlugin : Plugin(),
     // region Observer Callbacks
 
     override fun onWillDisplay(event: INotificationWillDisplayEvent) {
-        val notificationId = event.notification.notificationId
+        val notificationId = event.notification.notificationId ?: return
         notificationWillDisplayCache[notificationId] = event
         event.preventDefault()
-        val ret = JSObject(event.notification.toJSONObject().toString())
+        val ret = JSObject(event.notification.rawPayload)
         notifyListeners("notificationForegroundWillDisplay", ret)
     }
 
     override fun onClick(event: INotificationClickEvent) {
         if (bridge != null) {
             val ret = JSObject()
-            ret.put("result", JSObject(event.result.toJSONObject().toString()))
-            ret.put("notification", JSObject(event.notification.toJSONObject().toString()))
+            val clickResult = JSObject()
+            clickResult.put("actionId", event.result.actionId)
+            clickResult.put("url", event.result.url)
+            ret.put("result", clickResult)
+            ret.put("notification", JSObject(event.notification.rawPayload))
             notifyListeners("notificationClick", ret)
         } else {
             pendingClickEvent = event
@@ -649,12 +692,7 @@ class OneSignalCapacitorPlugin : Plugin(),
     }
 
     override fun onClick(event: IInAppMessageClickEvent) {
-        val urlTarget = when (event.result.urlTarget.ordinal) {
-            0 -> "browser"
-            1 -> "webview"
-            2 -> "replacement"
-            else -> "browser"
-        }
+        val urlTarget = event.result.urlTarget?.toString() ?: "browser"
 
         val clickResult = JSObject()
         clickResult.put("closingMessage", event.result.closingMessage)

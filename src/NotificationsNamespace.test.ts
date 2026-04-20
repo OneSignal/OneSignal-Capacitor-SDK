@@ -19,11 +19,11 @@ describe('Notifications', () => {
     expect(notifications).toBeInstanceOf(Notifications);
   });
 
-  describe('getPermissionAsync', () => {
+  describe('hasPermission', () => {
     test('should return a Promise', () => {
       mockPlugin.getPermission.mockResolvedValue({ permission: true });
 
-      const promise = notifications.getPermissionAsync();
+      const promise = notifications.hasPermission();
 
       expect(promise).toBeInstanceOf(Promise);
       return promise;
@@ -32,7 +32,7 @@ describe('Notifications', () => {
     test('should resolve with boolean value', async () => {
       mockPlugin.getPermission.mockResolvedValue({ permission: true });
 
-      const result = await notifications.getPermissionAsync();
+      const result = await notifications.hasPermission();
 
       expect(result).toBe(true);
     });
@@ -41,7 +41,7 @@ describe('Notifications', () => {
       const mockError = new Error('Permission check failed');
       mockPlugin.getPermission.mockRejectedValue(mockError);
 
-      await expect(notifications.getPermissionAsync()).rejects.toThrow(mockError.message);
+      await expect(notifications.hasPermission()).rejects.toThrow(mockError.message);
     });
   });
 
@@ -274,22 +274,6 @@ describe('Notifications', () => {
 
       expect(mockPlugin.removeGroupedNotifications).toHaveBeenCalledWith({
         id: groupId,
-      });
-    });
-  });
-
-  describe('hasPermission (deprecated)', () => {
-    test('should return false when _permission is undefined', () => {
-      const result = notifications.hasPermission();
-      expect(result).toBe(false);
-    });
-
-    test('should return true when permission is set via getPermission', async () => {
-      mockPlugin.getPermission.mockResolvedValue({ permission: true });
-      notifications._setPropertyAndObserver();
-
-      await vi.waitFor(() => {
-        expect(notifications.hasPermission()).toBe(true);
       });
     });
   });

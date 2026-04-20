@@ -45,7 +45,6 @@ export class OneSignalPlugin {
 
     return this._plugin.initialize({ appId: this._appID }).then(() => {
       this.User.pushSubscription._setPropertiesAndObserver();
-      this.Notifications._setPropertyAndObserver();
     });
   }
 

@@ -137,8 +137,8 @@ jobs:
             exit 1
           fi
 
-          sed -i '' "s/s\.dependency 'OneSignalXCFramework', '[^']*'/s.dependency 'OneSignalXCFramework', '$VERSION'/" OneSignalCapacitorPlugin.podspec
-          echo "✓ Updated OneSignalCapacitorPlugin.podspec with iOS SDK ${VERSION}"
+          sed -i '' "s/s\.dependency 'OneSignalXCFramework', '[^']*'/s.dependency 'OneSignalXCFramework', '$VERSION'/" OnesignalCapacitorPlugin.podspec
+          echo "✓ Updated OnesignalCapacitorPlugin.podspec with iOS SDK ${VERSION}"
 
           # Only commit if there are changes
           git add -A
