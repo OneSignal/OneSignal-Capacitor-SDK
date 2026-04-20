@@ -1,0 +1,32 @@
+node_modules
+*.tgz
+
+# Build & test output
+dist/
+coverage/
+
+# macOS
+.DS_Store
+
+# IDE
+.idea
+*.iml
+
+# iOS
+Pods/
+Podfile.lock
+Package.resolved
+DerivedData/
+xcuserdata/
+/.build
+.swiftpm/
+
+# Android
+.gradle/
+build/
+local.properties
+**/capacitor.build.gradle
+*.orig
+*.apk
+*.dex
+*.class

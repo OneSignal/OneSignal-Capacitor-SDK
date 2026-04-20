@@ -1,0 +1,25 @@
+# Version catalog for the OneSignal Capacitor Android plugin.
+# Defaults below can be overridden by the consuming app via gradle
+# properties or rootProject.extra (see android/build.gradle.kts).
+#
+# compileSdk / minSdk / targetSdk / kotlin / appcompat / junit follow
+# Capacitor 7's required versions, not the OneSignal Android SDK's.
+
+[versions]
+androidGradlePlugin = "8.7.3"
+androidxAppCompat = "1.7.0"
+androidxEspresso = "3.6.1"
+androidxTestJunit = "1.2.1"
+compileSdk = "35"
+junit = "4.13.2"
+kotlin = "1.9.25"
+minSdk = "23"
+onesignal = "5.7.7"
+targetSdk = "35"
+
+[libraries]
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidxAppCompat" }
+androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidxEspresso" }
+androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidxTestJunit" }
+junit = { module = "junit:junit", version.ref = "junit" }
+onesignal = { module = "com.onesignal:OneSignal", version.ref = "onesignal" }

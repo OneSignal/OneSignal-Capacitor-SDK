@@ -1,0 +1,67 @@
+import { vi } from 'vitest';
+
+import type { OneSignalCapacitorPlugin } from '../src/definitions';
+
+export type MockPlugin = {
+  [K in keyof OneSignalCapacitorPlugin]: ReturnType<typeof vi.fn>;
+} & OneSignalCapacitorPlugin;
+
+export function createMockPlugin(): MockPlugin {
+  return {
+    initialize: vi.fn().mockResolvedValue(undefined),
+    login: vi.fn().mockResolvedValue(undefined),
+    logout: vi.fn().mockResolvedValue(undefined),
+    setConsentRequired: vi.fn().mockResolvedValue(undefined),
+    setConsentGiven: vi.fn().mockResolvedValue(undefined),
+    setLogLevel: vi.fn().mockResolvedValue(undefined),
+    setAlertLevel: vi.fn().mockResolvedValue(undefined),
+    setLanguage: vi.fn().mockResolvedValue(undefined),
+    addAliases: vi.fn().mockResolvedValue(undefined),
+    removeAliases: vi.fn().mockResolvedValue(undefined),
+    addEmail: vi.fn().mockResolvedValue(undefined),
+    removeEmail: vi.fn().mockResolvedValue(undefined),
+    addSms: vi.fn().mockResolvedValue(undefined),
+    removeSms: vi.fn().mockResolvedValue(undefined),
+    addTags: vi.fn().mockResolvedValue(undefined),
+    removeTags: vi.fn().mockResolvedValue(undefined),
+    getTags: vi.fn().mockResolvedValue({ tags: {} }),
+    getOnesignalId: vi.fn().mockResolvedValue({ onesignalId: null }),
+    getExternalId: vi.fn().mockResolvedValue({ externalId: null }),
+    trackEvent: vi.fn().mockResolvedValue(undefined),
+    getPushSubscriptionId: vi.fn().mockResolvedValue({ id: null }),
+    getPushSubscriptionToken: vi.fn().mockResolvedValue({ token: null }),
+    getPushSubscriptionOptedIn: vi.fn().mockResolvedValue({ optedIn: false }),
+    optInPushSubscription: vi.fn().mockResolvedValue(undefined),
+    optOutPushSubscription: vi.fn().mockResolvedValue(undefined),
+    getPermission: vi.fn().mockResolvedValue({ permission: false }),
+    permissionNative: vi.fn().mockResolvedValue({ permission: 0 }),
+    requestPermission: vi.fn().mockResolvedValue({ permission: false }),
+    canRequestPermission: vi.fn().mockResolvedValue({ canRequest: true }),
+    registerForProvisionalAuthorization: vi.fn().mockResolvedValue({ accepted: false }),
+    clearAllNotifications: vi.fn().mockResolvedValue(undefined),
+    removeNotification: vi.fn().mockResolvedValue(undefined),
+    removeGroupedNotifications: vi.fn().mockResolvedValue(undefined),
+    preventDefault: vi.fn().mockResolvedValue(undefined),
+    proceedWithWillDisplay: vi.fn().mockResolvedValue(undefined),
+    displayNotification: vi.fn().mockResolvedValue(undefined),
+    addTriggers: vi.fn().mockResolvedValue(undefined),
+    removeTriggers: vi.fn().mockResolvedValue(undefined),
+    clearTriggers: vi.fn().mockResolvedValue(undefined),
+    setPaused: vi.fn().mockResolvedValue(undefined),
+    isPaused: vi.fn().mockResolvedValue({ paused: false }),
+    addOutcome: vi.fn().mockResolvedValue(undefined),
+    addUniqueOutcome: vi.fn().mockResolvedValue(undefined),
+    addOutcomeWithValue: vi.fn().mockResolvedValue(undefined),
+    requestLocationPermission: vi.fn().mockResolvedValue(undefined),
+    setLocationShared: vi.fn().mockResolvedValue(undefined),
+    isLocationShared: vi.fn().mockResolvedValue({ shared: false }),
+    enterLiveActivity: vi.fn().mockResolvedValue(undefined),
+    exitLiveActivity: vi.fn().mockResolvedValue(undefined),
+    setPushToStartToken: vi.fn().mockResolvedValue(undefined),
+    removePushToStartToken: vi.fn().mockResolvedValue(undefined),
+    setupDefaultLiveActivity: vi.fn().mockResolvedValue(undefined),
+    startDefaultLiveActivity: vi.fn().mockResolvedValue(undefined),
+    addListener: vi.fn().mockResolvedValue({ remove: vi.fn() }),
+    removeAllListeners: vi.fn().mockResolvedValue(undefined),
+  };
+}
