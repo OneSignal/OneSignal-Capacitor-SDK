@@ -8,11 +8,11 @@ import OneSignal, {
   type InAppMessageWillDisplayEvent,
   type NotificationClickEvent,
   type NotificationWillDisplayEvent,
+  type UserChangedState,
 } from 'onesignal-capacitor-plugin';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { NotificationType } from '../models/NotificationType';
-import OneSignalRepository from '../repositories/OneSignalRepository';
 import LogManager from '../services/LogManager';
 import OneSignalApiService, { API_KEY } from '../services/OneSignalApiService';
 import PreferencesService from '../services/PreferencesService';
@@ -20,8 +20,45 @@ import PreferencesService from '../services/PreferencesService';
 const TAG = 'useOneSignal';
 const log = LogManager.getInstance();
 const apiService = OneSignalApiService.getInstance();
-const repository = new OneSignalRepository(apiService);
 const preferences = new PreferencesService();
+const IS_NATIVE = Capacitor.isNativePlatform();
+
+async function getPushSubscriptionId(): Promise<string | null> {
+  if (!IS_NATIVE) return null;
+  return OneSignal.User.pushSubscription.getIdAsync();
+}
+
+async function isPushOptedIn(): Promise<boolean> {
+  if (!IS_NATIVE) return false;
+  return OneSignal.User.pushSubscription.getOptedInAsync();
+}
+
+async function hasPermission(): Promise<boolean> {
+  if (!IS_NATIVE) return false;
+  return OneSignal.Notifications.hasPermission();
+}
+
+async function getOnesignalId(): Promise<string | null> {
+  if (!IS_NATIVE) return null;
+  return OneSignal.User.getOnesignalId();
+}
+
+async function getExternalId(): Promise<string | null> {
+  if (!IS_NATIVE) return null;
+  return OneSignal.User.getExternalId();
+}
+
+async function postNotification(type: NotificationType): Promise<boolean> {
+  const subscriptionId = await getPushSubscriptionId();
+  if (!subscriptionId) return false;
+  return apiService.sendNotification(type, subscriptionId);
+}
+
+async function postCustomNotification(title: string, body: string): Promise<boolean> {
+  const subscriptionId = await getPushSubscriptionId();
+  if (!subscriptionId) return false;
+  return apiService.sendCustomNotification(title, body, subscriptionId);
+}
 
 function toPairs(pairs: Record<string, string>): [string, string][] {
   return Object.entries(pairs).map(([key, value]) => [key, value]);
@@ -107,37 +144,37 @@ export function useOneSignal(): UseOneSignalReturn {
   const mountedRef = useRef(true);
   const requestSequenceRef = useRef(0);
 
+  // Owns the isLoading toggle and uses a request-sequence guard so stale
+  // results are dropped when a newer fetch starts before this one finishes.
   const fetchUserDataFromApi = useCallback(async () => {
     const requestId = requestSequenceRef.current + 1;
     requestSequenceRef.current = requestId;
+    if (mountedRef.current) {
+      setIsLoading(true);
+    }
 
-    const onesignalId = await repository.getOnesignalId();
-    if (!onesignalId) {
+    try {
+      const onesignalId = await getOnesignalId();
+      if (!onesignalId) return;
+
+      const userData = await apiService.fetchUser(onesignalId);
+      if (!userData) return;
+
+      const externalId = await getExternalId();
+      if (!mountedRef.current || requestSequenceRef.current !== requestId) {
+        return;
+      }
+
+      setAliasesList(Object.entries(userData.aliases));
+      setTagsList(Object.entries(userData.tags));
+      setEmailsList(userData.emails);
+      setSmsNumbersList(userData.smsNumbers);
+      setExternalUserId(externalId ?? userData.externalId);
+    } finally {
       if (mountedRef.current && requestSequenceRef.current === requestId) {
         setIsLoading(false);
       }
-      return;
     }
-
-    const userData = await repository.fetchUser(onesignalId);
-    if (!userData) {
-      if (mountedRef.current && requestSequenceRef.current === requestId) {
-        setIsLoading(false);
-      }
-      return;
-    }
-
-    const externalId = await repository.getExternalId();
-    if (!mountedRef.current || requestSequenceRef.current !== requestId) {
-      return;
-    }
-
-    setAliasesList(Object.entries(userData.aliases));
-    setTagsList(Object.entries(userData.tags));
-    setEmailsList(userData.emails);
-    setSmsNumbersList(userData.smsNumbers);
-    setExternalUserId(externalId ?? userData.externalId);
-    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -191,10 +228,7 @@ export function useOneSignal(): UseOneSignalReturn {
       if (!mountedRef.current) {
         return;
       }
-      const [id, optedIn] = await Promise.all([
-        repository.getPushSubscriptionId(),
-        repository.isPushOptedIn(),
-      ]);
+      const [id, optedIn] = await Promise.all([getPushSubscriptionId(), isPushOptedIn()]);
       if (!mountedRef.current) {
         return;
       }
@@ -206,16 +240,21 @@ export function useOneSignal(): UseOneSignalReturn {
       if (!mountedRef.current) {
         return;
       }
-      setHasNotificationPermission(await repository.hasPermission());
+      setHasNotificationPermission(await hasPermission());
     };
 
-    const userChangeHandler = async () => {
-      log.i(TAG, 'User changed, fetching user data...');
-      if (!mountedRef.current) {
-        return;
-      }
-      setIsLoading(true);
-      await fetchUserDataFromApi();
+    const userChangeHandler = (event: UserChangedState) => {
+      const nextOnesignalId = event.current.onesignalId ?? null;
+      log.i(
+        TAG,
+        `User changed: onesignalId=${nextOnesignalId ?? 'null'}, externalId=${event.current.externalId ?? 'null'}`,
+      );
+
+      // Drive the post-login fetch from the event so it runs only once the
+      // SDK has actually assigned a new onesignalId. On logout (null), skip;
+      // logoutUser already clears local lists.
+      if (nextOnesignalId === null) return;
+      void fetchUserDataFromApi();
     };
 
     const load = async () => {
@@ -235,13 +274,16 @@ export function useOneSignal(): UseOneSignalReturn {
           OneSignal.setConsentGiven(nextPrivacyConsentGiven);
           OneSignal.initialize(nextAppId);
 
-          repository.setupDefaultLiveActivities();
+          OneSignal.LiveActivities.setupDefault({
+            enablePushToStart: true,
+            enablePushToUpdate: true,
+          });
 
           OneSignal.InAppMessages.setPaused(nextIamPaused);
           OneSignal.Location.setShared(nextLocationShared);
 
           if (storedExternalUserId) {
-            repository.loginUser(storedExternalUserId);
+            OneSignal.login(storedExternalUserId);
           }
 
           OneSignal.InAppMessages.addEventListener('willDisplay', handleIamWillDisplay);
@@ -269,11 +311,11 @@ export function useOneSignal(): UseOneSignalReturn {
         return;
       }
 
-      const externalId = await repository.getExternalId();
+      const externalId = await getExternalId();
       const [pushId, pushOptedIn, hasPerm] = await Promise.all([
-        repository.getPushSubscriptionId(),
-        repository.isPushOptedIn(),
-        repository.hasPermission(),
+        getPushSubscriptionId(),
+        isPushOptedIn(),
+        hasPermission(),
       ]);
 
       if (cancelled || !mountedRef.current) {
@@ -290,18 +332,17 @@ export function useOneSignal(): UseOneSignalReturn {
       setIsPushEnabled(pushOptedIn);
       setHasNotificationPermission(hasPerm);
 
-      const onesignalId = await repository.getOnesignalId();
+      const onesignalId = await getOnesignalId();
       if (cancelled || !mountedRef.current) {
         return;
       }
 
       if (onesignalId) {
-        setIsLoading(true);
         await fetchUserDataFromApi();
       }
 
-      if (Capacitor.isNativePlatform() && !cancelled && mountedRef.current) {
-        const granted = await repository.requestPermission(true);
+      if (IS_NATIVE && !cancelled && mountedRef.current) {
+        const granted = await OneSignal.Notifications.requestPermission(true);
         if (mountedRef.current) {
           setHasNotificationPermission(granted);
         }
@@ -337,22 +378,32 @@ export function useOneSignal(): UseOneSignalReturn {
   }, [fetchUserDataFromApi]);
 
   const loginUser = async (nextExternalUserId: string) => {
-    setIsLoading(true);
-    repository.loginUser(nextExternalUserId);
-    preferences.setExternalUserId(nextExternalUserId);
     if (mountedRef.current) {
       setAliasesList([]);
       setEmailsList([]);
       setSmsNumbersList([]);
       setTagsList([]);
       setTriggersList([]);
+      setExternalUserId(nextExternalUserId);
+      setIsLoading(true);
     }
-    log.i(TAG, `Logged in as: ${nextExternalUserId}`);
+
+    try {
+      if (IS_NATIVE) OneSignal.login(nextExternalUserId);
+      preferences.setExternalUserId(nextExternalUserId);
+      log.i(TAG, `Logged in as: ${nextExternalUserId}`);
+      // The user 'change' listener runs fetchUserDataFromApi once the new
+      // onesignalId is assigned; that call clears isLoading in its finally.
+    } catch (err) {
+      log.e(TAG, `Login error: ${String(err)}`);
+      if (mountedRef.current) {
+        setIsLoading(false);
+      }
+    }
   };
 
   const logoutUser = async () => {
-    setIsLoading(true);
-    repository.logoutUser();
+    if (IS_NATIVE) OneSignal.logout();
     preferences.setExternalUserId(null);
     if (mountedRef.current) {
       setExternalUserId(undefined);
@@ -369,7 +420,7 @@ export function useOneSignal(): UseOneSignalReturn {
     if (mountedRef.current) {
       setConsentRequiredState(required);
     }
-    repository.setConsentRequired(required);
+    if (IS_NATIVE) OneSignal.setConsentRequired(required);
     preferences.setConsentRequired(required);
   };
 
@@ -377,22 +428,25 @@ export function useOneSignal(): UseOneSignalReturn {
     if (mountedRef.current) {
       setPrivacyConsentGivenState(granted);
     }
-    repository.setConsentGiven(granted);
+    if (IS_NATIVE) OneSignal.setConsentGiven(granted);
     preferences.setConsentGiven(granted);
   };
 
   const promptPush = async () => {
-    const granted = await repository.requestPermission(true);
+    if (!IS_NATIVE) return;
+    const granted = await OneSignal.Notifications.requestPermission(true);
     if (mountedRef.current) {
       setHasNotificationPermission(granted);
     }
   };
 
   const setPushEnabled = (enabled: boolean) => {
-    if (enabled) {
-      repository.optInPush();
-    } else {
-      repository.optOutPush();
+    if (IS_NATIVE) {
+      if (enabled) {
+        OneSignal.User.pushSubscription.optIn();
+      } else {
+        OneSignal.User.pushSubscription.optOut();
+      }
     }
     setIsPushEnabled(enabled);
     const msg = enabled ? 'Push enabled' : 'Push disabled';
@@ -400,32 +454,32 @@ export function useOneSignal(): UseOneSignalReturn {
   };
 
   const sendNotification = async (type: NotificationType) => {
-    const success = await repository.sendNotification(type);
+    const success = await postNotification(type);
     const msg = success ? `Notification sent: ${type}` : 'Failed to send notification';
     log.i(TAG, msg);
   };
 
   const sendCustomNotification = async (title: string, body: string) => {
-    const success = await repository.sendCustomNotification(title, body);
+    const success = await postCustomNotification(title, body);
     const msg = success ? `Notification sent: ${title}` : 'Failed to send notification';
     log.i(TAG, msg);
   };
 
   const clearAllNotifications = () => {
-    repository.clearAllNotifications();
+    if (IS_NATIVE) OneSignal.Notifications.clearAll();
     log.i(TAG, 'All notifications cleared');
   };
 
   const setIamPaused = async (paused: boolean) => {
     setInAppMessagesPaused(paused);
-    repository.setPaused(paused);
+    if (IS_NATIVE) OneSignal.InAppMessages.setPaused(paused);
     preferences.setIamPaused(paused);
     const msg = paused ? 'In-app messages paused' : 'In-app messages resumed';
     log.i(TAG, msg);
   };
 
   const sendIamTrigger = (iamType: string) => {
-    repository.addTrigger('iam_type', iamType);
+    if (IS_NATIVE) OneSignal.InAppMessages.addTrigger('iam_type', iamType);
     setTriggersList((prev) => {
       const filtered = prev.filter(([key]) => key !== 'iam_type');
       return [...filtered, ['iam_type', iamType] as [string, string]];
@@ -435,26 +489,26 @@ export function useOneSignal(): UseOneSignalReturn {
   };
 
   const addAlias = (label: string, id: string) => {
-    repository.addAlias(label, id);
+    if (IS_NATIVE) OneSignal.User.addAlias(label, id);
     setAliasesList((prev) => [...prev, [label, id]]);
     log.i(TAG, `Alias added: ${label}`);
   };
 
   const addAliases = (pairs: Record<string, string>) => {
-    repository.addAliases(pairs);
+    if (IS_NATIVE) OneSignal.User.addAliases(pairs);
     const newEntries = toPairs(pairs);
     setAliasesList((prev) => [...prev, ...newEntries]);
     log.i(TAG, `${newEntries.length} alias(es) added`);
   };
 
   const addEmail = (email: string) => {
-    repository.addEmail(email);
+    if (IS_NATIVE) OneSignal.User.addEmail(email);
     setEmailsList((prev) => [...prev, email]);
     log.i(TAG, `Email added: ${email}`);
   };
 
   const removeEmail = (email: string) => {
-    repository.removeEmail(email);
+    if (IS_NATIVE) OneSignal.User.removeEmail(email);
     setEmailsList((prev) => {
       const idx = prev.indexOf(email);
       if (idx === -1) return prev;
@@ -464,13 +518,13 @@ export function useOneSignal(): UseOneSignalReturn {
   };
 
   const addSms = (sms: string) => {
-    repository.addSms(sms);
+    if (IS_NATIVE) OneSignal.User.addSms(sms);
     setSmsNumbersList((prev) => [...prev, sms]);
     log.i(TAG, `SMS added: ${sms}`);
   };
 
   const removeSms = (sms: string) => {
-    repository.removeSms(sms);
+    if (IS_NATIVE) OneSignal.User.removeSms(sms);
     setSmsNumbersList((prev) => {
       const idx = prev.indexOf(sms);
       if (idx === -1) return prev;
@@ -480,7 +534,7 @@ export function useOneSignal(): UseOneSignalReturn {
   };
 
   const addTag = (key: string, value: string) => {
-    repository.addTag(key, value);
+    if (IS_NATIVE) OneSignal.User.addTag(key, value);
     setTagsList((prev) => {
       const filtered = prev.filter(([k]) => k !== key);
       return [...filtered, [key, value]];
@@ -489,7 +543,7 @@ export function useOneSignal(): UseOneSignalReturn {
   };
 
   const addTags = (pairs: Record<string, string>) => {
-    repository.addTags(pairs);
+    if (IS_NATIVE) OneSignal.User.addTags(pairs);
     const newEntries = toPairs(pairs);
     setTagsList((prev) => {
       const keys = new Set(newEntries.map(([k]) => k));
@@ -499,29 +553,29 @@ export function useOneSignal(): UseOneSignalReturn {
   };
 
   const removeSelectedTags = (keys: string[]) => {
-    repository.removeTags(keys);
+    if (IS_NATIVE) OneSignal.User.removeTags(keys);
     const keySet = new Set(keys);
     setTagsList((prev) => prev.filter(([k]) => !keySet.has(k)));
     log.i(TAG, `${keys.length} tag(s) removed`);
   };
 
   const sendOutcome = (name: string) => {
-    repository.sendOutcome(name);
+    if (IS_NATIVE) OneSignal.Session.addOutcome(name);
     log.i(TAG, `Outcome sent: ${name}`);
   };
 
   const sendUniqueOutcome = (name: string) => {
-    repository.sendUniqueOutcome(name);
+    if (IS_NATIVE) OneSignal.Session.addUniqueOutcome(name);
     log.i(TAG, `Unique outcome sent: ${name}`);
   };
 
   const sendOutcomeWithValue = (name: string, value: number) => {
-    repository.sendOutcomeWithValue(name, value);
+    if (IS_NATIVE) OneSignal.Session.addOutcomeWithValue(name, value);
     log.i(TAG, `Outcome sent: ${name} = ${value}`);
   };
 
   const addTrigger = (key: string, value: string) => {
-    repository.addTrigger(key, value);
+    if (IS_NATIVE) OneSignal.InAppMessages.addTrigger(key, value);
     setTriggersList((prev) => {
       const filtered = prev.filter(([k]) => k !== key);
       return [...filtered, [key, value]];
@@ -530,7 +584,7 @@ export function useOneSignal(): UseOneSignalReturn {
   };
 
   const addTriggers = (pairs: Record<string, string>) => {
-    repository.addTriggers(pairs);
+    if (IS_NATIVE) OneSignal.InAppMessages.addTriggers(pairs);
     const newEntries = toPairs(pairs);
     setTriggersList((prev) => {
       const keys = new Set(newEntries.map(([k]) => k));
@@ -540,33 +594,33 @@ export function useOneSignal(): UseOneSignalReturn {
   };
 
   const removeSelectedTriggers = (keys: string[]) => {
-    repository.removeTriggers(keys);
+    if (IS_NATIVE) OneSignal.InAppMessages.removeTriggers(keys);
     const keySet = new Set(keys);
     setTriggersList((prev) => prev.filter(([k]) => !keySet.has(k)));
     log.i(TAG, `${keys.length} trigger(s) removed`);
   };
 
   const clearTriggers = () => {
-    repository.clearTriggers();
+    if (IS_NATIVE) OneSignal.InAppMessages.clearTriggers();
     setTriggersList([]);
     log.i(TAG, 'All triggers cleared');
   };
 
   const trackEvent = (name: string, properties?: Record<string, unknown>) => {
-    repository.trackEvent(name, properties);
+    if (IS_NATIVE) OneSignal.User.trackEvent(name, properties);
     log.i(TAG, `Event tracked: ${name}`);
   };
 
   const setLocationShared = async (shared: boolean) => {
     setLocationSharedState(shared);
-    repository.setLocationShared(shared);
+    if (IS_NATIVE) OneSignal.Location.setShared(shared);
     preferences.setLocationShared(shared);
     const msg = shared ? 'Location sharing enabled' : 'Location sharing disabled';
     log.i(TAG, msg);
   };
 
   const requestLocationPermission = () => {
-    repository.requestLocationPermission();
+    if (IS_NATIVE) OneSignal.Location.requestPermission();
   };
 
   const startDefaultLiveActivity = (
@@ -574,7 +628,7 @@ export function useOneSignal(): UseOneSignalReturn {
     attributes: Record<string, unknown>,
     content: Record<string, unknown>,
   ) => {
-    repository.startDefaultLiveActivity(activityId, attributes, content);
+    if (IS_NATIVE) OneSignal.LiveActivities.startDefault(activityId, attributes, content);
     log.i(TAG, `Started live activity: ${activityId}`);
   };
 
@@ -582,14 +636,14 @@ export function useOneSignal(): UseOneSignalReturn {
     activityId: string,
     eventUpdates: Record<string, unknown>,
   ): Promise<boolean> => {
-    const success = await repository.updateLiveActivity(activityId, 'update', eventUpdates);
+    const success = await apiService.updateLiveActivity(activityId, 'update', eventUpdates);
     const msg = success ? `Updated live activity: ${activityId}` : 'Failed to update live activity';
     log.i(TAG, msg);
     return success;
   };
 
   const endLiveActivity = async (activityId: string): Promise<boolean> => {
-    const success = await repository.updateLiveActivity(activityId, 'end', {
+    const success = await apiService.updateLiveActivity(activityId, 'end', {
       message: 'Ended Live Activity',
     });
     const msg = success ? `Ended live activity: ${activityId}` : 'Failed to end live activity';
@@ -598,12 +652,12 @@ export function useOneSignal(): UseOneSignalReturn {
   };
 
   const enterLiveActivity = (activityId: string, token: string) => {
-    repository.enterLiveActivity(activityId, token);
+    if (IS_NATIVE) OneSignal.LiveActivities.enter(activityId, token);
     log.i(TAG, `Entered live activity: ${activityId}`);
   };
 
   const exitLiveActivity = (activityId: string) => {
-    repository.exitLiveActivity(activityId);
+    if (IS_NATIVE) OneSignal.LiveActivities.exit(activityId);
     log.i(TAG, `Exited live activity: ${activityId}`);
   };
 
