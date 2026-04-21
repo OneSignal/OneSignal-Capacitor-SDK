@@ -69,7 +69,7 @@ const LiveActivitySection: FC<LiveActivitySectionProps> = ({
   const nextStatus = ORDER_STATUSES[(statusIndex + 1) % ORDER_STATUSES.length];
 
   return (
-    <SectionCard title="LIVE ACTIVITIES" onInfoTap={onInfoTap}>
+    <SectionCard title="LIVE ACTIVITIES" sectionKey="live_activity" onInfoTap={onInfoTap}>
       <div className="card kv-card">
         <div className="kv-row">
           <span>Activity ID</span>
@@ -82,6 +82,7 @@ const LiveActivitySection: FC<LiveActivitySectionProps> = ({
             autoComplete="off"
             spellCheck={false}
             className="la-inline-input"
+            data-testid="live_activity_id_input"
           />
         </div>
         <div className="divider" />
@@ -96,16 +97,23 @@ const LiveActivitySection: FC<LiveActivitySectionProps> = ({
             autoComplete="off"
             spellCheck={false}
             className="la-inline-input"
+            data-testid="live_activity_order_number"
           />
         </div>
       </div>
-      <ActionButton type="button" disabled={!activityId.trim()} onClick={handleStart}>
+      <ActionButton
+        type="button"
+        disabled={!activityId.trim()}
+        onClick={handleStart}
+        data-testid="start_live_activity_button"
+      >
         START LIVE ACTIVITY
       </ActionButton>
       <ActionButton
         type="button"
         disabled={!activityId.trim() || updating || !hasApiKey}
         onClick={handleUpdate}
+        data-testid="update_live_activity_button"
       >
         {`UPDATE → ${nextStatus.status.replace('_', ' ').toUpperCase()}`}
       </ActionButton>
@@ -114,6 +122,7 @@ const LiveActivitySection: FC<LiveActivitySectionProps> = ({
         type="button"
         disabled={!activityId.trim() || !hasApiKey}
         onClick={() => onEnd(activityId)}
+        data-testid="end_live_activity_button"
       >
         END LIVE ACTIVITY
       </ActionButton>

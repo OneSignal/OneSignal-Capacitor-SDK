@@ -14,12 +14,13 @@ const InAppSection: FC<InAppSectionProps> = ({
   onInfoTap,
   onTogglePaused,
 }) => (
-  <SectionCard title="IN-APP MESSAGING" onInfoTap={onInfoTap}>
+  <SectionCard title="IN-APP MESSAGING" sectionKey="iam" onInfoTap={onInfoTap}>
     <ToggleRow
       label="Pause In-App Messages"
       description="Toggle in-app message display"
       checked={inAppMessagesPaused}
       onToggle={onTogglePaused}
+      testId="pause_iam_toggle"
     />
   </SectionCard>
 );

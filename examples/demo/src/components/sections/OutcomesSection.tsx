@@ -9,8 +9,8 @@ interface OutcomesSectionProps {
 }
 
 const OutcomesSection: FC<OutcomesSectionProps> = ({ onInfoTap, onSendOutcome }) => (
-  <SectionCard title="OUTCOME EVENTS" onInfoTap={onInfoTap}>
-    <ActionButton type="button" onClick={onSendOutcome}>
+  <SectionCard title="OUTCOME EVENTS" sectionKey="outcomes" onInfoTap={onInfoTap}>
+    <ActionButton type="button" onClick={onSendOutcome} data-testid="send_outcome_button">
       SEND OUTCOME
     </ActionButton>
   </SectionCard>

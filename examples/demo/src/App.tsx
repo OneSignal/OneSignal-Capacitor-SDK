@@ -1,4 +1,3 @@
-import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
@@ -25,9 +24,7 @@ import '@ionic/react/css/palettes/dark.system.css';
 /* Theme variables */
 import './theme/variables.css';
 
-if (Capacitor.isNativePlatform()) {
-  StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
-}
+StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
 
 setupIonicReact();
 

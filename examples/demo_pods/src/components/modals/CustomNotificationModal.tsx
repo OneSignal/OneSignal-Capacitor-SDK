@@ -40,8 +40,14 @@ const CustomNotificationModal: FC<CustomNotificationModalProps> = ({ open, onClo
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           placeholder="Title"
+          data-testid="custom_notification_title_input"
         />
-        <input value={body} onChange={(event) => setBody(event.target.value)} placeholder="Body" />
+        <input
+          value={body}
+          onChange={(event) => setBody(event.target.value)}
+          placeholder="Body"
+          data-testid="custom_notification_body_input"
+        />
         <div className="modal-actions">
           <button type="button" onClick={onClose}>
             Cancel

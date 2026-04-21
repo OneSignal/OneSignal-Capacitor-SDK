@@ -47,15 +47,30 @@ const OutcomeModal: FC<OutcomeModalProps> = ({ open, onClose, onSubmit }) => {
         <h3 className="outcome-title">Send Outcome</h3>
         <div className="radio-list outcome-radio-list">
           <label>
-            <input type="radio" checked={mode === 'normal'} onChange={() => setMode('normal')} />
+            <input
+              type="radio"
+              checked={mode === 'normal'}
+              onChange={() => setMode('normal')}
+              data-testid="outcome_type_normal_radio"
+            />
             Normal Outcome
           </label>
           <label>
-            <input type="radio" checked={mode === 'unique'} onChange={() => setMode('unique')} />
+            <input
+              type="radio"
+              checked={mode === 'unique'}
+              onChange={() => setMode('unique')}
+              data-testid="outcome_type_unique_radio"
+            />
             Unique Outcome
           </label>
           <label>
-            <input type="radio" checked={mode === 'value'} onChange={() => setMode('value')} />
+            <input
+              type="radio"
+              checked={mode === 'value'}
+              onChange={() => setMode('value')}
+              data-testid="outcome_type_value_radio"
+            />
             Outcome with Value
           </label>
         </div>
@@ -64,6 +79,7 @@ const OutcomeModal: FC<OutcomeModalProps> = ({ open, onClose, onSubmit }) => {
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder="Outcome Name"
+          data-testid="outcome_name_input"
         />
         {mode === 'value' ? (
           <input
@@ -71,13 +87,16 @@ const OutcomeModal: FC<OutcomeModalProps> = ({ open, onClose, onSubmit }) => {
             value={value}
             onChange={(event) => setValue(event.target.value)}
             placeholder="Outcome Value"
+            data-testid="outcome_value_input"
           />
         ) : null}
         <div className="modal-actions outcome-actions">
           <button type="button" onClick={onClose}>
             Cancel
           </button>
-          <button type="submit">Send</button>
+          <button type="submit" data-testid="outcome_send_button">
+            Send
+          </button>
         </div>
       </form>
     </ModalShell>

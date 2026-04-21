@@ -7,6 +7,7 @@ import SectionCard from '../SectionCard';
 
 interface AliasesSectionProps {
   aliasItems: PairItem[];
+  loading?: boolean;
   onInfoTap: () => void;
   onAddAlias: () => void;
   onAddMultipleAliases: () => void;
@@ -14,16 +15,26 @@ interface AliasesSectionProps {
 
 const AliasesSection: FC<AliasesSectionProps> = ({
   aliasItems,
+  loading = false,
   onInfoTap,
   onAddAlias,
   onAddMultipleAliases,
 }) => (
-  <SectionCard title="ALIASES" onInfoTap={onInfoTap}>
-    <PairList items={aliasItems} emptyText="No Aliases Added" />
-    <ActionButton type="button" onClick={onAddAlias}>
+  <SectionCard title="ALIASES" sectionKey="aliases" onInfoTap={onInfoTap}>
+    <PairList
+      items={aliasItems}
+      emptyText="No Aliases Added"
+      loading={loading}
+      sectionKey="aliases"
+    />
+    <ActionButton type="button" onClick={onAddAlias} data-testid="add_alias_button">
       ADD
     </ActionButton>
-    <ActionButton type="button" onClick={onAddMultipleAliases}>
+    <ActionButton
+      type="button"
+      onClick={onAddMultipleAliases}
+      data-testid="add_multiple_aliases_button"
+    >
       ADD MULTIPLE
     </ActionButton>
   </SectionCard>

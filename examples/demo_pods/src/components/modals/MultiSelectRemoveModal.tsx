@@ -36,6 +36,7 @@ const MultiSelectRemoveModal: FC<MultiSelectRemoveModalProps> = ({
               <input
                 type="checkbox"
                 checked={selectedKeys.includes(key)}
+                data-testid={`remove_checkbox_${key}`}
                 onChange={(event) => {
                   if (event.target.checked) {
                     setSelectedKeys((prev) => [...prev, key]);
@@ -56,6 +57,7 @@ const MultiSelectRemoveModal: FC<MultiSelectRemoveModalProps> = ({
             type="button"
             onClick={() => onSubmit(selectedKeys)}
             disabled={!selectedKeys.length}
+            data-testid="multiselect_confirm_button"
           >
             Remove ({selectedKeys.length})
           </button>

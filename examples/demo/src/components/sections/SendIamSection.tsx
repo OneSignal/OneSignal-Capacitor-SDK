@@ -17,15 +17,16 @@ interface SendIamSectionProps {
   onSendFullScreen: () => void;
 }
 
-const iamButtons: { label: string; icon: ReactNode; key: string }[] = [
-  { label: 'TOP BANNER', icon: <MdOutlineVerticalAlignTop />, key: 'top' },
+const iamButtons: { label: string; icon: ReactNode; key: string; type: string }[] = [
+  { label: 'TOP BANNER', icon: <MdOutlineVerticalAlignTop />, key: 'top', type: 'top_banner' },
   {
     label: 'BOTTOM BANNER',
     icon: <MdOutlineVerticalAlignBottom />,
     key: 'bottom',
+    type: 'bottom_banner',
   },
-  { label: 'CENTER MODAL', icon: <MdCropSquare />, key: 'center' },
-  { label: 'FULL SCREEN', icon: <MdFullscreen />, key: 'full' },
+  { label: 'CENTER MODAL', icon: <MdCropSquare />, key: 'center', type: 'center_modal' },
+  { label: 'FULL SCREEN', icon: <MdFullscreen />, key: 'full', type: 'full_screen' },
 ];
 
 const SendIamSection: FC<SendIamSectionProps> = ({
@@ -38,9 +39,15 @@ const SendIamSection: FC<SendIamSectionProps> = ({
   const handlers = [onSendTopBanner, onSendBottomBanner, onSendCenterModal, onSendFullScreen];
 
   return (
-    <SectionCard title="SEND IN-APP MESSAGE" onInfoTap={onInfoTap}>
+    <SectionCard title="SEND IN-APP MESSAGE" sectionKey="send_iam" onInfoTap={onInfoTap}>
       {iamButtons.map((btn, i) => (
-        <ActionButton key={btn.key} className="iam-btn" type="button" onClick={handlers[i]}>
+        <ActionButton
+          key={btn.key}
+          className="iam-btn"
+          type="button"
+          onClick={handlers[i]}
+          data-testid={`send_iam_${btn.type}_button`}
+        >
           <span className="action-btn-content">
             <span className="action-btn-icon" aria-hidden>
               {btn.icon}

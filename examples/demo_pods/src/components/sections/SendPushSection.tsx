@@ -20,20 +20,25 @@ const SendPushSection: FC<SendPushSectionProps> = ({
   onSendCustom,
   onClearAll,
 }) => (
-  <SectionCard title="SEND PUSH NOTIFICATION" onInfoTap={onInfoTap}>
-    <ActionButton type="button" onClick={onSendSimple}>
+  <SectionCard title="SEND PUSH NOTIFICATION" sectionKey="send_push" onInfoTap={onInfoTap}>
+    <ActionButton type="button" onClick={onSendSimple} data-testid="send_simple_button">
       SIMPLE
     </ActionButton>
-    <ActionButton type="button" onClick={onSendImage}>
+    <ActionButton type="button" onClick={onSendImage} data-testid="send_image_button">
       WITH IMAGE
     </ActionButton>
-    <ActionButton type="button" onClick={onSendSound}>
+    <ActionButton type="button" onClick={onSendSound} data-testid="send_sound_button">
       WITH SOUND
     </ActionButton>
-    <ActionButton type="button" onClick={onSendCustom}>
+    <ActionButton type="button" onClick={onSendCustom} data-testid="send_custom_button">
       CUSTOM
     </ActionButton>
-    <ActionButton variant="outline" type="button" onClick={onClearAll}>
+    <ActionButton
+      variant="outline"
+      type="button"
+      onClick={onClearAll}
+      data-testid="clear_all_button"
+    >
       CLEAR ALL
     </ActionButton>
   </SectionCard>

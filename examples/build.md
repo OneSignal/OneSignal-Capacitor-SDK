@@ -170,10 +170,6 @@ All OneSignal SDK interactions and state are managed through a single `useOneSig
 
 `HomeScreen` calls `useOneSignal()` and passes state/callbacks down to section components as props.
 
-### Repository Pattern
-
-`OneSignalRepository` (`src/repositories/OneSignalRepository.ts`) wraps all OneSignal SDK calls with `Capacitor.isNativePlatform()` guards, providing a safe abstraction that no-ops on web. It also delegates notification sending and user fetching to `OneSignalApiService`.
-
 ### Services
 
 - `OneSignalApiService` (`src/services/OneSignalApiService.ts`) — Singleton REST client using `fetch` to send notifications via the OneSignal API and fetch user data
@@ -338,7 +334,7 @@ Under the hood, `addEventListener` wraps Capacitor's `this._plugin.addListener(n
 The `useOneSignal()` hook centralizes all SDK state and actions:
 
 - **Reactive state** via `useState`: app ID, consent settings, external user ID, push subscription ID, push enabled, notification permission, IAM paused, location shared, aliases, emails, SMS numbers, tags, triggers, loading state
-- **Refs** via `useRef`: mount tracking (`mountedRef`), request sequencing (`requestSequenceRef`) to discard stale API responses
+- **Refs** via `useRef`: request sequencing (`requestSequenceRef`) to discard stale API responses
 - **Effects** via `useEffect`: one-time SDK init + listener registration with full cleanup
 - **Memoized callbacks** via `useCallback`: `fetchUserDataFromApi` for API-driven state refresh
 
@@ -633,7 +629,6 @@ examples/
 
 - **TypeScript strict mode** on all source files, avoiding `any` and type assertions
 - **Central `useOneSignal` hook** manages all SDK state and actions; section components are pure props-driven
-- **Repository pattern** wraps SDK calls with `Capacitor.isNativePlatform()` guards
 - **Service layer** separates REST API calls, persistence, and logging from UI
 - **React + Ionic React** for component-based UI with React Router navigation
 - **Separate section components** per feature area for maintainability

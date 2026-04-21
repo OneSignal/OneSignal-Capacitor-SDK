@@ -11,12 +11,6 @@
   --os-divider: #e8eaed;
   --os-warning-background: #fff8e1;
   --os-backdrop: rgba(0, 0, 0, 0.54);
-  --os-log-background: #1a1b1e;
-  --os-log-debug: #82aaff;
-  --os-log-info: #c3e88d;
-  --os-log-warn: #ffcb6b;
-  --os-log-error: #ff5370;
-  --os-log-timestamp: #676e7b;
 
   /* Spacing */
   --space-card-gap: 8px;
@@ -500,14 +494,12 @@
   color: var(--os-success);
 }
 
-.loading-overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--os-backdrop);
+.list-loading {
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 60;
+  align-items: center;
+  padding: 12px 0;
+  color: var(--os-grey-600);
 }
 
 .hint-text {

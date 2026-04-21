@@ -7,6 +7,7 @@ import SectionCard from '../SectionCard';
 
 interface TagsSectionProps {
   tagItems: PairItem[];
+  loading?: boolean;
   onInfoTap: () => void;
   onRemoveTag: (key: string) => void;
   onAddTag: () => void;
@@ -16,21 +17,33 @@ interface TagsSectionProps {
 
 const TagsSection: FC<TagsSectionProps> = ({
   tagItems,
+  loading = false,
   onInfoTap,
   onRemoveTag,
   onAddTag,
   onAddMultipleTags,
   onRemoveSelectedTags,
 }) => (
-  <SectionCard title="TAGS" onInfoTap={onInfoTap}>
-    <PairList items={tagItems} emptyText="No tags added" onRemove={onRemoveTag} />
-    <ActionButton type="button" onClick={onAddTag}>
+  <SectionCard title="TAGS" sectionKey="tags" onInfoTap={onInfoTap}>
+    <PairList
+      items={tagItems}
+      emptyText="No tags added"
+      onRemove={onRemoveTag}
+      loading={loading}
+      sectionKey="tags"
+    />
+    <ActionButton type="button" onClick={onAddTag} data-testid="add_tag_button">
       ADD
     </ActionButton>
-    <ActionButton type="button" onClick={onAddMultipleTags}>
+    <ActionButton type="button" onClick={onAddMultipleTags} data-testid="add_multiple_tags_button">
       ADD MULTIPLE
     </ActionButton>
-    <ActionButton variant="outline" type="button" onClick={onRemoveSelectedTags}>
+    <ActionButton
+      variant="outline"
+      type="button"
+      onClick={onRemoveSelectedTags}
+      data-testid="remove_tags_button"
+    >
       REMOVE SELECTED
     </ActionButton>
   </SectionCard>

@@ -24,21 +24,40 @@ const TriggersSection: FC<TriggersSectionProps> = ({
   onRemoveSelectedTriggers,
   onClearTriggers,
 }) => (
-  <SectionCard title="TRIGGERS" onInfoTap={onInfoTap}>
-    <PairList items={triggerItems} emptyText="No Triggers Added" onRemove={onRemoveTrigger} />
-    <ActionButton type="button" onClick={onAddTrigger}>
+  <SectionCard title="TRIGGERS" sectionKey="triggers" onInfoTap={onInfoTap}>
+    <PairList
+      items={triggerItems}
+      emptyText="No Triggers Added"
+      onRemove={onRemoveTrigger}
+      sectionKey="triggers"
+    />
+    <ActionButton type="button" onClick={onAddTrigger} data-testid="add_trigger_button">
       ADD
     </ActionButton>
-    <ActionButton type="button" onClick={onAddMultipleTriggers}>
+    <ActionButton
+      type="button"
+      onClick={onAddMultipleTriggers}
+      data-testid="add_multiple_triggers_button"
+    >
       ADD MULTIPLE
     </ActionButton>
     {triggerItems.length ? (
-      <ActionButton variant="outline" type="button" onClick={onRemoveSelectedTriggers}>
+      <ActionButton
+        variant="outline"
+        type="button"
+        onClick={onRemoveSelectedTriggers}
+        data-testid="remove_triggers_button"
+      >
         REMOVE SELECTED
       </ActionButton>
     ) : null}
     {triggerItems.length ? (
-      <ActionButton variant="outline" type="button" onClick={onClearTriggers}>
+      <ActionButton
+        variant="outline"
+        type="button"
+        onClick={onClearTriggers}
+        data-testid="clear_triggers_button"
+      >
         CLEAR ALL
       </ActionButton>
     ) : null}
