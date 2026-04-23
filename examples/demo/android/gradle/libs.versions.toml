@@ -1,0 +1,35 @@
+[versions]
+agp = "8.13.0"
+kotlin = "2.1.20"
+googleServices = "4.4.4"
+
+compileSdk = "36"
+minSdk = "24"
+targetSdk = "36"
+
+androidxActivity = "1.11.0"
+androidxAppCompat = "1.7.1"
+androidxCoordinatorLayout = "1.3.0"
+androidxCore = "1.17.0"
+androidxFragment = "1.8.9"
+androidxWebkit = "1.14.0"
+coreSplashScreen = "1.2.0"
+
+junit = "4.13.2"
+androidxJunit = "1.3.0"
+androidxEspressoCore = "3.7.0"
+
+cordovaAndroid = "14.0.1"
+
+[libraries]
+android-gradle-plugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+google-services-plugin = { module = "com.google.gms:google-services", version.ref = "googleServices" }
+
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidxAppCompat" }
+androidx-coordinatorlayout = { module = "androidx.coordinatorlayout:coordinatorlayout", version.ref = "androidxCoordinatorLayout" }
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashScreen" }
+
+junit = { module = "junit:junit", version.ref = "junit" }
+androidx-test-junit = { module = "androidx.test.ext:junit", version.ref = "androidxJunit" }
+androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidxEspressoCore" }
