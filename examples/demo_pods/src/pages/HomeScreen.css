@@ -296,6 +296,14 @@
   margin: 0;
 }
 
+.list-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 0;
+  color: var(--os-grey-600);
+}
+
 .delete-btn {
   border: 0;
   background: transparent;
