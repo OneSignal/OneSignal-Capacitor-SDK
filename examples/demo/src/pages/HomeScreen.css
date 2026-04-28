@@ -1,6 +1,8 @@
 :root {
   /* Colors */
   --os-primary: #e54b4d;
+  --os-primary-pressed: #c33f41;
+  --os-primary-tint: rgba(229, 75, 77, 0.1);
   --os-success: #34a853;
   --os-grey-700: #616161;
   --os-grey-600: #757575;
@@ -49,6 +51,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 8%),
+    0 2px 4px rgb(0 0 0 / 6%);
 }
 
 .brand-title {
@@ -196,6 +201,11 @@
   font-weight: 600;
   letter-spacing: 0.6px;
   margin-bottom: var(--space-card-gap);
+  transition: background-color 100ms ease-out;
+}
+
+.action-btn:active {
+  background: var(--os-primary-pressed);
 }
 
 .action-btn-content {
@@ -222,10 +232,26 @@
   justify-content: flex-start;
 }
 
+.action-btn:disabled {
+  background: var(--os-grey-500);
+  color: #fff;
+}
+
 .action-btn.outline {
   background: transparent;
   border: 1px solid var(--os-primary);
   color: var(--os-primary);
+}
+
+.action-btn.outline:active {
+  background: var(--os-primary-tint);
+  border-color: var(--os-primary-pressed);
+  color: var(--os-primary-pressed);
+}
+
+.action-btn.outline:disabled {
+  border-color: var(--os-grey-500);
+  color: var(--os-grey-500);
 }
 
 .toggle-card ion-toggle {

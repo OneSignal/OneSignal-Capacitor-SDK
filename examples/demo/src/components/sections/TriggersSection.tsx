@@ -27,7 +27,7 @@ const TriggersSection: FC<TriggersSectionProps> = ({
   <SectionCard title="TRIGGERS" sectionKey="triggers" onInfoTap={onInfoTap}>
     <PairList
       items={triggerItems}
-      emptyText="No Triggers Added"
+      emptyText="No triggers added"
       onRemove={onRemoveTrigger}
       sectionKey="triggers"
     />

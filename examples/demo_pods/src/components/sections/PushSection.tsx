@@ -1,6 +1,7 @@
 import { IonToggle } from '@ionic/react';
 import type { FC } from 'react';
 
+import { maskValue } from '../../utils/maskValue';
 import ActionButton from '../ActionButton';
 import SectionCard from '../SectionCard';
 
@@ -26,7 +27,7 @@ const PushSection: FC<PushSectionProps> = ({
       <div className="kv-row">
         <span>Push ID</span>
         <span className="id-value" data-testid="push_id_value">
-          {pushSubscriptionId ?? '—'}
+          {maskValue(pushSubscriptionId ?? '—')}
         </span>
       </div>
       <div className="divider" />

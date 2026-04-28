@@ -3,10 +3,10 @@ import { CapacitorHttp } from '@capacitor/core';
 import { NotificationType } from '../models/NotificationType';
 import { userDataFromJson } from '../models/UserData';
 import type { UserData } from '../models/UserData';
-import LogManager from './LogManager';
 
-const TAG = 'OneSignalApiService';
 export const API_KEY = import.meta.env.VITE_ONESIGNAL_API_KEY as string | undefined;
+const ANDROID_CHANNEL_ID = import.meta.env.VITE_ONESIGNAL_ANDROID_CHANNEL_ID as string | undefined;
+const DEFAULT_ANDROID_CHANNEL_ID = 'b3b015d9-c050-4042-8548-dcc34aa44aa4';
 
 class OneSignalApiService {
   private static instance: OneSignalApiService;
@@ -51,7 +51,7 @@ class OneSignalApiService {
         headings = { en: 'Sound Notification' };
         contents = { en: 'This notification plays a custom sound' };
         extra.ios_sound = 'vine_boom.wav';
-        extra.android_channel_id = 'b3b015d9-c050-4042-8548-dcc34aa44aa4';
+        extra.android_channel_id = ANDROID_CHANNEL_ID?.trim() || DEFAULT_ANDROID_CHANNEL_ID;
         break;
       default:
         return false;
@@ -93,16 +93,13 @@ class OneSignalApiService {
       });
 
       if (response.status < 200 || response.status >= 300) {
-        LogManager.getInstance().e(
-          TAG,
-          `Send notification failed: ${JSON.stringify(response.data)}`,
-        );
+        console.error(`Send notification failed: ${JSON.stringify(response.data)}`);
         return false;
       }
 
       return true;
     } catch (err) {
-      LogManager.getInstance().e(TAG, `Send notification error: ${String(err)}`);
+      console.error(`Send notification error: ${String(err)}`);
       return false;
     }
   }
@@ -135,16 +132,13 @@ class OneSignalApiService {
       });
 
       if (response.status < 200 || response.status >= 300) {
-        LogManager.getInstance().e(
-          TAG,
-          `${event} live activity failed: ${JSON.stringify(response.data)}`,
-        );
+        console.error(`${event} live activity failed: ${JSON.stringify(response.data)}`);
         return false;
       }
 
       return true;
     } catch (err) {
-      LogManager.getInstance().e(TAG, `${event} live activity error: ${String(err)}`);
+      console.error(`${event} live activity error: ${String(err)}`);
       return false;
     }
   }
@@ -154,12 +148,12 @@ class OneSignalApiService {
       const url = `https://api.onesignal.com/apps/${this.appId}/users/by/onesignal_id/${onesignalId}`;
       const response = await CapacitorHttp.get({ url });
       if (response.status < 200 || response.status >= 300) {
-        LogManager.getInstance().w(TAG, `fetchUser failed: ${response.status}`);
+        console.warn(`fetchUser failed: ${response.status}`);
         return null;
       }
       return userDataFromJson(response.data as Record<string, unknown>);
     } catch (err) {
-      LogManager.getInstance().e(TAG, `fetchUser error: ${String(err)}`);
+      console.error(`fetchUser error: ${String(err)}`);
       return null;
     }
   }

@@ -2,6 +2,10 @@
 # DON'T RUN THIS FILE DIRECTLY, USE PACKAGE.JSON SCRIPTS
 set -e
 
+# Run from the calling package's directory (demo or demo_pods) so each
+# project deploys its own native build, not demo's.
+PROJECT_DIR="${INIT_CWD:-$PWD}"
+
 serials=$(adb devices | awk '/\tdevice$/{print $1}')
 
 if [ -z "$serials" ]; then
@@ -37,5 +41,5 @@ else
   selected="${devices[$idx]}"
 fi
 
-cd "$(dirname "$0")/demo"
+cd "$PROJECT_DIR"
 npx cap run android --target "$selected"

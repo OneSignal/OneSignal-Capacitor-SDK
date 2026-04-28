@@ -69,7 +69,7 @@ const LiveActivitySection: FC<LiveActivitySectionProps> = ({
   const nextStatus = ORDER_STATUSES[(statusIndex + 1) % ORDER_STATUSES.length];
 
   return (
-    <SectionCard title="LIVE ACTIVITIES" sectionKey="live_activity" onInfoTap={onInfoTap}>
+    <SectionCard title="LIVE ACTIVITIES" sectionKey="live_activities" onInfoTap={onInfoTap}>
       <div className="card kv-card">
         <div className="kv-row">
           <span>Activity ID</span>

@@ -21,7 +21,7 @@ bun add @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android
 bun add @capacitor/keyboard @capacitor/status-bar
 bun add react react-dom @ionic/react @ionic/react-router ionicons react-icons
 bun add react-router react-router-dom
-bun add -d @vitejs/plugin-react @types/react @types/react-dom @types/react-router @types/react-router-dom typescript vite
+bun add -d @vitejs/plugin-react @types/react @types/react-dom @types/react-router @types/react-router-dom typescript vite-plus
 bunx cap init "OneSignal Demo" com.onesignal.example --web-dir dist
 bunx cap add ios
 bunx cap add android
@@ -29,37 +29,38 @@ bunx cap add android
 
 - TypeScript strict mode enabled
 - React + Ionic React for component-based UI with React Router for navigation
-- Separate section components per feature area, driven by a central `useOneSignal` hook
 - Vite+ (`vite-plus`) with `@vitejs/plugin-react` for bundling, linting, and formatting; output to `dist/` (`webDir` for Capacitor)
-- Support both Android and iOS
+- Custom header in `HomeScreen.tsx` with the OneSignal logo and "Capacitor" subtitle (no `IonToolbar` header)
+- Reference the OneSignal Capacitor plugin via local tarball:
 
-App branding uses a custom header in `HomeScreen.tsx` with the OneSignal logo and "Capacitor" subtitle (no `IonToolbar` header).
+  ```json
+  "onesignal-capacitor-plugin": "file:../../onesignal-capacitor-plugin.tgz"
+  ```
 
-App icon generation uses `@capacitor/assets`. Place the OneSignal logo in `assets/icon-only.png`, then:
+### App icons
+
+Each demo's `assets/` directory holds the three 1024x1024 source images that [`@capacitor/assets`](https://capacitorjs.com/docs/guides/splash-screens-and-icons) consumes:
+
+```
+assets/
+├── icon-only.png         # OneSignal logo on white
+├── icon-foreground.png   # OneSignal logo on transparent (Android adaptive foreground)
+└── icon-background.png   # solid white                   (Android adaptive background)
+```
+
+To (re)generate all native icon assets, run from inside a demo:
 
 ```bash
-bunx @capacitor/assets generate --ios --android --iconBackgroundColor '#ffffff' --splashBackgroundColor '#ffffff'
+bunx @capacitor/assets generate --ios --android
 ```
 
-After generating, remove the adaptive icon files so Android uses the generated PNGs directly (the adaptive icon XMLs reference the default Capacitor foreground and override them):
+That produces the full Android adaptive icon set (foreground/background mipmaps + `mipmap-anydpi-v26/ic_launcher{,_round}.xml`) and the iOS `AppIcon.appiconset`. No additional steps.
 
-```bash
-rm -rf android/app/src/main/res/mipmap-anydpi-v26 \
-       android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml \
-       android/app/src/main/res/drawable/ic_launcher_background.xml \
-       android/app/src/main/res/values/ic_launcher_background.xml \
-       android/app/src/main/res/mipmap-*/ic_launcher_foreground.png
-```
+### Build & run scripts
 
-Local SDK reference via packed tarball:
+A `setup.sh` script in `examples/` builds the SDK from the repo root, packs it to `onesignal-capacitor-plugin.tgz`, reinstalls it in the demo, runs `vp build`, and runs `bunx cap sync`. `run-android.sh` and `run-ios.sh` list connected devices/simulators, prompt for selection if multiple, and run `bunx cap run`.
 
-```json
-"onesignal-capacitor-plugin": "file:../../onesignal-capacitor-plugin.tgz"
-```
-
-A `setup.sh` script in `examples/` handles building, packing, installing, and running `cap sync` automatically.
-
-Package scripts:
+`package.json` scripts wire these up:
 
 ```json
 {
@@ -73,51 +74,7 @@ Package scripts:
 }
 ```
 
-### Dependencies (package.json)
-
-Runtime:
-
-- `onesignal-capacitor-plugin` (local tarball)
-- `@capacitor/core`, `@capacitor/ios`, `@capacitor/android` for Capacitor runtime
-- `@capacitor/keyboard`, `@capacitor/status-bar` for native UI control
-- `react`, `react-dom` for React
-- `@ionic/react`, `@ionic/react-router` for Ionic React components and routing
-- `react-router`, `react-router-dom` for page navigation
-- `ionicons` for icon support
-- `react-icons` for additional icons
-
-Dev:
-
-- `@capacitor/cli` for `cap sync`, `cap run`, etc.
-- `vite-plus` for bundling, linting, and formatting
-- `@vitejs/plugin-react` for JSX/TSX transform
-- `@types/react`, `@types/react-dom`, `@types/react-router`, `@types/react-router-dom`
-- `typescript`
-
-Vite+ config (`vite.config.ts`):
-
-```ts
-import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite-plus';
-
-export default defineConfig({
-  plugins: [react()],
-  build: {
-    outDir: 'dist',
-  },
-  fmt: {
-    singleQuote: true,
-    sortImports: {
-      enabled: true,
-    },
-  },
-  lint: {
-    options: { typeAware: true, typeCheck: true },
-  },
-});
-```
-
-Capacitor config (`capacitor.config.ts`):
+### Capacitor config (`capacitor.config.ts`)
 
 ```ts
 import type { CapacitorConfig } from '@capacitor/cli';
@@ -128,379 +85,103 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   ios: {
     handleApplicationNotifications: false,
+    webContentsDebuggingEnabled: true,
   },
 };
 
 export default config;
 ```
 
-The `handleApplicationNotifications: false` setting is required on iOS so that Capacitor does not intercept notifications before OneSignal's native delegate can process them. Without it, foreground notification display and lifecycle events will not work.
-
-### setup.sh Details
-
-The setup script performs:
-
-1. Builds the SDK from repo root (`bun run build`)
-2. Packs to `onesignal-capacitor-plugin.tgz`
-3. Reinstalls the tarball in the demo app
-4. Builds the React web app (`vp build`)
-5. Runs `bunx cap sync`
-
-### Run Scripts
-
-- `run-android.sh`: Lists connected ADB devices, prompts for selection if multiple, runs `bunx cap run android --target <device>`
-- `run-ios.sh`: Lists booted iOS simulators, prompts for selection if multiple, runs `bunx cap run ios --target <udid>`
-
----
-
-## Architecture
-
-The demo app follows a layered architecture with clear separation of concerns:
-
-### `useOneSignal` Hook (Central State Manager)
-
-All OneSignal SDK interactions and state are managed through a single `useOneSignal()` hook in `src/hooks/useOneSignal.ts`. This hook:
-
-- Initializes the SDK (via `OneSignal.initialize()`)
-- Registers all event listeners (notifications, IAM, push subscription, user changes, permissions)
-- Exposes reactive state (push subscription ID, permission status, aliases, tags, emails, etc.)
-- Provides action methods (login, logout, send notification, add tag, etc.)
-- Fetches user data from the REST API on user change events
-- Handles cleanup of all listeners on unmount
-
-`HomeScreen` calls `useOneSignal()` and passes state/callbacks down to section components as props.
-
-### Services
-
-- `OneSignalApiService` (`src/services/OneSignalApiService.ts`) — Singleton REST client using `fetch` to send notifications via the OneSignal API and fetch user data
-- `PreferencesService` (`src/services/PreferencesService.ts`) — Persists app settings (app ID, consent, IAM paused, location shared, external user ID) to `localStorage`
-- `LogManager` (`src/services/LogManager.ts`) — Singleton logger with pub/sub; entries shown in the `LogView` component
-- `TooltipHelper` (`src/services/TooltipHelper.ts`) — Fetches tooltip content from the shared `sdk-shared` repo for info modals
-
-### Models
-
-- `NotificationType` (`src/models/NotificationType.ts`) — Enum: `Simple`, `WithImage`, `WithSound`, `Custom`
-- `UserData` (`src/models/UserData.ts`) — Interface + parser for REST API user response
-
----
-
-## OneSignal Repository (SDK API Mapping)
-
-Use the default export `OneSignal` from `onesignal-capacitor-plugin`:
-
-```typescript
-import OneSignal, { LogLevel } from 'onesignal-capacitor-plugin';
-```
-
-| Operation                         | SDK Call                                                    |
-| --------------------------------- | ----------------------------------------------------------- |
-| LoginUser(externalUserId)         | `OneSignal.login(externalUserId)`                           |
-| LogoutUser()                      | `OneSignal.logout()`                                        |
-| AddAlias(label, id)               | `OneSignal.User.addAlias(label, id)`                        |
-| AddAliases(aliases)               | `OneSignal.User.addAliases(aliases)`                        |
-| RemoveAlias(label)                | `OneSignal.User.removeAlias(label)`                         |
-| RemoveAliases(labels)             | `OneSignal.User.removeAliases(labels)`                      |
-| AddEmail(email)                   | `OneSignal.User.addEmail(email)`                            |
-| RemoveEmail(email)                | `OneSignal.User.removeEmail(email)`                         |
-| AddSms(number)                    | `OneSignal.User.addSms(number)`                             |
-| RemoveSms(number)                 | `OneSignal.User.removeSms(number)`                          |
-| AddTag(key, value)                | `OneSignal.User.addTag(key, value)`                         |
-| AddTags(tags)                     | `OneSignal.User.addTags(tags)`                              |
-| RemoveTag(key)                    | `OneSignal.User.removeTag(key)`                             |
-| RemoveTags(keys)                  | `OneSignal.User.removeTags(keys)`                           |
-| GetTags()                         | `await OneSignal.User.getTags()`                            |
-| SetLanguage(language)             | `OneSignal.User.setLanguage(language)`                      |
-| AddTrigger(key, value)            | `OneSignal.InAppMessages.addTrigger(key, value)`            |
-| AddTriggers(triggers)             | `OneSignal.InAppMessages.addTriggers(triggers)`             |
-| RemoveTrigger(key)                | `OneSignal.InAppMessages.removeTrigger(key)`                |
-| RemoveTriggers(keys)              | `OneSignal.InAppMessages.removeTriggers(keys)`              |
-| ClearTriggers()                   | `OneSignal.InAppMessages.clearTriggers()`                   |
-| GetPaused()                       | `await OneSignal.InAppMessages.getPaused()`                 |
-| SetPaused(paused)                 | `OneSignal.InAppMessages.setPaused(paused)`                 |
-| SendOutcome(name)                 | `OneSignal.Session.addOutcome(name)`                        |
-| SendUniqueOutcome(name)           | `OneSignal.Session.addUniqueOutcome(name)`                  |
-| SendOutcomeWithValue(name, value) | `OneSignal.Session.addOutcomeWithValue(name, value)`        |
-| TrackEvent(name, properties)      | `OneSignal.User.trackEvent(name, properties)`               |
-| GetPushSubscriptionId()           | `await OneSignal.User.pushSubscription.getIdAsync()`        |
-| GetPushSubscriptionToken()        | `await OneSignal.User.pushSubscription.getTokenAsync()`     |
-| IsPushOptedIn()                   | `await OneSignal.User.pushSubscription.getOptedInAsync()`   |
-| OptInPush()                       | `OneSignal.User.pushSubscription.optIn()`                   |
-| OptOutPush()                      | `OneSignal.User.pushSubscription.optOut()`                  |
-| ClearAllNotifications()           | `OneSignal.Notifications.clearAll()`                        |
-| RemoveNotification(id)            | `OneSignal.Notifications.removeNotification(id)`            |
-| RemoveGroupedNotifications(id)    | `OneSignal.Notifications.removeGroupedNotifications(id)`    |
-| HasPermission()                   | `await OneSignal.Notifications.hasPermission()`             |
-| RequestPermission(fallback)       | `await OneSignal.Notifications.requestPermission(fallback)` |
-| CanRequestPermission()            | `await OneSignal.Notifications.canRequestPermission()`      |
-| SetLocationShared(shared)         | `OneSignal.Location.setShared(shared)`                      |
-| IsLocationShared()                | `await OneSignal.Location.isShared()`                       |
-| RequestLocationPermission()       | `OneSignal.Location.requestPermission()`                    |
-| SetConsentRequired(required)      | `OneSignal.setConsentRequired(required)`                    |
-| SetConsentGiven(granted)          | `OneSignal.setConsentGiven(granted)`                        |
-| GetExternalId()                   | `await OneSignal.User.getExternalId()`                      |
-| GetOnesignalId()                  | `await OneSignal.User.getOnesignalId()`                     |
-| SetLogLevel(level)                | `OneSignal.Debug.setLogLevel(level)`                        |
-| SetAlertLevel(level)              | `OneSignal.Debug.setAlertLevel(level)`                      |
-
-### Live Activities (iOS only)
-
-| Operation                                     | SDK Call                                                                 |
-| --------------------------------------------- | ------------------------------------------------------------------------ |
-| SetupDefault(options)                         | `OneSignal.LiveActivities.setupDefault(options)`                         |
-| StartDefault(activityId, attributes, content) | `OneSignal.LiveActivities.startDefault(activityId, attributes, content)` |
-| Enter(activityId, token)                      | `OneSignal.LiveActivities.enter(activityId, token)`                      |
-| Exit(activityId)                              | `OneSignal.LiveActivities.exit(activityId)`                              |
-| SetPushToStartToken(activityType, token)      | `OneSignal.LiveActivities.setPushToStartToken(activityType, token)`      |
-| RemovePushToStartToken(activityType)          | `OneSignal.LiveActivities.removePushToStartToken(activityType)`          |
-
-REST API client uses built-in `fetch`.
-
----
-
-## SDK Initialization & Observers
-
-All SDK initialization and event registration is handled inside `useOneSignal()` hook in a single `useEffect`:
-
-```typescript
-import OneSignal, { LogLevel } from 'onesignal-capacitor-plugin';
-
-// Inside useEffect in useOneSignal():
-OneSignal.Debug.setLogLevel(LogLevel.Verbose);
-OneSignal.setConsentRequired(consentRequired);
-OneSignal.setConsentGiven(consentGiven);
-OneSignal.initialize(appId);
-
-OneSignal.LiveActivities.setupDefault({
-  enablePushToStart: true,
-  enablePushToUpdate: true,
-});
-```
-
-Event listeners (addEventListener pattern, same API as React Native):
-
-```typescript
-OneSignal.Notifications.addEventListener('click', (e) => {
-  log(`Notification click: ${e.notification.title ?? ''}`);
-});
-
-OneSignal.Notifications.addEventListener('foregroundWillDisplay', (e) => {
-  log(`foregroundWillDisplay: ${e.getNotification().title ?? ''}`);
-});
-
-OneSignal.Notifications.addEventListener('permissionChange', (granted) => {
-  log(`Permission changed: ${granted}`);
-});
-
-OneSignal.InAppMessages.addEventListener('click', (e) => {
-  log(`IAM click: ${e.result.actionId ?? 'unknown'}`);
-});
-```
-
-User and push subscription observers:
-
-```typescript
-OneSignal.User.addEventListener('change', (e) => {
-  log(`User changed`);
-});
-
-OneSignal.User.pushSubscription.addEventListener('change', (e) => {
-  log(`Push sub changed: optedIn=${e.current.optedIn}`);
-});
-```
-
-All listeners are cleaned up in the `useEffect` return function via `removeEventListener`.
-
-Under the hood, `addEventListener` wraps Capacitor's `this._plugin.addListener(nativeEventName, handler)`. The SDK maps public event names to native event names:
-
-| Namespace               | Public Event            | Native Event                        |
-| ----------------------- | ----------------------- | ----------------------------------- |
-| `User`                  | `change`                | `userStateChange`                   |
-| `User.pushSubscription` | `change`                | `pushSubscriptionChange`            |
-| `Notifications`         | `click`                 | `notificationClick`                 |
-| `Notifications`         | `foregroundWillDisplay` | `notificationForegroundWillDisplay` |
-| `Notifications`         | `permissionChange`      | `permissionChange`                  |
-| `InAppMessages`         | `click`                 | `inAppMessageClick`                 |
-| `InAppMessages`         | `willDisplay`           | `inAppMessageWillDisplay`           |
-| `InAppMessages`         | `didDisplay`            | `inAppMessageDidDisplay`            |
-| `InAppMessages`         | `willDismiss`           | `inAppMessageWillDismiss`           |
-| `InAppMessages`         | `didDismiss`            | `inAppMessageDidDismiss`            |
+`handleApplicationNotifications: false` is required on iOS so Capacitor does not intercept notifications before OneSignal's native delegate processes them. `webContentsDebuggingEnabled: true` keeps `WKWebView.isInspectable = true` in Release builds so Appium's XCUITest driver can find the WebView context (test-only convenience).
 
 ---
 
 ## State Management
 
-### `useOneSignal` Hook
+Use a single `useOneSignal()` hook (`src/hooks/useOneSignal.ts`) as the central state manager. There is no repository wrapper — the hook calls the OneSignal SDK directly.
 
-The `useOneSignal()` hook centralizes all SDK state and actions:
+- `useState` for reactive state (app id, push subscription id, aliases, tags, emails, SMS, triggers, consent, location, IAM paused, loading, ready)
+- `useRef` `requestSequenceRef` discards stale REST results when a newer fetch is in flight
+- One `useEffect` registers SDK observers and cleans them up on unmount via `removeEventListener`
+- `useCallback` memoizes `fetchUserDataFromApi` so the user-state observer's dependency stays stable
+- `OneSignalApiService` (singleton, `src/services/OneSignalApiService.ts`) wraps the REST API (send notification, fetch user, live activity update/end) using `CapacitorHttp` so requests work uniformly across iOS, Android, and the dev browser
+- `PreferencesService` (singleton, `src/services/PreferencesService.ts`) wraps `localStorage` for consent, IAM paused, location shared, and external user id. App ID is read from `.env` (`VITE_ONESIGNAL_APP_ID`), not from preferences.
+- `mergePairs` and `mergeUnique` helpers in the hook merge REST results into existing in-memory lists so locally-added entries that have not yet round-tripped through the API are preserved
 
-- **Reactive state** via `useState`: app ID, consent settings, external user ID, push subscription ID, push enabled, notification permission, IAM paused, location shared, aliases, emails, SMS numbers, tags, triggers, loading state
-- **Refs** via `useRef`: request sequencing (`requestSequenceRef`) to discard stale API responses
-- **Effects** via `useEffect`: one-time SDK init + listener registration with full cleanup
-- **Memoized callbacks** via `useCallback`: `fetchUserDataFromApi` for API-driven state refresh
+### SDK state restoration
 
-The hook returns a typed object (`UseOneSignalReturn`) with all state values and action methods. `HomeScreen` destructures this and passes slices to section components as props.
+In `useOneSignal`'s `load()`, restore SDK state from `localStorage` BEFORE `initialize`:
 
-### Persistence
-
-`PreferencesService` persists the following to `localStorage`:
-
-- App ID
-- Consent required / consent given
-- External user ID
-- Location sharing
-- IAM paused
-
-On init, `useOneSignal` reads these preferences and restores state accordingly.
-
-### Data Flow
-
+```ts
+OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+OneSignal.setConsentRequired(cachedConsentRequired);
+OneSignal.setConsentGiven(cachedConsentGiven);
+OneSignal.initialize(appId);
 ```
-useOneSignal (hook)
-  ├── OneSignalRepository (SDK calls + native guards)
-  │   └── OneSignalApiService (REST API: send notifications, fetch user)
-  ├── PreferencesService (localStorage persistence)
-  └── LogManager (pub/sub logging → LogView)
+
+Then AFTER initialize:
+
+```ts
+OneSignal.LiveActivities.setupDefault({ enablePushToStart: true, enablePushToUpdate: true });
+OneSignal.InAppMessages.setPaused(cachedIamPaused);
+OneSignal.Location.setShared(cachedLocationShared);
 ```
+
+Read UI state directly from the SDK once it's initialized (push subscription, permission, external id) instead of from cache.
 
 ---
 
 ## Capacitor-Specific UI Details
 
-### React Entry (`main.tsx`)
+### Notification Permission
 
-Render the root component with strict mode:
+- `useOneSignal` exposes `isReady` (set after the initial load completes) and `promptPush()`
+- `HomeScreen` calls `promptPush()` in a `useEffect` gated by `isReady`
 
-```tsx
-import React from 'react';
-import { createRoot } from 'react-dom/client';
+### Loading State
 
-import App from './App';
+- No global overlay; section components (Aliases, Emails, SMS, Tags) render an inline spinner in the empty-state slot when `isLoading` is true
+- Stale-result protection via `requestSequenceRef` in the hook
 
-const container = document.getElementById('root');
-const root = createRoot(container!);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
-```
+### Toast / SnackBar
 
-### App Shell (`App.tsx`)
+- Use Ionic's `IonToast` from `HomeScreen`, fed by a local `showToast(message)` helper that hides the previous toast before showing the next
 
-Uses Ionic React Router for navigation between `HomeScreen` and `Secondary`:
+### Send In-App Message Icons
 
-```tsx
-<IonApp>
-  <IonReactRouter>
-    <IonRouterOutlet>
-      <Route exact path="/home">
-        <HomeScreen />
-      </Route>
-      <Route exact path="/secondary">
-        <Secondary />
-      </Route>
-      <Route exact path="/">
-        <Redirect to="/home" />
-      </Route>
-    </IonRouterOutlet>
-  </IonReactRouter>
-</IonApp>
-```
-
-`App.tsx` also configures `StatusBar` (dark style) and `Keyboard` (hide accessory bar) on startup.
-
-### HomeScreen
-
-`HomeScreen` is the main page assembling all section components. It:
-
-- Calls `useOneSignal()` to get SDK state and actions
-- Manages dialog state for modals (login, add alias, add tag, outcomes, etc.)
-- Renders sections as props-driven components
-- Renders modals conditionally based on `DialogState` discriminated union
-
-### Section Components
-
-Each feature area is a separate React component under `src/components/sections/`:
-
-- `AppSection` — App ID display, consent toggles
-- `UserSection` — External user ID, login/logout
-- `PushSection` — Push subscription ID, permission, push toggle
-- `SendPushSection` — Send simple/image/sound/custom notifications, clear all
-- `InAppSection` — IAM pause toggle
-- `SendIamSection` — Send IAM triggers (top banner, bottom banner, center modal, full screen)
-- `AliasesSection` — List aliases, add single/multiple
-- `EmailsSection` — List emails, add/remove
-- `SmsSection` — List SMS numbers, add/remove
-- `TagsSection` — List tags, add single/multiple, remove selected
-- `OutcomesSection` — Send outcomes (normal, unique, with value)
-- `TriggersSection` — List triggers, add single/multiple, remove selected, clear all
-- `TrackEventSection` — Track custom events with properties
-- `LocationSection` — Location sharing toggle, request permission
-- `LiveActivitySection` — Enter/exit live activities
-
-### Shared Components
-
-- `SectionCard` — Reusable wrapper using `IonList` with inset styling and info icon
-- `ActionButton` — Styled button component
-- `ToggleRow` — Label + toggle component
-- `ListWidgets` — Key-value list display with remove actions
-- `LoadingOverlay` — Full-screen loading indicator
-- `LogView` — Scrollable log display subscribing to `LogManager`
+Use `react-icons/md`: `MdVerticalAlignTop`, `MdVerticalAlignBottom`, `MdCropSquare`, `MdFullscreen`.
 
 ### Modals
 
-Under `src/components/modals/`:
-
-- `ModalShell` — Base modal wrapper
-- `SingleInputModal` — Single text input (login, add email, add SMS)
-- `PairInputModal` — Two-field input (add alias, add tag, add trigger)
-- `MultiPairInputModal` — Dynamic list of key-value pairs
-- `MultiSelectRemoveModal` — Checkbox list for bulk removal
-- `OutcomeModal` — Outcome name + mode (normal/unique/value)
-- `TrackEventModal` — Event name + dynamic properties
-- `CustomNotificationModal` — Custom title + body
-- `TooltipModal` — Info tooltip display
-
-### Log View
-
-- React component subscribing to `LogManager` singleton
-- Displays timestamped log entries with level indicators
-- Auto-scrolls to latest entry
-
-### Secondary Page
-
-A minimal second page (`src/pages/Secondary.tsx`) reachable via a "NEXT ACTIVITY" button on HomeScreen, testing navigation behavior with the SDK.
+All modals live in `src/components/modals/` and render through Ionic's `IonModal`. Single-field prompts share `SingleInputModal`; key/value prompts share `PairInputModal`; bulk add/remove use `MultiPairInputModal` and `MultiSelectRemoveModal`.
 
 ### Accessibility (Appium)
 
-Use `id` props on Ionic React elements for test automation.
+Apply test ids using `data-testid` on Ionic React elements; the shared Appium suite under `sdk-shared/appium/tests/` queries by these ids.
 
 ---
 
 ## iOS Project Setup
 
-The iOS Xcode project includes extension targets:
-
-### Entitlements
+The iOS Xcode project includes the main App target plus a Notification Service Extension and a Widget Extension (for Live Activities).
 
 - `ios/App/App/App.entitlements` — push notification (`aps-environment`) + app groups
-
-### Notification Service Extension
-
-- `ios/App/OneSignalNotificationServiceExtension/NotificationService.swift` — forwards to `OneSignalExtension` for rich notification support
-- `ios/App/OneSignalNotificationServiceExtension/Info.plist` — extension point `com.apple.usernotifications.service`
+- `ios/App/OneSignalNotificationServiceExtension/NotificationService.swift` — forwards to `OneSignalExtension` for rich notifications
+- `ios/App/OneSignalWidget/OneSignalWidgetLiveActivity.swift` — Live Activity widget; replace contents with the shared reference at `https://raw.githubusercontent.com/OneSignal/sdk-shared/main/demo/LiveActivity.swift`
 
 ### Swift Package Manager
 
-The demo uses Swift Package Manager (SPM) instead of CocoaPods. Capacitor manages the App target's plugin dependencies through `ios/App/CapApp-SPM/Package.swift`. The extension targets reference the OneSignal XCFramework Swift package directly:
+The demo uses SPM instead of CocoaPods. Capacitor manages App-target plugin dependencies through `ios/App/CapApp-SPM/Package.swift`. The two extension targets reference the OneSignal XCFramework Swift package directly:
 
 - App target → `CapApp-SPM` local package (Capacitor + plugin products, regenerated by `cap sync`)
 - `OneSignalNotificationServiceExtension` → `OneSignalExtension` product from `https://github.com/OneSignal/OneSignal-XCFramework`
-- `OneSignalWidgetExtension` → `OneSignalFramework` product from `https://github.com/OneSignal/OneSignal-XCFramework` (transitively brings in `OneSignalLiveActivities` for Live Activity widgets)
+- `OneSignalWidget` → `OneSignalFramework` product from `https://github.com/OneSignal/OneSignal-XCFramework` (transitively pulls in `OneSignalLiveActivities`)
 
 `ios/debug.xcconfig` is wired up as the App target's Debug base configuration so Capacitor's debug-only behaviors stay enabled.
 
-To migrate an existing CocoaPods-based project to SPM, run `bunx cap spm-migration-assistant` and then add the local `CapApp-SPM` package and any extension dependencies through Xcode's Package Dependencies tab.
+The plugin's SPM product is named `OnesignalCapacitorPlugin` to match Capacitor's derived package name (`fixName` converts `onesignal-capacitor-plugin` → `OnesignalCapacitorPlugin`).
+
+To migrate an existing CocoaPods-based project to SPM, run `bunx cap spm-migration-assistant` and add the local `CapApp-SPM` package and any extension dependencies through Xcode's Package Dependencies tab.
 
 ---
 
@@ -514,23 +195,16 @@ To migrate an existing CocoaPods-based project to SPM, run `bunx cap spm-migrati
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 ```
 
-### iOS
-
-- `handleApplicationNotifications: false` in `capacitor.config.ts` to let OneSignal handle notifications
-- Capacitor setup with push notification entitlement and app groups
-- NSE target in Xcode project
-- SPM product named `OnesignalCapacitorPlugin` to match Capacitor's derived package name (Capacitor's `fixName` converts `onesignal-capacitor-plugin` → `OnesignalCapacitorPlugin`)
-
 ### Custom Notification Sound
 
 Copy `vine_boom.wav` from [sdk-shared/assets](https://github.com/OneSignal/sdk-shared/tree/main/assets) and place in:
 
 - **Android**: `android/app/src/main/res/raw/vine_boom.wav`
-- **iOS**: `ios/App/App/vine_boom.wav` (add to Xcode project as a bundle resource)
+- **iOS**: `ios/App/App/vine_boom.wav` (add to the Xcode project as a bundle resource)
 
 ---
 
-## Key Files Structure
+## File Structure
 
 ```
 examples/
@@ -539,40 +213,39 @@ examples/
 ├── run-ios.sh            # Simulator selection + cap run ios
 ├── build.md              # This file
 └── demo/
-    ├── index.html         # Minimal HTML shell with React root
+    ├── index.html
     ├── capacitor.config.ts
     ├── vite.config.ts
     ├── tsconfig.json
     ├── package.json
+    ├── .env.example
+    ├── assets/
+    │   ├── icon-only.png         # OneSignal logo on white
+    │   ├── icon-foreground.png   # Android adaptive icon foreground (transparent)
+    │   └── icon-background.png   # Android adaptive icon background (solid white)
     ├── src/
-    │   ├── main.tsx        # React entry, StrictMode, render <App />
-    │   ├── App.tsx         # IonApp + IonReactRouter, StatusBar/Keyboard config
-    │   ├── vite-env.d.ts   # Vite client types
+    │   ├── main.tsx
+    │   ├── App.tsx             # IonApp + IonReactRouter, StatusBar config
+    │   ├── vite-env.d.ts
     │   ├── assets/
     │   │   └── onesignal_logo.svg
     │   ├── hooks/
-    │   │   └── useOneSignal.ts   # Central SDK state + actions hook
+    │   │   └── useOneSignal.ts
     │   ├── models/
     │   │   ├── NotificationType.ts
     │   │   └── UserData.ts
-    │   ├── repositories/
-    │   │   └── OneSignalRepository.ts  # SDK wrapper with native guards
     │   ├── services/
-    │   │   ├── LogManager.ts           # Pub/sub logger singleton
-    │   │   ├── OneSignalApiService.ts  # REST API client singleton
-    │   │   ├── PreferencesService.ts   # localStorage persistence
-    │   │   └── TooltipHelper.ts        # Remote tooltip content
+    │   │   ├── OneSignalApiService.ts
+    │   │   ├── PreferencesService.ts
+    │   │   └── TooltipHelper.ts
     │   ├── pages/
-    │   │   ├── HomeScreen.tsx   # Main page assembling all sections
+    │   │   ├── HomeScreen.tsx
     │   │   ├── HomeScreen.css
-    │   │   ├── Secondary.tsx    # Minimal secondary page
+    │   │   ├── Secondary.tsx
     │   │   └── Secondary.css
     │   ├── components/
     │   │   ├── ActionButton.tsx
     │   │   ├── ListWidgets.tsx
-    │   │   ├── LoadingOverlay.tsx
-    │   │   ├── LogView.tsx
-    │   │   ├── LogView.css
     │   │   ├── SectionCard.tsx
     │   │   ├── ToggleRow.tsx
     │   │   ├── modals/
@@ -598,42 +271,41 @@ examples/
     │   │       ├── TagsSection.tsx
     │   │       ├── OutcomesSection.tsx
     │   │       ├── TriggersSection.tsx
-    │   │       ├── TrackEventSection.tsx
+    │   │       ├── CustomEventsSection.tsx
     │   │       ├── LocationSection.tsx
     │   │       └── LiveActivitySection.tsx
-    │   └── theme/
-    │       └── variables.css
-    ├── dist/              # Vite build output (webDir for Capacitor)
-    ├── android/           # Capacitor Android project
-    └── ios/               # Capacitor iOS project
+    │   ├── theme/
+    │   │   └── variables.css
+    │   └── utils/
+    │       └── maskValue.ts        # E2E_MODE bullet masking helper
+    ├── android/                    # Capacitor Android project
+    └── ios/
         └── App/
             ├── App/                                    # Main app target
-            │   ├── App.entitlements                    # Push + app groups
-            │   ├── vine_boom.wav                       # Custom notification sound
+            │   ├── App.entitlements
+            │   ├── vine_boom.wav
             │   └── ...
             ├── OneSignalNotificationServiceExtension/  # NSE target
             │   ├── NotificationService.swift
+            │   ├── OneSignalNotificationServiceExtension.entitlements
             │   └── Info.plist
-            ├── OneSignalWidget/                         # Widget + Live Activity target
+            ├── OneSignalWidget/                         # Widget + Live Activity
             │   ├── OneSignalWidgetBundle.swift
             │   ├── OneSignalWidgetLiveActivity.swift
             │   └── Info.plist
-            └── CapApp-SPM/                              # Capacitor-managed SPM package
-                ├── Package.swift                        # Auto-generated by `cap sync`
+            └── CapApp-SPM/                              # Capacitor-managed SPM
+                ├── Package.swift                        # Auto-generated by cap sync
                 └── Sources/CapApp-SPM/CapApp-SPM.swift
 ```
+
+A second variant lives at `examples/demo_pods/` that mirrors `demo/` but uses CocoaPods for iOS instead of SPM. The TypeScript / React source is kept in sync with `demo/`.
 
 ---
 
 ## Capacitor Best Practices
 
-- **TypeScript strict mode** on all source files, avoiding `any` and type assertions
-- **Central `useOneSignal` hook** manages all SDK state and actions; section components are pure props-driven
-- **Service layer** separates REST API calls, persistence, and logging from UI
-- **React + Ionic React** for component-based UI with React Router navigation
-- **Separate section components** per feature area for maintainability
-- **`useEffect` cleanup** for all SDK event listeners
-- **Vite+** (`vite-plus`) with `@vitejs/plugin-react` for bundling, linting, and formatting
-- **`cap sync`** after every dependency change to push web assets and native plugins
-- **Async getters** (`getIdAsync`, `hasPermission`, etc.) over deprecated sync properties
-- **`handleApplicationNotifications: false`** in `capacitor.config.ts` so OneSignal controls notification lifecycle on iOS
+- Run `bunx cap sync` after every native dependency or web-asset change to push `dist/` into the platform projects and regenerate `CapApp-SPM/Package.swift`
+- Prefer the async getters (`getIdAsync`, `getOptedInAsync`, `hasPermission`) over the deprecated sync property accessors
+- Keep `handleApplicationNotifications: false` in `capacitor.config.ts` so OneSignal owns the iOS notification lifecycle
+- Use `CapacitorHttp` for REST calls so the same code path works on iOS, Android, and the dev browser without CORS workarounds
+- Name the iOS SPM product `OnesignalCapacitorPlugin` (Capacitor's `fixName` derivation) — renaming will break `cap sync`

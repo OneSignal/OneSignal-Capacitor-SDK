@@ -2,6 +2,10 @@
 # DON'T RUN THIS FILE DIRECTLY, USE PACKAGE.JSON SCRIPTS
 set -e
 
+# Run from the calling package's directory (demo or demo_pods) so each
+# project deploys its own native build, not demo's.
+PROJECT_DIR="${INIT_CWD:-$PWD}"
+
 booted=$(xcrun simctl list devices booted -j | python3 -c '
 import json
 import sys
@@ -70,5 +74,5 @@ name="${selected%%|*}"
 udid="${selected##*|}"
 echo "Using simulator: $name ($udid)"
 
-cd "$(dirname "$0")/demo"
+cd "$PROJECT_DIR"
 npx cap run ios --target "$udid"

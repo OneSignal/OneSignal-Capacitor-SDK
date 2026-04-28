@@ -5,6 +5,8 @@ import { userDataFromJson } from '../models/UserData';
 import type { UserData } from '../models/UserData';
 
 export const API_KEY = import.meta.env.VITE_ONESIGNAL_API_KEY as string | undefined;
+const ANDROID_CHANNEL_ID = import.meta.env.VITE_ONESIGNAL_ANDROID_CHANNEL_ID as string | undefined;
+const DEFAULT_ANDROID_CHANNEL_ID = 'b3b015d9-c050-4042-8548-dcc34aa44aa4';
 
 class OneSignalApiService {
   private static instance: OneSignalApiService;
@@ -49,7 +51,7 @@ class OneSignalApiService {
         headings = { en: 'Sound Notification' };
         contents = { en: 'This notification plays a custom sound' };
         extra.ios_sound = 'vine_boom.wav';
-        extra.android_channel_id = 'b3b015d9-c050-4042-8548-dcc34aa44aa4';
+        extra.android_channel_id = ANDROID_CHANNEL_ID?.trim() || DEFAULT_ANDROID_CHANNEL_ID;
         break;
       default:
         return false;

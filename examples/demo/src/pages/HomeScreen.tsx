@@ -95,6 +95,10 @@ const HomeScreen: React.FC = () => {
     void TooltipHelper.getInstance().init();
   }, []);
 
+  useEffect(() => {
+    if (os.isReady) void os.promptPush();
+  }, [os.isReady, os.promptPush]);
+
   const showTooltipModal = (key: string): void => {
     const tooltip = TooltipHelper.getInstance().getTooltip(key);
     if (tooltip) {
@@ -223,7 +227,10 @@ const HomeScreen: React.FC = () => {
               onInfoTap={() => showTooltipModal('location')}
               onToggleLocationShared={(checked) => void os.setLocationShared(checked)}
               onPromptLocation={() => os.requestLocationPermission()}
-              onCheckLocationShared={() => showToast(`Location shared: ${os.locationShared}`)}
+              onCheckLocationShared={async () => {
+                const shared = await os.checkLocationShared();
+                showToast(`Location shared: ${shared}`);
+              }}
             />
 
             {Capacitor.getPlatform() === 'ios' && (
@@ -236,6 +243,7 @@ const HomeScreen: React.FC = () => {
                 }
                 onEnd={(activityId) => void os.endLiveActivity(activityId)}
                 hasApiKey={!!API_KEY}
+                onInfoTap={() => showTooltipModal('liveActivities')}
               />
             )}
 

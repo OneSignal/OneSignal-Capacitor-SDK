@@ -38,6 +38,7 @@ export default class LiveActivities {
    * @param  {Function} onSuccess
    * @param  {Function} onFailure
    * @returns void
+   * @deprecated Currently unsupported, avoid using this method.
    */
   exit(
     activityId: string,

@@ -21,7 +21,14 @@ let package = Package(
             dependencies: [
                 .product(name: "Capacitor", package: "capacitor-swift-pm"),
                 .product(name: "Cordova", package: "capacitor-swift-pm"),
-                .product(name: "OneSignalFramework", package: "OneSignal-XCFramework")
+                // InAppMessages and Location are separate library products in
+                // OneSignal-XCFramework and must be linked explicitly under SPM,
+                // otherwise their xcframeworks aren't loaded and the namespaces
+                // are silent no-ops at runtime.
+                .product(name: "OneSignalFramework", package: "OneSignal-XCFramework"),
+                .product(name: "OneSignalInAppMessages", package: "OneSignal-XCFramework"),
+                .product(name: "OneSignalLocation", package: "OneSignal-XCFramework"),
+                .product(name: "OneSignalExtension", package: "OneSignal-XCFramework")
             ],
             path: "ios/Sources/OneSignalCapacitorPlugin"
         )
