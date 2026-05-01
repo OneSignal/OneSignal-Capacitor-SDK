@@ -44,9 +44,7 @@ export class OneSignalPlugin implements OneSignalAPI {
   initialize(appId: string): Promise<void> {
     this._appID = appId;
 
-    return this._plugin.initialize({ appId: this._appID }).then(() => {
-      this.User.pushSubscription._setPropertiesAndObserver();
-    });
+    return this._plugin.initialize({ appId: this._appID });
   }
 
   /**

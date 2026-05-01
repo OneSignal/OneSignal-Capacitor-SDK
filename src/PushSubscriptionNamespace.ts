@@ -15,9 +15,6 @@ export interface PushSubscriptionChangedState {
 
 export default class PushSubscription implements OneSignalPushSubscriptionAPI {
   private _plugin: OneSignalCapacitorPlugin;
-  private _id?: string | null;
-  private _token?: string | null;
-  private _optedIn?: boolean;
 
   private _subscriptionObserverList: ((event: PushSubscriptionChangedState) => void)[] = [];
 
@@ -32,60 +29,6 @@ export default class PushSubscription implements OneSignalPushSubscriptionAPI {
     for (let i = 0; i < array.length; i++) {
       array[i](param);
     }
-  }
-
-  /**
-   * Sets initial Push Subscription properties and adds observer for changes.
-   * This internal method is kept to support the deprecated methods {@link id}, {@link token}, {@link optedIn}.
-   */
-  _setPropertiesAndObserver(): void {
-    void this._plugin.getPushSubscriptionId().then((result) => {
-      this._id = result.id;
-    });
-
-    void this._plugin.getPushSubscriptionToken().then((result) => {
-      this._token = result.token;
-    });
-
-    void this._plugin.getPushSubscriptionOptedIn().then((result) => {
-      this._optedIn = result.optedIn;
-    });
-
-    this.addEventListener('change', (subscriptionChange) => {
-      this._id = subscriptionChange.current.id;
-      this._token = subscriptionChange.current.token;
-      this._optedIn = subscriptionChange.current.optedIn;
-    });
-  }
-
-  /**
-   * @deprecated This method is deprecated. It has been replaced by {@link getIdAsync}.
-   */
-  get id(): string | null | undefined {
-    console.warn(
-      'OneSignal: This method has been deprecated. Use getIdAsync instead for getting push subscription id.',
-    );
-    return this._id;
-  }
-
-  /**
-   * @deprecated This method is deprecated. It has been replaced by {@link getTokenAsync}.
-   */
-  get token(): string | null | undefined {
-    console.warn(
-      'OneSignal: This method has been deprecated. Use getTokenAsync instead for getting push subscription token.',
-    );
-    return this._token;
-  }
-
-  /**
-   * @deprecated This method is deprecated. It has been replaced by {@link getOptedInAsync}.
-   */
-  get optedIn(): boolean {
-    console.warn(
-      'OneSignal: This method has been deprecated. Use getOptedInAsync instead for getting push subscription opted in status.',
-    );
-    return this._optedIn || false;
   }
 
   /**

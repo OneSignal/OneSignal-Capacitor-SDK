@@ -21,15 +21,6 @@ export interface OneSignalDebugAPI {
  * Push subscription state and controls exposed via `OneSignal.User.pushSubscription`.
  */
 export interface OneSignalPushSubscriptionAPI {
-  /** @deprecated Use {@link getIdAsync} instead. */
-  readonly id: string | null | undefined;
-
-  /** @deprecated Use {@link getTokenAsync} instead. */
-  readonly token: string | null | undefined;
-
-  /** @deprecated Use {@link getOptedInAsync} instead. */
-  readonly optedIn: boolean;
-
   /** Get the current device's push subscription ID, or null if not yet assigned. */
   getIdAsync(): Promise<string | null>;
 

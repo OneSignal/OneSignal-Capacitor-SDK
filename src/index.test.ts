@@ -1,4 +1,4 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { describe, test, expect, beforeEach } from 'vitest';
 
 import { createMockPlugin } from '../mocks/capacitor';
 import { APP_ID } from '../mocks/constants';
@@ -31,10 +31,6 @@ describe('OneSignalPlugin', () => {
     await plugin.initialize(APP_ID);
 
     expect(mockPlugin.initialize).toHaveBeenCalledWith({ appId: APP_ID });
-
-    await vi.waitFor(() => {
-      expect(mockPlugin.getPushSubscriptionId).toHaveBeenCalled();
-    });
   });
 
   test('should call plugin for login', async () => {
