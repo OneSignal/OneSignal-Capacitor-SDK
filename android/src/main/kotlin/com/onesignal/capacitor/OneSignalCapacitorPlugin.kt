@@ -14,6 +14,7 @@ import com.onesignal.inAppMessages.IInAppMessageDidDisplayEvent
 import com.onesignal.inAppMessages.IInAppMessageLifecycleListener
 import com.onesignal.inAppMessages.IInAppMessageWillDismissEvent
 import com.onesignal.inAppMessages.IInAppMessageWillDisplayEvent
+import com.onesignal.notifications.INotification
 import com.onesignal.notifications.INotificationClickEvent
 import com.onesignal.notifications.INotificationClickListener
 import com.onesignal.notifications.INotificationLifecycleListener
@@ -649,8 +650,7 @@ class OneSignalCapacitorPlugin : Plugin(),
         val notificationId = event.notification.notificationId ?: return
         notificationWillDisplayCache[notificationId] = event
         event.preventDefault()
-        val ret = JSObject(event.notification.rawPayload)
-        notifyListeners("notificationForegroundWillDisplay", ret)
+        notifyListeners("notificationForegroundWillDisplay", serializeNotification(event.notification))
     }
 
     override fun onClick(event: INotificationClickEvent) {
@@ -660,11 +660,37 @@ class OneSignalCapacitorPlugin : Plugin(),
             clickResult.put("actionId", event.result.actionId)
             clickResult.put("url", event.result.url)
             ret.put("result", clickResult)
-            ret.put("notification", JSObject(event.notification.rawPayload))
+            ret.put("notification", serializeNotification(event.notification))
             notifyListeners("notificationClick", ret)
         } else {
             pendingClickEvent = event
         }
+    }
+
+    private fun serializeNotification(notification: INotification): JSObject {
+        val json = JSObject()
+        json.put("notificationId", notification.notificationId)
+        json.put("title", notification.title)
+        json.put("body", notification.body)
+        json.put("sound", notification.sound)
+        json.put("launchURL", notification.launchURL)
+        json.put("rawPayload", notification.rawPayload)
+        json.put("actionButtons", notification.actionButtons)
+        json.put("additionalData", notification.additionalData)
+        json.put("groupKey", notification.groupKey)
+        json.put("groupMessage", notification.groupMessage)
+        json.put("groupedNotifications", notification.groupedNotifications)
+        json.put("ledColor", notification.ledColor)
+        json.put("priority", notification.priority)
+        json.put("smallIcon", notification.smallIcon)
+        json.put("largeIcon", notification.largeIcon)
+        json.put("bigPicture", notification.bigPicture)
+        json.put("collapseId", notification.collapseId)
+        json.put("fromProjectNumber", notification.fromProjectNumber)
+        json.put("smallIconAccentColor", notification.smallIconAccentColor)
+        json.put("lockScreenVisibility", notification.lockScreenVisibility)
+        json.put("androidNotificationId", notification.androidNotificationId)
+        return json
     }
 
     override fun onWillDisplay(event: IInAppMessageWillDisplayEvent) {
