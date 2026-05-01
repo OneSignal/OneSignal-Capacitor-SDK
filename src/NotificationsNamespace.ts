@@ -24,6 +24,9 @@ export default class Notifications {
   private _permissionObserverList: ((event: boolean) => void)[] = [];
   private _notificationClickedListeners: ((event: NotificationClickEvent) => void)[] = [];
   private _notificationWillDisplayListeners: ((event: NotificationWillDisplayEvent) => void)[] = [];
+  private _hasRegisteredClickListener = false;
+  private _hasRegisteredForegroundWillDisplayListener = false;
+  private _hasRegisteredPermissionListener = false;
 
   constructor(plugin: OneSignalCapacitorPlugin) {
     this._plugin = plugin;
@@ -103,29 +106,38 @@ export default class Notifications {
   ): void {
     if (event === 'click') {
       this._notificationClickedListeners.push(listener as (event: NotificationClickEvent) => void);
-      void this._plugin.addListener('notificationClick', (json: NotificationClickEvent) => {
-        this._processFunctionList(this._notificationClickedListeners, json);
-      });
+      if (!this._hasRegisteredClickListener) {
+        this._hasRegisteredClickListener = true;
+        void this._plugin.addListener('notificationClick', (json: NotificationClickEvent) => {
+          this._processFunctionList(this._notificationClickedListeners, json);
+        });
+      }
     } else if (event === 'foregroundWillDisplay') {
       this._notificationWillDisplayListeners.push(
         listener as (event: NotificationWillDisplayEvent) => void,
       );
-      void this._plugin.addListener(
-        'notificationForegroundWillDisplay',
-        (notification: OSNotification) => {
-          this._notificationWillDisplayListeners.forEach((listener) => {
-            listener(new NotificationWillDisplayEvent(notification));
-          });
-          void this._plugin.proceedWithWillDisplay({
-            notificationId: notification.notificationId,
-          });
-        },
-      );
+      if (!this._hasRegisteredForegroundWillDisplayListener) {
+        this._hasRegisteredForegroundWillDisplayListener = true;
+        void this._plugin.addListener(
+          'notificationForegroundWillDisplay',
+          (notification: OSNotification) => {
+            this._notificationWillDisplayListeners.forEach((listener) => {
+              listener(new NotificationWillDisplayEvent(notification));
+            });
+            void this._plugin.proceedWithWillDisplay({
+              notificationId: notification.notificationId,
+            });
+          },
+        );
+      }
     } else if (event === 'permissionChange') {
       this._permissionObserverList.push(listener as (event: boolean) => void);
-      void this._plugin.addListener('permissionChange', (state: { permission: boolean }) => {
-        this._processFunctionList(this._permissionObserverList, state.permission);
-      });
+      if (!this._hasRegisteredPermissionListener) {
+        this._hasRegisteredPermissionListener = true;
+        void this._plugin.addListener('permissionChange', (state: { permission: boolean }) => {
+          this._processFunctionList(this._permissionObserverList, state.permission);
+        });
+      }
     }
   }
 

@@ -222,6 +222,27 @@ describe('Notifications', () => {
 
       expect(mockPlugin.addListener).not.toHaveBeenCalled();
     });
+
+    test.each([['click'], ['foregroundWillDisplay'], ['permissionChange']] as const)(
+      'should register the bridge %s listener only once across multiple subscriptions',
+      (eventType) => {
+        notifications.addEventListener(eventType, vi.fn());
+        notifications.addEventListener(eventType, vi.fn());
+        notifications.addEventListener(eventType, vi.fn());
+
+        expect(mockPlugin.addListener).toHaveBeenCalledTimes(1);
+      },
+    );
+
+    test('should call proceedWithWillDisplay only once per push regardless of subscriber count', () => {
+      notifications.addEventListener('foregroundWillDisplay', vi.fn());
+      notifications.addEventListener('foregroundWillDisplay', vi.fn());
+
+      const callback = mockPlugin.addListener.mock.calls[0][1];
+      callback(mockNotification());
+
+      expect(mockPlugin.proceedWithWillDisplay).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('removeEventListener', () => {
