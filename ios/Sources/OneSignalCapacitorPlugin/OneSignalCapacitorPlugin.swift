@@ -632,7 +632,7 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
         clickResult["urlTarget"] = urlTargetStr
 
         notifyListeners("inAppMessageClick", data: [
-            "message": event.message.jsonRepresentation as? [String: Any] ?? [:],
+            "message": ["messageId": event.message.messageId],
             "result": clickResult
         ])
     }

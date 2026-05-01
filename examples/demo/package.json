@@ -9,8 +9,8 @@
     "clean:android": "rm -rf android/app/build android/app/.cxx android/build",
     "clean:ios": "rm -rf ios/App/build ios/DerivedData ios/App/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm",
     "ios": "bash ../run-ios.sh",
-    "preandroid": "bun run setup",
-    "preios": "bun run setup",
+    "preandroid": "vp run setup",
+    "preios": "vp run setup",
     "setup": "../setup.sh"
   },
   "dependencies": {
