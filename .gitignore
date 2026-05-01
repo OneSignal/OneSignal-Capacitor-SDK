@@ -5,6 +5,7 @@ node_modules
 dist/
 coverage/
 .capacitor-sdk-source.stamp
+.cap-sync.stamp
 
 # macOS
 .DS_Store
