@@ -163,12 +163,6 @@ Current-user operations exposed via `OneSignal.User`.
 
 Push subscription state and controls exposed via `OneSignal.User.pushSubscription`.
 
-| Prop          | Type                        |
-| ------------- | --------------------------- |
-| **`id`**      | <code>string \| null</code> |
-| **`token`**   | <code>string \| null</code> |
-| **`optedIn`** | <code>boolean</code>        |
-
 | Method                  | Signature                                                                                                                            | Description                                                                                                                                                                                         |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **getIdAsync**          | () =&gt; Promise&lt;string \| null&gt;                                                                                               | Get the current device's push subscription ID, or null if not yet assigned.                                                                                                                         |

@@ -157,6 +157,15 @@ jobs:
           git diff --staged --quiet && exit 0
           git commit -m "Release $NEW_VERSION" && git push
 
+      - name: Regenerate API docs
+        run: |
+          vp run docgen
+
+          # Only commit if there are changes
+          git add -A
+          git diff --staged --quiet && exit 0
+          git commit -m "Regenerate docs for ${{ inputs.capacitor_version }}" && git push
+
   create-pr:
     needs: [prep, update_version]
     uses: OneSignal/sdk-shared/.github/workflows/create-release.yml@main
