@@ -1,3 +1,4 @@
+import type { OneSignalUserAPI } from './api';
 import type { OneSignalCapacitorPlugin } from './definitions';
 import { isObjectSerializable, removeListener } from './helpers';
 import PushSubscription from './PushSubscriptionNamespace';
@@ -11,7 +12,7 @@ export interface UserChangedState {
   current: UserState;
 }
 
-export default class User {
+export default class User implements OneSignalUserAPI {
   pushSubscription: PushSubscription;
 
   private _plugin: OneSignalCapacitorPlugin;

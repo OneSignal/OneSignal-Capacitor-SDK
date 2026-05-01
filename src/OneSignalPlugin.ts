@@ -1,3 +1,4 @@
+import type { OneSignalAPI } from './api';
 import Debug from './DebugNamespace';
 import type { OneSignalCapacitorPlugin } from './definitions';
 import InAppMessages from './InAppMessagesNamespace';
@@ -9,7 +10,7 @@ import { _setOSNotificationPlugin } from './OSNotification';
 import Session from './SessionNamespace';
 import User from './UserNamespace';
 
-export class OneSignalPlugin {
+export class OneSignalPlugin implements OneSignalAPI {
   User: User;
   Debug: Debug;
   Session: Session;

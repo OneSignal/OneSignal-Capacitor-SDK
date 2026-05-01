@@ -1,6 +1,7 @@
+import type { OneSignalLocationAPI } from './api';
 import type { OneSignalCapacitorPlugin } from './definitions';
 
-export default class Location {
+export default class Location implements OneSignalLocationAPI {
   private _plugin: OneSignalCapacitorPlugin;
 
   constructor(plugin: OneSignalCapacitorPlugin) {

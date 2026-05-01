@@ -1,3 +1,4 @@
+import type { OneSignalPushSubscriptionAPI } from './api';
 import type { OneSignalCapacitorPlugin } from './definitions';
 import { removeListener } from './helpers';
 
@@ -12,7 +13,7 @@ export interface PushSubscriptionChangedState {
   current: PushSubscriptionState;
 }
 
-export default class PushSubscription {
+export default class PushSubscription implements OneSignalPushSubscriptionAPI {
   private _plugin: OneSignalCapacitorPlugin;
   private _id?: string | null;
   private _token?: string | null;

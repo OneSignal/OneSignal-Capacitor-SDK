@@ -1,7 +1,8 @@
+import type { OneSignalLiveActivitiesAPI } from './api';
 import type { OneSignalCapacitorPlugin } from './definitions';
 import type { LiveActivitySetupOptions } from './types/LiveActivities';
 
-export default class LiveActivities {
+export default class LiveActivities implements OneSignalLiveActivitiesAPI {
   private _plugin: OneSignalCapacitorPlugin;
 
   constructor(plugin: OneSignalCapacitorPlugin) {

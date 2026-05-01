@@ -1,3 +1,4 @@
+import type { OneSignalDebugAPI } from './api';
 import type { OneSignalCapacitorPlugin } from './definitions';
 
 export const LogLevel = {
@@ -12,7 +13,7 @@ export const LogLevel = {
 
 export type LogLevel = (typeof LogLevel)[keyof typeof LogLevel];
 
-export default class Debug {
+export default class Debug implements OneSignalDebugAPI {
   private _plugin: OneSignalCapacitorPlugin;
 
   constructor(plugin: OneSignalCapacitorPlugin) {

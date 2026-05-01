@@ -42,7 +42,7 @@
   },
   "scripts": {
     "build": "vp pack",
-    "docgen": "docgen --api OneSignalCapacitorPlugin --project tsconfig.docgen.json --output-readme README.md --output-json dist/docs.json",
+    "docgen": "docgen --api OneSignalAPI --project tsconfig.docgen.json --output-readme README.md --output-json dist/docs.json",
     "format": "vp fmt",
     "format:check": "vp fmt --check",
     "lint": "vp check src",

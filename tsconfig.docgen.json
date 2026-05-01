@@ -10,5 +10,5 @@
     "strict": true,
     "types": []
   },
-  "files": ["src/definitions.ts"]
+  "files": ["src/api.ts"]
 }

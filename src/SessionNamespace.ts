@@ -1,6 +1,7 @@
+import type { OneSignalSessionAPI } from './api';
 import type { OneSignalCapacitorPlugin } from './definitions';
 
-export default class Session {
+export default class Session implements OneSignalSessionAPI {
   private _plugin: OneSignalCapacitorPlugin;
 
   constructor(plugin: OneSignalCapacitorPlugin) {

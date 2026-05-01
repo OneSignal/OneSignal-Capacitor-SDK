@@ -1,3 +1,4 @@
+import type { OneSignalNotificationsAPI } from './api';
 import type { OneSignalCapacitorPlugin } from './definitions';
 import { removeListener } from './helpers';
 import { NotificationWillDisplayEvent } from './NotificationReceivedEvent';
@@ -19,7 +20,7 @@ export const OSNotificationPermission = {
 export type OSNotificationPermission =
   (typeof OSNotificationPermission)[keyof typeof OSNotificationPermission];
 
-export default class Notifications {
+export default class Notifications implements OneSignalNotificationsAPI {
   private _plugin: OneSignalCapacitorPlugin;
   private _permissionObserverList: ((event: boolean) => void)[] = [];
   private _notificationClickedListeners: ((event: NotificationClickEvent) => void)[] = [];

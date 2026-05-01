@@ -1,3 +1,4 @@
+import type { OneSignalInAppMessagesAPI } from './api';
 import type { OneSignalCapacitorPlugin } from './definitions';
 import { removeListener } from './helpers';
 import type {
@@ -10,7 +11,7 @@ import type {
   InAppMessageWillDisplayEvent,
 } from './types/InAppMessage';
 
-export default class InAppMessages {
+export default class InAppMessages implements OneSignalInAppMessagesAPI {
   private _plugin: OneSignalCapacitorPlugin;
   private _inAppMessageClickListeners: ((action: InAppMessageClickEvent) => void)[] = [];
   private _willDisplayInAppMessageListeners: ((event: InAppMessageWillDisplayEvent) => void)[] = [];
