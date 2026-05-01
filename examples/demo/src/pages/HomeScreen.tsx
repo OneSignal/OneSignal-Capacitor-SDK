@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core';
+import { SplashScreen } from '@capacitor/splash-screen';
 import { IonContent, IonPage, IonToast } from '@ionic/react';
 import { useEffect, useMemo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
@@ -96,7 +97,17 @@ const HomeScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (os.isReady) void os.promptPush();
+    if (!os.isReady) return;
+    // Hide the splash before prompting so the Android 13+ permission
+    // dialog never races the splash screen.
+    void (async () => {
+      try {
+        await SplashScreen.hide();
+      } catch {
+        // Ignore: web/non-native platforms don't have a splash to hide.
+      }
+      await os.promptPush();
+    })();
   }, [os.isReady, os.promptPush]);
 
   const showTooltipModal = (key: string): void => {

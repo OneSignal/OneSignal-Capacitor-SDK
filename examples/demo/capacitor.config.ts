@@ -16,7 +16,9 @@ const config: CapacitorConfig = {
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
-      launchAutoHide: true,
+      // Hide the splash manually so we can ensure native permission dialogs
+      // (e.g. push on Android 13+) don't appear behind/over the splash.
+      launchAutoHide: false,
       backgroundColor: '#ffffff',
       showSpinner: false,
     },
