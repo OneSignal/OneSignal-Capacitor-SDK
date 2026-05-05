@@ -23,8 +23,10 @@
   },
   "files": [
     "dist",
-    "ios",
-    "android",
+    "ios/Sources",
+    "android/src",
+    "android/build.gradle.kts",
+    "android/gradle",
     "Package.swift",
     "OneSignalCapacitorPlugin.podspec"
   ],
