@@ -48,13 +48,15 @@ jobs:
 
       - name: Build release APK
         working-directory: examples/demo/android
-        run: ./gradlew assembleRelease --quiet --console=plain --warning-mode=summary
+        # -PciSingleAbi → arm64-v8a-only APK; BrowserStack devices are all
+        # arm64-v8a, so dropping other ABIs trims size with no test impact.
+        run: ./gradlew assembleRelease -PciSingleAbi --quiet --console=plain --warning-mode=summary
 
       - name: Upload APK
         uses: actions/upload-artifact@v7
         with:
           name: demo-apk
-          path: examples/demo/android/app/build/outputs/apk/release/app-release.apk
+          path: examples/demo/android/app/build/outputs/apk/release/app-arm64-v8a-release.apk
           retention-days: 1
           compression-level: 0
 
@@ -138,7 +140,7 @@ jobs:
     with:
       platform: android
       app-artifact: demo-apk
-      app-filename: app-release.apk
+      app-filename: app-arm64-v8a-release.apk
       sdk-type: capacitor
       build-name: capacitor-android-${{ github.ref_name }}-${{ github.run_number }}
 

@@ -22,6 +22,23 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+            // Sign release with Android's auto-generated debug keystore so
+            // `assembleRelease` produces an installable app-release.apk for
+            // Appium E2E. Don't ship release builds to users this way.
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
+    // Opt-in via `-PciSingleAbi` to build an arm64-v8a-only APK for CI.
+    // BrowserStack devices we test against are all arm64-v8a, so dropping
+    // the other ABIs trims native libraries (Capacitor WebView shims and
+    // plugin .so files) without affecting test coverage.
+    splits {
+        abi {
+            isEnable = project.hasProperty("ciSingleAbi")
+            reset()
+            include("arm64-v8a")
+            isUniversalApk = false
         }
     }
 }
