@@ -53,7 +53,7 @@
     "test": "vp test",
     "test:coverage": "vp test run --coverage",
     "test:run": "vp test run",
-    "verify": "vp build && vp test run && vp lint"
+    "verify": "vp pack && vp test run && vp lint"
   },
   "devDependencies": {
     "@capacitor/core": "^7.0.0",
