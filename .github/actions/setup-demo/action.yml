@@ -10,31 +10,23 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Set up Bun
-      uses: oven-sh/setup-bun@v2
-
-    - name: Cache SDK bun dependencies
-      uses: actions/cache@v5
+    - name: Set up Vite+
+      uses: voidzero-dev/setup-vp@v1
       with:
-        path: node_modules
-        key: bun-sdk-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-        restore-keys: bun-sdk-${{ runner.os }}-
+        cache: true
+        run-install: true
 
-    - name: Cache demo bun dependencies
+    - name: Cache demo Vite+ dependencies
       uses: actions/cache@v5
       with:
         path: examples/demo/node_modules
-        key: bun-demo-${{ runner.os }}-${{ hashFiles('examples/demo/bun.lock') }}
-        restore-keys: bun-demo-${{ runner.os }}-
+        key: vp-demo-${{ runner.os }}-${{ hashFiles('examples/demo/bun.lock') }}
+        restore-keys: vp-demo-${{ runner.os }}-
 
-    - name: Install SDK dependencies
-      shell: bash
-      run: bun install --frozen-lockfile
-
-    - name: Set up demo
+    - name: Install and set up demo
       shell: bash
       working-directory: examples/demo
-      run: bun run setup
+      run: vp run setup
 
     - name: Create demo .env
       shell: bash
@@ -42,4 +34,5 @@ runs:
       run: |
         echo "VITE_ONESIGNAL_APP_ID=${{ inputs.onesignal-app-id }}" > .env
         echo "VITE_ONESIGNAL_API_KEY=${{ inputs.onesignal-api-key }}" >> .env
+        echo "VITE_ONESIGNAL_ANDROID_CHANNEL_ID=7ec2ece9-c538-4656-9516-1316f48a005c" >> .env
         echo "VITE_E2E_MODE=true" >> .env
