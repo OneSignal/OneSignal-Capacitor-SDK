@@ -10,7 +10,7 @@ info() { echo -e "\033[0;32m[setup]\033[0m $*"; }
 # ── Plugin tarball cache ─────────────────────────────────────────────────────
 # Skip rebuild/repack/`vp add` when plugin sources haven't changed.
 SDK_STAMP="$SDK_ROOT/.capacitor-sdk-source.stamp"
-INSTALLED_DIR="$ORIGINAL_DIR/node_modules/onesignal-capacitor-plugin"
+INSTALLED_DIR="$ORIGINAL_DIR/node_modules/@onesignal/capacitor-plugin"
 
 SDK_SRC_HASH=$(find "$SDK_ROOT/src" "$SDK_ROOT/android" "$SDK_ROOT/ios" \
                     "$SDK_ROOT/package.json" \
@@ -34,7 +34,7 @@ else
   # tarball; otherwise `vp add` hits a dependency-loop error under bun 1.3+.
   # Keep the relative `file:../../...` path to match package.json's spec.
   info "Registering tarball with vp (refreshes bun.lock integrity hash)..."
-  vp remove onesignal-capacitor-plugin 2>/dev/null || true
+  vp remove @onesignal/capacitor-plugin 2>/dev/null || true
   vp add file:../../onesignal-capacitor-plugin.tgz
 
   echo "$SDK_SRC_HASH" > "$SDK_STAMP"

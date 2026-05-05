@@ -13,7 +13,7 @@ def capacitor_pods
   pod 'CapacitorCordova', :path => '../../node_modules/@capacitor/ios'
   pod 'CapacitorKeyboard', :path => '../../node_modules/@capacitor/keyboard'
   pod 'CapacitorStatusBar', :path => '../../node_modules/@capacitor/status-bar'
-  pod 'OnesignalCapacitorPlugin', :path => '../../node_modules/onesignal-capacitor-plugin'
+  pod 'OnesignalCapacitorPlugin', :path => '../../node_modules/@onesignal/capacitor-plugin'
 end
 
 target 'App' do

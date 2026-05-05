@@ -15,7 +15,7 @@ let package = Package(
         .package(name: "CapacitorKeyboard", path: "../../../node_modules/@capacitor/keyboard"),
         .package(name: "CapacitorSplashScreen", path: "../../../node_modules/@capacitor/splash-screen"),
         .package(name: "CapacitorStatusBar", path: "../../../node_modules/@capacitor/status-bar"),
-        .package(name: "OnesignalCapacitorPlugin", path: "../../../node_modules/onesignal-capacitor-plugin")
+        .package(name: "OnesignalCapacitorPlugin", path: "../../../node_modules/@onesignal/capacitor-plugin")
     ],
     targets: [
         .target(

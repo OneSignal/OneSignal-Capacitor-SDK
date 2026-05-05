@@ -5,14 +5,14 @@ The pure [Capacitor](https://capacitorjs.com/) plugin for [OneSignal](https://on
 ## Install
 
 ```bash
-npm install onesignal-capacitor-plugin
+npm install @onesignal/capacitor-plugin
 npx cap sync
 ```
 
 ## Usage
 
 ```ts
-import OneSignal from 'onesignal-capacitor-plugin';
+import OneSignal from '@onesignal/capacitor-plugin';
 
 await OneSignal.initialize({ appId: 'YOUR_ONESIGNAL_APP_ID' });
 await OneSignal.Notifications.requestPermission(true);
