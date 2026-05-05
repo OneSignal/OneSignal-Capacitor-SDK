@@ -34,7 +34,7 @@ bunx cap add android
 - Reference the OneSignal Capacitor plugin via local tarball:
 
   ```json
-  "onesignal-capacitor-plugin": "file:../../onesignal-capacitor-plugin.tgz"
+  "@onesignal/capacitor-plugin": "file:../../onesignal-capacitor-plugin.tgz"
   ```
 
 ### App icons
@@ -179,7 +179,7 @@ The demo uses SPM instead of CocoaPods. Capacitor manages App-target plugin depe
 
 `ios/debug.xcconfig` is wired up as the App target's Debug base configuration so Capacitor's debug-only behaviors stay enabled.
 
-The plugin's SPM product is named `OnesignalCapacitorPlugin` to match Capacitor's derived package name (`fixName` converts `onesignal-capacitor-plugin` → `OnesignalCapacitorPlugin`).
+The plugin's SPM product is named `OnesignalCapacitorPlugin` to match Capacitor's derived package name (`fixName` converts `@onesignal/capacitor-plugin` → `OnesignalCapacitorPlugin`).
 
 To migrate an existing CocoaPods-based project to SPM, run `bunx cap spm-migration-assistant` and add the local `CapApp-SPM` package and any extension dependencies through Xcode's Package Dependencies tab.
 

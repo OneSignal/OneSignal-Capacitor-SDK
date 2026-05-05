@@ -8,7 +8,7 @@ import OneSignal, {
   type NotificationClickEvent,
   type NotificationWillDisplayEvent,
   type UserChangedState,
-} from 'onesignal-capacitor-plugin';
+} from '@onesignal/capacitor-plugin';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { NotificationType } from '../models/NotificationType';
