@@ -46,15 +46,22 @@ jobs:
           onesignal-app-id: ${{ vars.APPIUM_ONESIGNAL_APP_ID }}
           onesignal-api-key: ${{ secrets.APPIUM_ONESIGNAL_API_KEY }}
 
-      - name: Build release APK
+      - name: Build debug APK
         working-directory: examples/demo/android
-        run: ./gradlew assembleRelease --quiet --console=plain --warning-mode=summary
+        # Use the debug variant: Capacitor only calls
+        # WebView.setWebContentsDebuggingEnabled(true) when BuildConfig.DEBUG
+        # is true, which Appium needs to enter the WEBVIEW context (CSS /
+        # data-testid selectors). Release APKs error with
+        # "Failed to get sockets matching: @webview_devtools_remote_.*".
+        # -PciSingleAbi → arm64-v8a-only APK; BrowserStack devices are all
+        # arm64-v8a, so dropping other ABIs trims size with no test impact.
+        run: ./gradlew assembleDebug -PciSingleAbi --quiet --console=plain --warning-mode=summary
 
       - name: Upload APK
         uses: actions/upload-artifact@v7
         with:
           name: demo-apk
-          path: examples/demo/android/app/build/outputs/apk/release/app-release.apk
+          path: examples/demo/android/app/build/outputs/apk/debug/app-arm64-v8a-debug.apk
           retention-days: 1
           compression-level: 0
 
@@ -92,6 +99,10 @@ jobs:
 
       - name: Build signed IPA
         working-directory: examples/demo/ios/App
+        # Release builds are fine for Appium because capacitor.config.ts sets
+        # `ios.webContentsDebuggingEnabled: true`, which forces
+        # WKWebView.isInspectable=true so the WEBVIEW_* context (and
+        # data-testid selectors) remain available in Release IPAs.
         run: |
           xcodebuild archive \
             -project App.xcodeproj \
@@ -138,7 +149,7 @@ jobs:
     with:
       platform: android
       app-artifact: demo-apk
-      app-filename: app-release.apk
+      app-filename: app-arm64-v8a-debug.apk
       sdk-type: capacitor
       build-name: capacitor-android-${{ github.ref_name }}-${{ github.run_number }}
 

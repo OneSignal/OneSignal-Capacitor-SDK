@@ -2,7 +2,7 @@
 //  OneSignalWidgetBundle.swift
 //  OneSignalWidget
 //
-//  Created by Fadi George on 4/21/26.
+//  Created by Fadi George on 5/5/26.
 //
 
 import WidgetKit
