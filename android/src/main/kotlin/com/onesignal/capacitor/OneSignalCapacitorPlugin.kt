@@ -39,11 +39,6 @@ class OneSignalCapacitorPlugin : Plugin(),
 
     private val notificationWillDisplayCache = mutableMapOf<String, INotificationWillDisplayEvent>()
     private val preventDefaultCache = mutableSetOf<String>()
-    // Holds a click event that arrived before the JS-side click listener was
-    // attached. Replayed once initialize() has run and JS calls
-    // setNotificationClickHandlerRegistered.
-    private var pendingClickEvent: INotificationClickEvent? = null
-    private var jsClickHandlerRegistered = false
 
     // region Core
 
@@ -103,23 +98,7 @@ class OneSignalCapacitorPlugin : Plugin(),
         OneSignal.InAppMessages.addLifecycleListener(this)
         OneSignal.InAppMessages.addClickListener(this)
 
-        flushPendingClickEventIfReady()
-
         call.resolve()
-    }
-
-    @PluginMethod
-    fun setNotificationClickHandlerRegistered(call: PluginCall) {
-        jsClickHandlerRegistered = true
-        flushPendingClickEventIfReady()
-        call.resolve()
-    }
-
-    private fun flushPendingClickEventIfReady() {
-        if (bridge == null || !jsClickHandlerRegistered) return
-        val event = pendingClickEvent ?: return
-        pendingClickEvent = null
-        notifyListeners("notificationClick", buildClickEventJson(event))
     }
 
     private fun buildClickEventJson(event: INotificationClickEvent): JSObject {
@@ -673,8 +652,11 @@ class OneSignalCapacitorPlugin : Plugin(),
     }
 
     override fun onClick(event: INotificationClickEvent) {
-        pendingClickEvent = event
-        flushPendingClickEventIfReady()
+        // retainUntilConsumed lets Capacitor hold this event until the JS-side
+        // click listener attaches. On Android the OneSignal SDK can deliver a
+        // cold-start click before the WebView has finished booting and the JS
+        // layer has called addEventListener('click', ...).
+        notifyListeners("notificationClick", buildClickEventJson(event), true)
     }
 
     private fun serializeNotification(notification: INotification): JSObject {

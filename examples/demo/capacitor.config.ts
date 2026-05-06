@@ -4,6 +4,7 @@ const config: CapacitorConfig = {
   appId: 'com.onesignal.example',
   appName: 'OneSignal Demo',
   webDir: 'dist',
+  loggingBehavior: 'debug',
   ios: {
     handleApplicationNotifications: false,
     // Force WKWebView.isInspectable = true so Appium's XCUITest driver can
