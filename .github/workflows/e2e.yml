@@ -99,15 +99,15 @@ jobs:
 
       - name: Build signed IPA
         working-directory: examples/demo/ios/App
-        # Build the Debug configuration so WKWebView's remote inspector is
-        # exposed; Appium needs it to enter the WEBVIEW_* context. Release
-        # IPAs error with "data-testid is not a valid attribute" because
-        # selectors fall through to XCUITest's native attribute set.
+        # Release builds are fine for Appium because capacitor.config.ts sets
+        # `ios.webContentsDebuggingEnabled: true`, which forces
+        # WKWebView.isInspectable=true so the WEBVIEW_* context (and
+        # data-testid selectors) remain available in Release IPAs.
         run: |
           xcodebuild archive \
             -project App.xcodeproj \
             -scheme App \
-            -configuration Debug \
+            -configuration Release \
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
             -archivePath build/App.xcarchive \
