@@ -265,11 +265,6 @@ export function useOneSignal(): UseOneSignalReturn {
 
       console.log(`OneSignal initialized with app ID: ${nextAppId}`);
 
-      const stored = localStorage.getItem('lastNotificationClicks');
-      if (stored) {
-        console.log('lastNotificationClicks (from previous launches):', JSON.parse(stored));
-      }
-
       const externalId = await OneSignal.User.getExternalId();
       const [pushId, pushOptedIn, hasPerm] = await Promise.all([
         OneSignal.User.pushSubscription.getIdAsync(),
