@@ -39,7 +39,11 @@ class OneSignalCapacitorPlugin : Plugin(),
 
     private val notificationWillDisplayCache = mutableMapOf<String, INotificationWillDisplayEvent>()
     private val preventDefaultCache = mutableSetOf<String>()
+    // Holds a click event that arrived before the JS-side click listener was
+    // attached. Replayed once initialize() has run and JS calls
+    // setNotificationClickHandlerRegistered.
     private var pendingClickEvent: INotificationClickEvent? = null
+    private var jsClickHandlerRegistered = false
 
     // region Core
 
@@ -99,18 +103,33 @@ class OneSignalCapacitorPlugin : Plugin(),
         OneSignal.InAppMessages.addLifecycleListener(this)
         OneSignal.InAppMessages.addClickListener(this)
 
-        pendingClickEvent?.let { event ->
-            val ret = JSObject()
-            val clickResult = JSObject()
-            clickResult.put("actionId", event.result.actionId)
-            clickResult.put("url", event.result.url)
-            ret.put("result", clickResult)
-            ret.put("notification", JSObject(event.notification.rawPayload))
-            notifyListeners("notificationClick", ret)
-            pendingClickEvent = null
-        }
+        flushPendingClickEventIfReady()
 
         call.resolve()
+    }
+
+    @PluginMethod
+    fun setNotificationClickHandlerRegistered(call: PluginCall) {
+        jsClickHandlerRegistered = true
+        flushPendingClickEventIfReady()
+        call.resolve()
+    }
+
+    private fun flushPendingClickEventIfReady() {
+        if (bridge == null || !jsClickHandlerRegistered) return
+        val event = pendingClickEvent ?: return
+        pendingClickEvent = null
+        notifyListeners("notificationClick", buildClickEventJson(event))
+    }
+
+    private fun buildClickEventJson(event: INotificationClickEvent): JSObject {
+        val ret = JSObject()
+        val clickResult = JSObject()
+        clickResult.put("actionId", event.result.actionId)
+        clickResult.put("url", event.result.url)
+        ret.put("result", clickResult)
+        ret.put("notification", serializeNotification(event.notification))
+        return ret
     }
 
     @PluginMethod
@@ -654,17 +673,8 @@ class OneSignalCapacitorPlugin : Plugin(),
     }
 
     override fun onClick(event: INotificationClickEvent) {
-        if (bridge != null) {
-            val ret = JSObject()
-            val clickResult = JSObject()
-            clickResult.put("actionId", event.result.actionId)
-            clickResult.put("url", event.result.url)
-            ret.put("result", clickResult)
-            ret.put("notification", serializeNotification(event.notification))
-            notifyListeners("notificationClick", ret)
-        } else {
-            pendingClickEvent = event
-        }
+        pendingClickEvent = event
+        flushPendingClickEventIfReady()
     }
 
     private fun serializeNotification(notification: INotification): JSObject {

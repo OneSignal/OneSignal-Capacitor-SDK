@@ -2,6 +2,7 @@ import Foundation
 import Capacitor
 import OneSignalFramework
 import OneSignalLiveActivities
+import OSCapacitorLaunchOptions
 
 @objc(OneSignalCapacitorPlugin)
 public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
@@ -73,7 +74,6 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
 
     private var notificationWillDisplayCache = [String: OSNotificationWillDisplayEvent]()
     private var preventDefaultCache = [String: OSNotificationWillDisplayEvent]()
-    private var pendingClickEvent: OSNotificationClickEvent?
 
     // MARK: - Core
 
@@ -84,7 +84,24 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
         }
         OneSignalWrapper.sdkType = "capacitor"
         OneSignalWrapper.sdkVersion = "010000"
-        OneSignal.initialize(appId, withLaunchOptions: nil)
+        // OSCapacitorLaunchOptions's +load captures the dictionary from
+        // UIApplicationDidFinishLaunchingNotification at process start (before
+        // main()), so cold-start notification taps that arrive via launchOptions
+        // are still available to the OneSignal iOS SDK when the JS layer
+        // initializes us.
+        OneSignal.initialize(appId, withLaunchOptions: OSCapacitorLaunchOptions.launchOptions)
+
+        // The OneSignal iOS SDK drops cold-start UNNotificationResponse objects
+        // inside processNotificationResponse: when no appId is set yet, which
+        // is always true on cold start because iOS delivers the response before
+        // OneSignal.initialize() runs from JS. OSCapacitorLaunchOptions's
+        // delegate wrap captures the response so we can replay it here, after
+        // initialize has set the appId.
+        if let pending = OSCapacitorLaunchOptions.pendingColdStartResponse {
+            OSNotificationsManager.processNotificationResponse(pending)
+            OSCapacitorLaunchOptions.consumeColdStartResponse()
+        }
+
         OneSignal.Notifications.addPermissionObserver(self)
         OneSignal.Notifications.addForegroundLifecycleListener(self)
         OneSignal.Notifications.addClickListener(self)
@@ -93,10 +110,6 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
         OneSignal.InAppMessages.addLifecycleListener(self)
         OneSignal.InAppMessages.addClickListener(self)
 
-        if let pending = pendingClickEvent {
-            sendNotificationClickEvent(pending)
-            pendingClickEvent = nil
-        }
         call.resolve()
     }
 
@@ -569,18 +582,16 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
     }
 
     public func onClick(event: OSNotificationClickEvent) {
-        if bridge != nil {
-            sendNotificationClickEvent(event)
-        } else {
-            pendingClickEvent = event
+        // retainUntilConsumed lets Capacitor hold this event until a JS click
+        // listener attaches. On cold start the plugin's initialize() replays
+        // the OneSignal click before JS has had a chance to call
+        // addEventListener('click', ...), so without this a cold-start tap
+        // would fire before any JS listener exists and be lost.
+        guard let data = event.stringify().data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return
         }
-    }
-
-    private func sendNotificationClickEvent(_ event: OSNotificationClickEvent) {
-        if let data = event.stringify().data(using: .utf8),
-           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-            notifyListeners("notificationClick", data: json)
-        }
+        notifyListeners("notificationClick", data: json, retainUntilConsumed: true)
     }
 
     @objc(onWillDisplayInAppMessage:)

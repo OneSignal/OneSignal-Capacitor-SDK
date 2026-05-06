@@ -16,6 +16,16 @@ let package = Package(
         .package(url: "https://github.com/OneSignal/OneSignal-XCFramework", from: "5.0.0")
     ],
     targets: [
+        // Obj-C helper that captures the iOS launchOptions dictionary at
+        // process start (via +load + UIApplicationDidFinishLaunchingNotification)
+        // so cold-start notification taps are still available when the JS
+        // layer initializes the plugin later. SPM cannot mix Swift and Obj-C
+        // in the same target, so this lives as its own target.
+        .target(
+            name: "OSCapacitorLaunchOptions",
+            path: "ios/Sources/OSCapacitorLaunchOptions",
+            publicHeadersPath: "include"
+        ),
         .target(
             name: "OnesignalCapacitorPlugin",
             dependencies: [
@@ -28,7 +38,8 @@ let package = Package(
                 .product(name: "OneSignalFramework", package: "OneSignal-XCFramework"),
                 .product(name: "OneSignalInAppMessages", package: "OneSignal-XCFramework"),
                 .product(name: "OneSignalLocation", package: "OneSignal-XCFramework"),
-                .product(name: "OneSignalExtension", package: "OneSignal-XCFramework")
+                .product(name: "OneSignalExtension", package: "OneSignal-XCFramework"),
+                "OSCapacitorLaunchOptions"
             ],
             path: "ios/Sources/OneSignalCapacitorPlugin"
         )

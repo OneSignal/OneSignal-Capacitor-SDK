@@ -175,6 +175,22 @@ export function useOneSignal(): UseOneSignalReturn {
 
     const handleNotificationClick = (e: NotificationClickEvent) => {
       console.log(`Notification click: ${e.notification.title ?? ''}`);
+      // Persist to localStorage so cold-start clicks are still inspectable
+      // after the Safari Web Inspector reattaches to the WKWebView.
+      try {
+        const existing = JSON.parse(localStorage.getItem('lastNotificationClicks') ?? '[]');
+        existing.push({
+          notificationId: e.notification.notificationId,
+          title: e.notification.title ?? null,
+          body: e.notification.body ?? null,
+          actionId: e.result.actionId ?? null,
+          url: e.result.url ?? null,
+          receivedAt: new Date().toISOString(),
+        });
+        localStorage.setItem('lastNotificationClicks', JSON.stringify(existing.slice(-20)));
+      } catch (err) {
+        console.warn('Failed to persist notification click to localStorage', err);
+      }
     };
 
     const handleForegroundWillDisplay = (e: NotificationWillDisplayEvent) => {
@@ -248,6 +264,11 @@ export function useOneSignal(): UseOneSignalReturn {
       OneSignal.User.addEventListener('change', userChangeHandler);
 
       console.log(`OneSignal initialized with app ID: ${nextAppId}`);
+
+      const stored = localStorage.getItem('lastNotificationClicks');
+      if (stored) {
+        console.log('lastNotificationClicks (from previous launches):', JSON.parse(stored));
+      }
 
       const externalId = await OneSignal.User.getExternalId();
       const [pushId, pushOptedIn, hasPerm] = await Promise.all([
