@@ -23,11 +23,10 @@ runs:
         key: vp-demo-${{ runner.os }}-${{ hashFiles('examples/demo/bun.lock') }}
         restore-keys: vp-demo-${{ runner.os }}-
 
-    - name: Install and set up demo
-      shell: bash
-      working-directory: examples/demo
-      run: vp run setup
-
+    # Must precede `vp run setup`: the demo's setup.sh runs `vp run build`,
+    # which inlines `import.meta.env.VITE_*` into the web bundle at build time.
+    # Writing .env afterward leaves the bundle (and therefore the APK/IPA) with
+    # fallback values like the default APP_ID.
     - name: Create demo .env
       shell: bash
       working-directory: examples/demo
@@ -36,3 +35,8 @@ runs:
         echo "VITE_ONESIGNAL_API_KEY=${{ inputs.onesignal-api-key }}" >> .env
         echo "VITE_ONESIGNAL_ANDROID_CHANNEL_ID=7ec2ece9-c538-4656-9516-1316f48a005c" >> .env
         echo "VITE_E2E_MODE=true" >> .env
+
+    - name: Install and set up demo
+      shell: bash
+      working-directory: examples/demo
+      run: vp run setup
