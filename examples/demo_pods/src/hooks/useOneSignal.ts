@@ -278,7 +278,9 @@ export function useOneSignal(): UseOneSignalReturn {
       setIsLoading(false);
     });
 
+    console.log('Loaded OneSignal');
     return () => {
+      console.log('Cleaning up OneSignal listeners');
       OneSignal.InAppMessages.removeEventListener('willDisplay', handleIamWillDisplay);
       OneSignal.InAppMessages.removeEventListener('didDisplay', handleIamDidDisplay);
       OneSignal.InAppMessages.removeEventListener('willDismiss', handleIamWillDismiss);
