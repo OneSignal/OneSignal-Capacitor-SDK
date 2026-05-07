@@ -40,6 +40,27 @@ else
   echo "$SDK_SRC_HASH" > "$SDK_STAMP"
 fi
 
+# ── Vite prebundle staleness check ───────────────────────────────────────────
+# Vite prebundles deps into node_modules/.vite/deps once at startup and keys
+# the cache on lockfileHash. file: deps don't always trip that hash, and a
+# long-running Vite (via dev-android.sh's "reuse existing dev server" path)
+# never re-bundles mid-session. Always check: if the prebundle predates the
+# installed dist, drop it and kill any Vite still on $DEV_PORT so the next
+# dev:* run re-bundles cleanly. Self-healing; runs regardless of whether the
+# SDK rebuild branch above fired.
+DEV_PORT="${DEV_PORT:-5173}"
+PREBUNDLE="$ORIGINAL_DIR/node_modules/.vite/deps/@onesignal_capacitor-plugin.js"
+INSTALLED_DIST="$INSTALLED_DIR/dist/index.js"
+if [[ -f "$INSTALLED_DIST" ]] && [[ -f "$PREBUNDLE" ]] && [[ "$INSTALLED_DIST" -nt "$PREBUNDLE" ]]; then
+  info "Vite prebundle is stale (installed dist is newer); invalidating..."
+  rm -rf "$ORIGINAL_DIR/node_modules/.vite"
+  if lsof -ti:"$DEV_PORT" >/dev/null 2>&1; then
+    info "Killing stale Vite on :$DEV_PORT so the rebuild takes effect..."
+    lsof -ti:"$DEV_PORT" | xargs kill 2>/dev/null || true
+    sleep 1
+  fi
+fi
+
 # ── Web bundle ───────────────────────────────────────────────────────────────
 info "Building web bundle (vite)..."
 # Same reasoning as the SDK build above: invoke `vp build` directly to skip
