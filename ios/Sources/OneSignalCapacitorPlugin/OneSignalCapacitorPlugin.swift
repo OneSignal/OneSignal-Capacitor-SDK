@@ -73,7 +73,20 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
     ]
 
     private var notificationWillDisplayCache = [String: OSNotificationWillDisplayEvent]()
-    private var preventDefaultCache = [String: OSNotificationWillDisplayEvent]()
+    private var preventDefaultCache = Set<String>()
+    private var initialized = false
+
+    deinit {
+        // Detach observers so a stale plugin instance doesn't keep firing
+        // into a dead JS bridge if the WebView VC is ever released.
+        OneSignal.Notifications.removePermissionObserver(self)
+        OneSignal.Notifications.removeForegroundLifecycleListener(self)
+        OneSignal.Notifications.removeClickListener(self)
+        OneSignal.User.pushSubscription.removeObserver(self)
+        OneSignal.User.removeObserver(self)
+        OneSignal.InAppMessages.removeLifecycleListener(self)
+        OneSignal.InAppMessages.removeClickListener(self)
+    }
 
     // MARK: - Core
 
@@ -82,6 +95,17 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
             call.reject("appId is required")
             return
         }
+
+        // initialize() is idempotent: JS may call it multiple times per
+        // plugin instance (effect re-runs, hot reload). The iOS SDK's
+        // listener arrays don't dedupe, so unguarded re-entry would
+        // double-fire foreground/click events.
+        if initialized {
+            call.resolve()
+            return
+        }
+        initialized = true
+
         OneSignalWrapper.sdkType = "capacitor"
         OneSignalWrapper.sdkVersion = "010000"
         // OSCapacitorLaunchOptions's +load captures the dictionary from
@@ -333,7 +357,7 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
             return
         }
         event.preventDefault()
-        preventDefaultCache[notificationId] = event
+        preventDefaultCache.insert(notificationId)
         call.resolve()
     }
 
@@ -342,11 +366,15 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
             call.reject("notificationId is required")
             return
         }
-        guard let event = notificationWillDisplayCache[notificationId] else {
-            call.reject("Could not find notification will display event")
+        // JS always dispatches this after the listener loop, even when a
+        // listener already called display(). Missing entry = already handled.
+        guard let event = notificationWillDisplayCache.removeValue(forKey: notificationId) else {
+            preventDefaultCache.remove(notificationId)
+            call.resolve()
             return
         }
-        if preventDefaultCache[notificationId] == nil {
+        let wasPrevented = preventDefaultCache.remove(notificationId) != nil
+        if !wasPrevented {
             event.notification.display()
         }
         call.resolve()
@@ -357,10 +385,12 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
             call.reject("notificationId is required")
             return
         }
-        guard let event = notificationWillDisplayCache[notificationId] else {
-            call.reject("Could not find notification will display event")
+        guard let event = notificationWillDisplayCache.removeValue(forKey: notificationId) else {
+            preventDefaultCache.remove(notificationId)
+            call.resolve()
             return
         }
+        preventDefaultCache.remove(notificationId)
         event.notification.display()
         call.resolve()
     }
