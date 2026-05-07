@@ -24,8 +24,8 @@ import com.onesignal.user.state.IUserStateObserver
 import com.onesignal.user.state.UserChangedState
 import com.onesignal.user.subscriptions.IPushSubscriptionObserver
 import com.onesignal.user.subscriptions.PushSubscriptionChangedState
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
@@ -37,9 +37,24 @@ class OneSignalCapacitorPlugin : Plugin(),
     IInAppMessageLifecycleListener,
     IInAppMessageClickListener {
 
+    companion object {
+        // Mirror of iOS UNAuthorizationStatus values so the JS layer can use a
+        // single permissionNative() return shape across platforms. Android only
+        // distinguishes denied/authorized; the iOS-specific notDetermined (0),
+        // provisional (3), and ephemeral (4) states do not apply here.
+        private const val PERMISSION_DENIED = 1
+        private const val PERMISSION_AUTHORIZED = 2
+    }
+
     private val notificationWillDisplayCache = mutableMapOf<String, INotificationWillDisplayEvent>()
     private val preventDefaultCache = mutableSetOf<String>()
     private var initialized = false
+
+    // Class-scoped scope so launched permission/location coroutines are tied
+    // to the plugin instance lifetime. Cancelled in handleOnDestroy so a
+    // pending permission dialog that resolves after the activity dies cannot
+    // call into the dead Capacitor bridge.
+    private val pluginScope = MainScope()
 
     private val permissionObserver = object : IPermissionObserver {
         override fun onNotificationPermissionChange(permission: Boolean) {
@@ -95,6 +110,12 @@ class OneSignalCapacitorPlugin : Plugin(),
             OneSignal.InAppMessages.removeLifecycleListener(this)
             OneSignal.InAppMessages.removeClickListener(this)
         }
+        pluginScope.cancel()
+        // notificationWillDisplayCache and preventDefaultCache are not cleared
+        // here — once the listener removals above run, nothing references this
+        // plugin instance and GC reclaims the caches along with it. The real
+        // bound on cache size is the consume-on-read in proceedWithWillDisplay
+        // / displayNotification.
         super.handleOnDestroy()
     }
 
@@ -172,8 +193,6 @@ class OneSignalCapacitorPlugin : Plugin(),
         OneSignal.consentGiven = granted
         call.resolve()
     }
-
-    // endregion
 
     // region Debug
 
@@ -416,14 +435,15 @@ class OneSignalCapacitorPlugin : Plugin(),
     @PluginMethod
     fun permissionNative(call: PluginCall) {
         val ret = JSObject()
-        ret.put("permission", if (OneSignal.Notifications.permission) 2 else 1)
+        val status = if (OneSignal.Notifications.permission) PERMISSION_AUTHORIZED else PERMISSION_DENIED
+        ret.put("permission", status)
         call.resolve(ret)
     }
 
     @PluginMethod
     fun requestPermission(call: PluginCall) {
         val fallback = call.getBoolean("fallbackToSettings") ?: false
-        CoroutineScope(Dispatchers.Main).launch {
+        pluginScope.launch {
             val accepted = OneSignal.Notifications.requestPermission(fallback)
             val ret = JSObject()
             ret.put("permission", accepted)
@@ -440,8 +460,12 @@ class OneSignalCapacitorPlugin : Plugin(),
 
     @PluginMethod
     fun registerForProvisionalAuthorization(call: PluginCall) {
+        // Provisional authorization is an iOS-only concept (UNUserNotification
+        // .provisional). Android has no equivalent quiet-delivery permission
+        // tier, so report `accepted = false` rather than misleading the JS
+        // layer into thinking a quiet permission was granted.
         val ret = JSObject()
-        ret.put("accepted", true)
+        ret.put("accepted", false)
         call.resolve(ret)
     }
 
@@ -496,12 +520,15 @@ class OneSignalCapacitorPlugin : Plugin(),
             call.reject("notificationId is required")
             return
         }
-        val event = notificationWillDisplayCache[notificationId]
+        // Consume the cached event: foreground will-display is single-shot, so
+        // remove from the cache once the JS side has decided what to do with
+        // it. Without this both caches would grow for the activity's lifetime.
+        val event = notificationWillDisplayCache.remove(notificationId)
         if (event == null) {
             call.reject("Could not find notification will display event")
             return
         }
-        if (!preventDefaultCache.contains(notificationId)) {
+        if (!preventDefaultCache.remove(notificationId)) {
             event.notification.display()
         }
         call.resolve()
@@ -514,11 +541,12 @@ class OneSignalCapacitorPlugin : Plugin(),
             call.reject("notificationId is required")
             return
         }
-        val event = notificationWillDisplayCache[notificationId]
+        val event = notificationWillDisplayCache.remove(notificationId)
         if (event == null) {
             call.reject("Could not find notification will display event")
             return
         }
+        preventDefaultCache.remove(notificationId)
         event.notification.display()
         call.resolve()
     }
@@ -617,7 +645,7 @@ class OneSignalCapacitorPlugin : Plugin(),
 
     @PluginMethod
     fun requestLocationPermission(call: PluginCall) {
-        CoroutineScope(Dispatchers.Main).launch {
+        pluginScope.launch {
             OneSignal.Location.requestPermission()
             call.resolve()
         }
@@ -639,7 +667,13 @@ class OneSignalCapacitorPlugin : Plugin(),
 
     // endregion
 
-    // region Live Activities (no-op on Android)
+    // region Live Activities
+    //
+    // Live Activities are an iOS-only feature backed by ActivityKit. All
+    // methods below intentionally resolve as a no-op on Android (any args
+    // passed from JS are ignored) so cross-platform JS code can call them
+    // unconditionally. Do not log warnings here — JS callers expect silent
+    // success on the unsupported platform.
 
     @PluginMethod
     fun enterLiveActivity(call: PluginCall) {
@@ -676,6 +710,10 @@ class OneSignalCapacitorPlugin : Plugin(),
     // region Observer Callbacks
 
     override fun onWillDisplay(event: INotificationWillDisplayEvent) {
+        // No retainUntilConsumed needed: foreground will-display only fires
+        // while the app is foregrounded, so the JS layer's listener is
+        // already attached. Contrast with onClick() below, which can fire
+        // before the WebView finishes booting on a cold-start tap.
         val notificationId = event.notification.notificationId ?: return
         notificationWillDisplayCache[notificationId] = event
         event.preventDefault()
