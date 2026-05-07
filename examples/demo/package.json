@@ -8,8 +8,13 @@
     "build": "vp build",
     "clean:android": "rm -rf android/app/build android/app/.cxx android/build",
     "clean:ios": "rm -rf ios/App/build ios/DerivedData ios/App/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm",
+    "dev": "vp dev --host --port 5173",
+    "dev:android": "bash ../dev-android.sh",
+    "dev:ios": "bash ../dev-ios.sh",
     "ios": "bash ../run-ios.sh",
     "preandroid": "vp run setup",
+    "predev:android": "vp run setup",
+    "predev:ios": "vp run setup",
     "preios": "vp run setup",
     "setup": "../setup.sh"
   },
