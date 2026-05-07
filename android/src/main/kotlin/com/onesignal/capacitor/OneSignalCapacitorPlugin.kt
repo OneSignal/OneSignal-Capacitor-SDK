@@ -1,5 +1,6 @@
 package com.onesignal.capacitor
 
+import android.app.Application
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
@@ -7,6 +8,7 @@ import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import com.onesignal.OneSignal
 import com.onesignal.common.OneSignalWrapper
+import com.onesignal.core.internal.application.IApplicationService
 import com.onesignal.inAppMessages.IInAppMessageClickEvent
 import com.onesignal.inAppMessages.IInAppMessageClickListener
 import com.onesignal.inAppMessages.IInAppMessageDidDismissEvent
@@ -95,12 +97,9 @@ class OneSignalCapacitorPlugin : Plugin(),
     }
 
     override fun handleOnDestroy() {
-        // Detach this dead plugin instance from the OneSignal SDK singleton so a
-        // new plugin instance (created on the next activity launch) can receive
-        // events. Without this, a notification click delivered between activity
-        // destroy and re-launch would fire on this stale instance whose WebView
-        // is gone, and the SDK's `unprocessedOpenedNotifs` replay queue would be
-        // skipped because `extOpenedCallback.hasSubscribers` would still be true.
+        // Detach this dead plugin instance so the next plugin instance can
+        // receive events; otherwise the SDK keeps firing on this stale
+        // instance and skips its unprocessed-click replay queue.
         runCatching {
             OneSignal.Notifications.removePermissionObserver(permissionObserver)
             OneSignal.Notifications.removeForegroundLifecycleListener(this)
@@ -111,11 +110,9 @@ class OneSignalCapacitorPlugin : Plugin(),
             OneSignal.InAppMessages.removeClickListener(this)
         }
         pluginScope.cancel()
-        // notificationWillDisplayCache and preventDefaultCache are not cleared
-        // here — once the listener removals above run, nothing references this
-        // plugin instance and GC reclaims the caches along with it. The real
-        // bound on cache size is the consume-on-read in proceedWithWillDisplay
-        // / displayNotification.
+        // Caches aren't explicitly cleared: GC reclaims them with this
+        // instance once the listener removals above run, and runtime size is
+        // bounded by consume-on-read in proceedWithWillDisplay/displayNotification.
         super.handleOnDestroy()
     }
 
@@ -127,11 +124,9 @@ class OneSignalCapacitorPlugin : Plugin(),
             return
         }
 
-        // initialize() is idempotent at the plugin layer. The JS side can call
-        // it multiple times within one activity (React effect re-runs on
-        // remount, hot reload, etc.); subsequent calls are a no-op. Listeners
-        // are detached in handleOnDestroy when the activity dies, and the next
-        // plugin instance gets a fresh `initialized = false`.
+        // initialize() is idempotent: JS may call it multiple times per
+        // activity (effect re-runs, hot reload). Listeners are detached in
+        // handleOnDestroy and the next plugin instance starts fresh.
         if (initialized) {
             call.resolve()
             return
@@ -142,6 +137,11 @@ class OneSignalCapacitorPlugin : Plugin(),
         OneSignalWrapper.sdkVersion = "010000"
         OneSignal.initWithContext(context, appId)
 
+        // If the SDK was initialized from a non-Activity context (FCM/work
+        // managers) before this call, its ALC missed MainActivity.onResume
+        // and isInForeground stays false. Forward the missed events now.
+        nudgeApplicationServiceForeground()
+
         OneSignal.Notifications.addPermissionObserver(permissionObserver)
         OneSignal.Notifications.addForegroundLifecycleListener(this)
         OneSignal.Notifications.addClickListener(this)
@@ -151,6 +151,17 @@ class OneSignalCapacitorPlugin : Plugin(),
         OneSignal.InAppMessages.addClickListener(this)
 
         call.resolve()
+    }
+
+    /** Forward the missed activity-resume to the SDK so isInForeground is
+     *  correct on cold start. No-op if the SDK already saw the resume. */
+    private fun nudgeApplicationServiceForeground() {
+        val activity = activity ?: return
+        val appSvc = runCatching { OneSignal.getServiceOrNull<IApplicationService>() }.getOrNull() ?: return
+        if (appSvc.isInForeground && appSvc.current === activity) return
+        val callbacks = appSvc as? Application.ActivityLifecycleCallbacks ?: return
+        callbacks.onActivityStarted(activity)
+        callbacks.onActivityResumed(activity)
     }
 
     private fun buildClickEventJson(event: INotificationClickEvent): JSObject {
@@ -520,12 +531,12 @@ class OneSignalCapacitorPlugin : Plugin(),
             call.reject("notificationId is required")
             return
         }
-        // Consume the cached event: foreground will-display is single-shot, so
-        // remove from the cache once the JS side has decided what to do with
-        // it. Without this both caches would grow for the activity's lifetime.
+        // JS always dispatches this after the listener loop, even when a
+        // listener already called display(). Missing entry = already handled.
         val event = notificationWillDisplayCache.remove(notificationId)
         if (event == null) {
-            call.reject("Could not find notification will display event")
+            preventDefaultCache.remove(notificationId)
+            call.resolve()
             return
         }
         if (!preventDefaultCache.remove(notificationId)) {
@@ -543,7 +554,8 @@ class OneSignalCapacitorPlugin : Plugin(),
         }
         val event = notificationWillDisplayCache.remove(notificationId)
         if (event == null) {
-            call.reject("Could not find notification will display event")
+            preventDefaultCache.remove(notificationId)
+            call.resolve()
             return
         }
         preventDefaultCache.remove(notificationId)
@@ -668,12 +680,8 @@ class OneSignalCapacitorPlugin : Plugin(),
     // endregion
 
     // region Live Activities
-    //
-    // Live Activities are an iOS-only feature backed by ActivityKit. All
-    // methods below intentionally resolve as a no-op on Android (any args
-    // passed from JS are ignored) so cross-platform JS code can call them
-    // unconditionally. Do not log warnings here — JS callers expect silent
-    // success on the unsupported platform.
+    // iOS-only feature; methods below are no-ops on Android so cross-platform
+    // JS code can call them unconditionally. No warnings — silent success.
 
     @PluginMethod
     fun enterLiveActivity(call: PluginCall) {
