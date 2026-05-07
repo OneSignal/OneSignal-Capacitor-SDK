@@ -40,7 +40,21 @@ class OneSignalCapacitorPlugin : Plugin(),
     private val notificationWillDisplayCache = mutableMapOf<String, INotificationWillDisplayEvent>()
     private val preventDefaultCache = mutableSetOf<String>()
 
-    // region Core
+    override fun handleOnDestroy() {
+        // Detach this dead plugin instance from the OneSignal SDK singleton so a
+        // new plugin instance (created on the next activity launch) can receive
+        // events. Without this, a notification click delivered between activity
+        // destroy and re-launch would fire on this stale instance whose WebView
+        // is gone, and the SDK's `unprocessedOpenedNotifs` replay queue would be
+        // skipped because `extOpenedCallback.hasSubscribers` would still be true.
+        runCatching {
+            OneSignal.Notifications.removeClickListener(this)
+            OneSignal.Notifications.removeForegroundLifecycleListener(this)
+            OneSignal.InAppMessages.removeLifecycleListener(this)
+            OneSignal.InAppMessages.removeClickListener(this)
+        }
+        super.handleOnDestroy()
+    }
 
     @PluginMethod
     fun initialize(call: PluginCall) {
