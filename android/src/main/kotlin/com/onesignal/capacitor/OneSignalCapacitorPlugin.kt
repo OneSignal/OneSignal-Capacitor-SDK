@@ -39,7 +39,45 @@ class OneSignalCapacitorPlugin : Plugin(),
 
     private val notificationWillDisplayCache = mutableMapOf<String, INotificationWillDisplayEvent>()
     private val preventDefaultCache = mutableSetOf<String>()
-    private var listenersRegistered = false
+    private var initialized = false
+
+    private val permissionObserver = object : IPermissionObserver {
+        override fun onNotificationPermissionChange(permission: Boolean) {
+            val ret = JSObject()
+            ret.put("permission", permission)
+            notifyListeners("permissionChange", ret)
+        }
+    }
+
+    private val pushSubscriptionObserver = object : IPushSubscriptionObserver {
+        override fun onPushSubscriptionChange(state: PushSubscriptionChangedState) {
+            val ret = JSObject()
+            val prev = JSObject()
+            prev.put("id", state.previous.id.ifEmpty { JSONObject.NULL })
+            prev.put("token", state.previous.token.ifEmpty { JSONObject.NULL })
+            prev.put("optedIn", state.previous.optedIn)
+            ret.put("previous", prev)
+
+            val curr = JSObject()
+            curr.put("id", state.current.id.ifEmpty { JSONObject.NULL })
+            curr.put("token", state.current.token.ifEmpty { JSONObject.NULL })
+            curr.put("optedIn", state.current.optedIn)
+            ret.put("current", curr)
+
+            notifyListeners("pushSubscriptionChange", ret)
+        }
+    }
+
+    private val userStateObserver = object : IUserStateObserver {
+        override fun onUserStateChange(state: UserChangedState) {
+            val ret = JSObject()
+            val curr = JSObject()
+            curr.put("onesignalId", state.current.onesignalId.ifEmpty { JSONObject.NULL })
+            curr.put("externalId", state.current.externalId.ifEmpty { JSONObject.NULL })
+            ret.put("current", curr)
+            notifyListeners("userStateChange", ret)
+        }
+    }
 
     override fun handleOnDestroy() {
         // Detach this dead plugin instance from the OneSignal SDK singleton so a
@@ -49,8 +87,11 @@ class OneSignalCapacitorPlugin : Plugin(),
         // is gone, and the SDK's `unprocessedOpenedNotifs` replay queue would be
         // skipped because `extOpenedCallback.hasSubscribers` would still be true.
         runCatching {
-            OneSignal.Notifications.removeClickListener(this)
+            OneSignal.Notifications.removePermissionObserver(permissionObserver)
             OneSignal.Notifications.removeForegroundLifecycleListener(this)
+            OneSignal.Notifications.removeClickListener(this)
+            OneSignal.User.pushSubscription.removeObserver(pushSubscriptionObserver)
+            OneSignal.User.removeObserver(userStateObserver)
             OneSignal.InAppMessages.removeLifecycleListener(this)
             OneSignal.InAppMessages.removeClickListener(this)
         }
@@ -65,63 +106,28 @@ class OneSignalCapacitorPlugin : Plugin(),
             return
         }
 
+        // initialize() is idempotent at the plugin layer. The JS side can call
+        // it multiple times within one activity (React effect re-runs on
+        // remount, hot reload, etc.); subsequent calls are a no-op. Listeners
+        // are detached in handleOnDestroy when the activity dies, and the next
+        // plugin instance gets a fresh `initialized = false`.
+        if (initialized) {
+            call.resolve()
+            return
+        }
+        initialized = true
+
         OneSignalWrapper.sdkType = "capacitor"
         OneSignalWrapper.sdkVersion = "010000"
         OneSignal.initWithContext(context, appId)
 
-        // The JS layer can call initialize() multiple times within a single
-        // Activity lifetime (e.g. on every React mount). The OneSignal SDK's
-        // EventProducer does not de-duplicate subscribers, so re-subscribing
-        // `this` would cause `onWillDisplay` / `onClick` to fire N times for a
-        // single notification. Register the listeners once per plugin instance;
-        // they're cleaned up in handleOnDestroy when the activity dies.
-        if (!listenersRegistered) {
-            listenersRegistered = true
-
-            OneSignal.Notifications.addPermissionObserver(object : IPermissionObserver {
-                override fun onNotificationPermissionChange(permission: Boolean) {
-                    val ret = JSObject()
-                    ret.put("permission", permission)
-                    notifyListeners("permissionChange", ret)
-                }
-            })
-
-            OneSignal.Notifications.addForegroundLifecycleListener(this)
-            OneSignal.Notifications.addClickListener(this)
-
-            OneSignal.User.pushSubscription.addObserver(object : IPushSubscriptionObserver {
-                override fun onPushSubscriptionChange(state: PushSubscriptionChangedState) {
-                    val ret = JSObject()
-                    val prev = JSObject()
-                    prev.put("id", state.previous.id.ifEmpty { JSONObject.NULL })
-                    prev.put("token", state.previous.token.ifEmpty { JSONObject.NULL })
-                    prev.put("optedIn", state.previous.optedIn)
-                    ret.put("previous", prev)
-
-                    val curr = JSObject()
-                    curr.put("id", state.current.id.ifEmpty { JSONObject.NULL })
-                    curr.put("token", state.current.token.ifEmpty { JSONObject.NULL })
-                    curr.put("optedIn", state.current.optedIn)
-                    ret.put("current", curr)
-
-                    notifyListeners("pushSubscriptionChange", ret)
-                }
-            })
-
-            OneSignal.User.addObserver(object : IUserStateObserver {
-                override fun onUserStateChange(state: UserChangedState) {
-                    val ret = JSObject()
-                    val curr = JSObject()
-                    curr.put("onesignalId", state.current.onesignalId.ifEmpty { JSONObject.NULL })
-                    curr.put("externalId", state.current.externalId.ifEmpty { JSONObject.NULL })
-                    ret.put("current", curr)
-                    notifyListeners("userStateChange", ret)
-                }
-            })
-
-            OneSignal.InAppMessages.addLifecycleListener(this)
-            OneSignal.InAppMessages.addClickListener(this)
-        }
+        OneSignal.Notifications.addPermissionObserver(permissionObserver)
+        OneSignal.Notifications.addForegroundLifecycleListener(this)
+        OneSignal.Notifications.addClickListener(this)
+        OneSignal.User.pushSubscription.addObserver(pushSubscriptionObserver)
+        OneSignal.User.addObserver(userStateObserver)
+        OneSignal.InAppMessages.addLifecycleListener(this)
+        OneSignal.InAppMessages.addClickListener(this)
 
         call.resolve()
     }
