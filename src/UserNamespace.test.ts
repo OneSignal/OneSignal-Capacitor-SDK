@@ -229,6 +229,14 @@ describe('User', () => {
       expect(mockListener2).toHaveBeenCalledWith(USER_CHANGED_STATE);
       expect(mockListener3).toHaveBeenCalledWith(USER_CHANGED_STATE);
     });
+
+    test('should register the bridge change listener only once across multiple subscriptions', () => {
+      user.addEventListener('change', vi.fn());
+      user.addEventListener('change', vi.fn());
+      user.addEventListener('change', vi.fn());
+
+      expect(mockPlugin.addListener).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('removeEventListener', () => {

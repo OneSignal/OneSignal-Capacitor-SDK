@@ -67,6 +67,45 @@ describe('InAppMessages', () => {
 
       expect(mockPlugin.addListener).not.toHaveBeenCalled();
     });
+
+    test.each([
+      ['click'],
+      ['willDisplay'],
+      ['didDisplay'],
+      ['willDismiss'],
+      ['didDismiss'],
+    ] as const)(
+      'should register the bridge %s listener only once across multiple subscriptions',
+      (eventType) => {
+        inAppMessages.addEventListener(eventType, vi.fn());
+        inAppMessages.addEventListener(eventType, vi.fn());
+        inAppMessages.addEventListener(eventType, vi.fn());
+
+        expect(mockPlugin.addListener).toHaveBeenCalledTimes(1);
+      },
+    );
+
+    test.each([
+      ['click', 'inAppMessageClick', messageData.click],
+      ['willDisplay', 'inAppMessageWillDisplay', messageData.willDisplay],
+      ['didDisplay', 'inAppMessageDidDisplay', messageData.didDisplay],
+      ['willDismiss', 'inAppMessageWillDismiss', messageData.willDismiss],
+      ['didDismiss', 'inAppMessageDidDismiss', messageData.didDismiss],
+    ] as const)(
+      'should fan a single native %s event into all currently-subscribed listeners',
+      (eventType, _listenerName, data) => {
+        const listener1 = vi.fn();
+        const listener2 = vi.fn();
+        inAppMessages.addEventListener(eventType, listener1);
+        inAppMessages.addEventListener(eventType, listener2);
+
+        const callback = mockPlugin.addListener.mock.calls[0][1];
+        callback(data);
+
+        expect(listener1).toHaveBeenCalledTimes(1);
+        expect(listener2).toHaveBeenCalledTimes(1);
+      },
+    );
   });
 
   describe('removeEventListener', () => {
