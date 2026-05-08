@@ -17,6 +17,7 @@ export default class User implements OneSignalUserAPI {
 
   private _plugin: OneSignalCapacitorPlugin;
   private _userStateObserverList: ((event: UserChangedState) => void)[] = [];
+  private _hasRegisteredChangeListener = false;
 
   constructor(plugin: OneSignalCapacitorPlugin) {
     this._plugin = plugin;
@@ -170,14 +171,18 @@ export default class User implements OneSignalUserAPI {
 
   /**
    * Add a callback that fires when the OneSignal User state changes.
-   * @param  {(event: UserChangedState)=>void} listener
-   * @returns void
+   * The bridge subscription is registered once per namespace instance; subsequent
+   * subscribers append to the local list to avoid orphaned bridge handlers
+   * across hot-reload cycles.
    */
   addEventListener(_event: 'change', listener: (event: UserChangedState) => void) {
     this._userStateObserverList.push(listener);
-    void this._plugin.addListener('userStateChange', (state: UserChangedState) => {
-      this._processFunctionList(this._userStateObserverList, state);
-    });
+    if (!this._hasRegisteredChangeListener) {
+      this._hasRegisteredChangeListener = true;
+      void this._plugin.addListener('userStateChange', (state: UserChangedState) => {
+        this._processFunctionList(this._userStateObserverList, state);
+      });
+    }
   }
 
   /**

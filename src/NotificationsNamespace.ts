@@ -109,6 +109,9 @@ export default class Notifications implements OneSignalNotificationsAPI {
       this._notificationClickedListeners.push(listener as (event: NotificationClickEvent) => void);
       if (!this._hasRegisteredClickListener) {
         this._hasRegisteredClickListener = true;
+        // The native plugin emits notificationClick with retainUntilConsumed
+        // so any click delivered before this addListener call (e.g. a cold
+        // start from a notification tap) is held until we attach here.
         void this._plugin.addListener('notificationClick', (json: NotificationClickEvent) => {
           this._processFunctionList(this._notificationClickedListeners, json);
         });

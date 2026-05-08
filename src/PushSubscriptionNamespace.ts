@@ -17,6 +17,7 @@ export default class PushSubscription implements OneSignalPushSubscriptionAPI {
   private _plugin: OneSignalCapacitorPlugin;
 
   private _subscriptionObserverList: ((event: PushSubscriptionChangedState) => void)[] = [];
+  private _hasRegisteredChangeListener = false;
 
   constructor(plugin: OneSignalCapacitorPlugin) {
     this._plugin = plugin;
@@ -63,17 +64,21 @@ export default class PushSubscription implements OneSignalPushSubscriptionAPI {
 
   /**
    * Add a callback that fires when the OneSignal push subscription state changes.
-   * @param  {(event: PushSubscriptionChangedState)=>void} listener
-   * @returns void
+   * The bridge subscription is registered once per namespace instance; subsequent
+   * subscribers append to the local list to avoid orphaned bridge handlers
+   * across hot-reload cycles.
    */
   addEventListener(_event: 'change', listener: (event: PushSubscriptionChangedState) => void) {
     this._subscriptionObserverList.push(listener);
-    void this._plugin.addListener(
-      'pushSubscriptionChange',
-      (state: PushSubscriptionChangedState) => {
-        this._processFunctionList(this._subscriptionObserverList, state);
-      },
-    );
+    if (!this._hasRegisteredChangeListener) {
+      this._hasRegisteredChangeListener = true;
+      void this._plugin.addListener(
+        'pushSubscriptionChange',
+        (state: PushSubscriptionChangedState) => {
+          this._processFunctionList(this._subscriptionObserverList, state);
+        },
+      );
+    }
   }
 
   /**

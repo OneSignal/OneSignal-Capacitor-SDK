@@ -1,5 +1,6 @@
 package com.onesignal.capacitor
 
+import android.app.Application
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
@@ -7,6 +8,7 @@ import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import com.onesignal.OneSignal
 import com.onesignal.common.OneSignalWrapper
+import com.onesignal.core.internal.application.IApplicationService
 import com.onesignal.inAppMessages.IInAppMessageClickEvent
 import com.onesignal.inAppMessages.IInAppMessageClickListener
 import com.onesignal.inAppMessages.IInAppMessageDidDismissEvent
@@ -24,8 +26,8 @@ import com.onesignal.user.state.IUserStateObserver
 import com.onesignal.user.state.UserChangedState
 import com.onesignal.user.subscriptions.IPushSubscriptionObserver
 import com.onesignal.user.subscriptions.PushSubscriptionChangedState
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
@@ -37,11 +39,82 @@ class OneSignalCapacitorPlugin : Plugin(),
     IInAppMessageLifecycleListener,
     IInAppMessageClickListener {
 
+    companion object {
+        // Mirror of iOS UNAuthorizationStatus values so the JS layer can use a
+        // single permissionNative() return shape across platforms. Android only
+        // distinguishes denied/authorized; the iOS-specific notDetermined (0),
+        // provisional (3), and ephemeral (4) states do not apply here.
+        private const val PERMISSION_DENIED = 1
+        private const val PERMISSION_AUTHORIZED = 2
+    }
+
     private val notificationWillDisplayCache = mutableMapOf<String, INotificationWillDisplayEvent>()
     private val preventDefaultCache = mutableSetOf<String>()
-    private var pendingClickEvent: INotificationClickEvent? = null
+    private var initialized = false
 
-    // region Core
+    // Class-scoped scope so launched permission/location coroutines are tied
+    // to the plugin instance lifetime. Cancelled in handleOnDestroy so a
+    // pending permission dialog that resolves after the activity dies cannot
+    // call into the dead Capacitor bridge.
+    private val pluginScope = MainScope()
+
+    private val permissionObserver = object : IPermissionObserver {
+        override fun onNotificationPermissionChange(permission: Boolean) {
+            val ret = JSObject()
+            ret.put("permission", permission)
+            notifyListeners("permissionChange", ret)
+        }
+    }
+
+    private val pushSubscriptionObserver = object : IPushSubscriptionObserver {
+        override fun onPushSubscriptionChange(state: PushSubscriptionChangedState) {
+            val ret = JSObject()
+            val prev = JSObject()
+            prev.put("id", state.previous.id.ifEmpty { JSONObject.NULL })
+            prev.put("token", state.previous.token.ifEmpty { JSONObject.NULL })
+            prev.put("optedIn", state.previous.optedIn)
+            ret.put("previous", prev)
+
+            val curr = JSObject()
+            curr.put("id", state.current.id.ifEmpty { JSONObject.NULL })
+            curr.put("token", state.current.token.ifEmpty { JSONObject.NULL })
+            curr.put("optedIn", state.current.optedIn)
+            ret.put("current", curr)
+
+            notifyListeners("pushSubscriptionChange", ret)
+        }
+    }
+
+    private val userStateObserver = object : IUserStateObserver {
+        override fun onUserStateChange(state: UserChangedState) {
+            val ret = JSObject()
+            val curr = JSObject()
+            curr.put("onesignalId", state.current.onesignalId.ifEmpty { JSONObject.NULL })
+            curr.put("externalId", state.current.externalId.ifEmpty { JSONObject.NULL })
+            ret.put("current", curr)
+            notifyListeners("userStateChange", ret)
+        }
+    }
+
+    override fun handleOnDestroy() {
+        // Detach this dead plugin instance so the next plugin instance can
+        // receive events; otherwise the SDK keeps firing on this stale
+        // instance and skips its unprocessed-click replay queue.
+        runCatching {
+            OneSignal.Notifications.removePermissionObserver(permissionObserver)
+            OneSignal.Notifications.removeForegroundLifecycleListener(this)
+            OneSignal.Notifications.removeClickListener(this)
+            OneSignal.User.pushSubscription.removeObserver(pushSubscriptionObserver)
+            OneSignal.User.removeObserver(userStateObserver)
+            OneSignal.InAppMessages.removeLifecycleListener(this)
+            OneSignal.InAppMessages.removeClickListener(this)
+        }
+        pluginScope.cancel()
+        // Caches aren't explicitly cleared: GC reclaims them with this
+        // instance once the listener removals above run, and runtime size is
+        // bounded by consume-on-read in proceedWithWillDisplay/displayNotification.
+        super.handleOnDestroy()
+    }
 
     @PluginMethod
     fun initialize(call: PluginCall) {
@@ -51,66 +124,54 @@ class OneSignalCapacitorPlugin : Plugin(),
             return
         }
 
+        // initialize() is idempotent: JS may call it multiple times per
+        // activity (effect re-runs, hot reload). Listeners are detached in
+        // handleOnDestroy and the next plugin instance starts fresh.
+        if (initialized) {
+            call.resolve()
+            return
+        }
+        initialized = true
+
         OneSignalWrapper.sdkType = "capacitor"
         OneSignalWrapper.sdkVersion = "010000"
         OneSignal.initWithContext(context, appId)
 
-        OneSignal.Notifications.addPermissionObserver(object : IPermissionObserver {
-            override fun onNotificationPermissionChange(permission: Boolean) {
-                val ret = JSObject()
-                ret.put("permission", permission)
-                notifyListeners("permissionChange", ret)
-            }
-        })
+        // If the SDK was initialized from a non-Activity context (FCM/work
+        // managers) before this call, its ALC missed MainActivity.onResume
+        // and isInForeground stays false. Forward the missed events now.
+        nudgeApplicationServiceForeground()
 
+        OneSignal.Notifications.addPermissionObserver(permissionObserver)
         OneSignal.Notifications.addForegroundLifecycleListener(this)
         OneSignal.Notifications.addClickListener(this)
-
-        OneSignal.User.pushSubscription.addObserver(object : IPushSubscriptionObserver {
-            override fun onPushSubscriptionChange(state: PushSubscriptionChangedState) {
-                val ret = JSObject()
-                val prev = JSObject()
-                prev.put("id", state.previous.id.ifEmpty { JSONObject.NULL })
-                prev.put("token", state.previous.token.ifEmpty { JSONObject.NULL })
-                prev.put("optedIn", state.previous.optedIn)
-                ret.put("previous", prev)
-
-                val curr = JSObject()
-                curr.put("id", state.current.id.ifEmpty { JSONObject.NULL })
-                curr.put("token", state.current.token.ifEmpty { JSONObject.NULL })
-                curr.put("optedIn", state.current.optedIn)
-                ret.put("current", curr)
-
-                notifyListeners("pushSubscriptionChange", ret)
-            }
-        })
-
-        OneSignal.User.addObserver(object : IUserStateObserver {
-            override fun onUserStateChange(state: UserChangedState) {
-                val ret = JSObject()
-                val curr = JSObject()
-                curr.put("onesignalId", state.current.onesignalId.ifEmpty { JSONObject.NULL })
-                curr.put("externalId", state.current.externalId.ifEmpty { JSONObject.NULL })
-                ret.put("current", curr)
-                notifyListeners("userStateChange", ret)
-            }
-        })
-
+        OneSignal.User.pushSubscription.addObserver(pushSubscriptionObserver)
+        OneSignal.User.addObserver(userStateObserver)
         OneSignal.InAppMessages.addLifecycleListener(this)
         OneSignal.InAppMessages.addClickListener(this)
 
-        pendingClickEvent?.let { event ->
-            val ret = JSObject()
-            val clickResult = JSObject()
-            clickResult.put("actionId", event.result.actionId)
-            clickResult.put("url", event.result.url)
-            ret.put("result", clickResult)
-            ret.put("notification", JSObject(event.notification.rawPayload))
-            notifyListeners("notificationClick", ret)
-            pendingClickEvent = null
-        }
-
         call.resolve()
+    }
+
+    /** Forward the missed activity-resume to the SDK so isInForeground is
+     *  correct on cold start. No-op if the SDK already saw the resume. */
+    private fun nudgeApplicationServiceForeground() {
+        val activity = activity ?: return
+        val appSvc = runCatching { OneSignal.getServiceOrNull<IApplicationService>() }.getOrNull() ?: return
+        if (appSvc.isInForeground && appSvc.current === activity) return
+        val callbacks = appSvc as? Application.ActivityLifecycleCallbacks ?: return
+        callbacks.onActivityStarted(activity)
+        callbacks.onActivityResumed(activity)
+    }
+
+    private fun buildClickEventJson(event: INotificationClickEvent): JSObject {
+        val ret = JSObject()
+        val clickResult = JSObject()
+        clickResult.put("actionId", event.result.actionId)
+        clickResult.put("url", event.result.url)
+        ret.put("result", clickResult)
+        ret.put("notification", serializeNotification(event.notification))
+        return ret
     }
 
     @PluginMethod
@@ -143,8 +204,6 @@ class OneSignalCapacitorPlugin : Plugin(),
         OneSignal.consentGiven = granted
         call.resolve()
     }
-
-    // endregion
 
     // region Debug
 
@@ -387,14 +446,15 @@ class OneSignalCapacitorPlugin : Plugin(),
     @PluginMethod
     fun permissionNative(call: PluginCall) {
         val ret = JSObject()
-        ret.put("permission", if (OneSignal.Notifications.permission) 2 else 1)
+        val status = if (OneSignal.Notifications.permission) PERMISSION_AUTHORIZED else PERMISSION_DENIED
+        ret.put("permission", status)
         call.resolve(ret)
     }
 
     @PluginMethod
     fun requestPermission(call: PluginCall) {
         val fallback = call.getBoolean("fallbackToSettings") ?: false
-        CoroutineScope(Dispatchers.Main).launch {
+        pluginScope.launch {
             val accepted = OneSignal.Notifications.requestPermission(fallback)
             val ret = JSObject()
             ret.put("permission", accepted)
@@ -411,8 +471,12 @@ class OneSignalCapacitorPlugin : Plugin(),
 
     @PluginMethod
     fun registerForProvisionalAuthorization(call: PluginCall) {
+        // Provisional authorization is an iOS-only concept (UNUserNotification
+        // .provisional). Android has no equivalent quiet-delivery permission
+        // tier, so report `accepted = false` rather than misleading the JS
+        // layer into thinking a quiet permission was granted.
         val ret = JSObject()
-        ret.put("accepted", true)
+        ret.put("accepted", false)
         call.resolve(ret)
     }
 
@@ -467,12 +531,15 @@ class OneSignalCapacitorPlugin : Plugin(),
             call.reject("notificationId is required")
             return
         }
-        val event = notificationWillDisplayCache[notificationId]
+        // JS always dispatches this after the listener loop, even when a
+        // listener already called display(). Missing entry = already handled.
+        val event = notificationWillDisplayCache.remove(notificationId)
         if (event == null) {
-            call.reject("Could not find notification will display event")
+            preventDefaultCache.remove(notificationId)
+            call.resolve()
             return
         }
-        if (!preventDefaultCache.contains(notificationId)) {
+        if (!preventDefaultCache.remove(notificationId)) {
             event.notification.display()
         }
         call.resolve()
@@ -485,11 +552,13 @@ class OneSignalCapacitorPlugin : Plugin(),
             call.reject("notificationId is required")
             return
         }
-        val event = notificationWillDisplayCache[notificationId]
+        val event = notificationWillDisplayCache.remove(notificationId)
         if (event == null) {
-            call.reject("Could not find notification will display event")
+            preventDefaultCache.remove(notificationId)
+            call.resolve()
             return
         }
+        preventDefaultCache.remove(notificationId)
         event.notification.display()
         call.resolve()
     }
@@ -588,7 +657,7 @@ class OneSignalCapacitorPlugin : Plugin(),
 
     @PluginMethod
     fun requestLocationPermission(call: PluginCall) {
-        CoroutineScope(Dispatchers.Main).launch {
+        pluginScope.launch {
             OneSignal.Location.requestPermission()
             call.resolve()
         }
@@ -610,7 +679,9 @@ class OneSignalCapacitorPlugin : Plugin(),
 
     // endregion
 
-    // region Live Activities (no-op on Android)
+    // region Live Activities
+    // iOS-only feature; methods below are no-ops on Android so cross-platform
+    // JS code can call them unconditionally. No warnings — silent success.
 
     @PluginMethod
     fun enterLiveActivity(call: PluginCall) {
@@ -647,6 +718,10 @@ class OneSignalCapacitorPlugin : Plugin(),
     // region Observer Callbacks
 
     override fun onWillDisplay(event: INotificationWillDisplayEvent) {
+        // No retainUntilConsumed needed: foreground will-display only fires
+        // while the app is foregrounded, so the JS layer's listener is
+        // already attached. Contrast with onClick() below, which can fire
+        // before the WebView finishes booting on a cold-start tap.
         val notificationId = event.notification.notificationId ?: return
         notificationWillDisplayCache[notificationId] = event
         event.preventDefault()
@@ -654,17 +729,11 @@ class OneSignalCapacitorPlugin : Plugin(),
     }
 
     override fun onClick(event: INotificationClickEvent) {
-        if (bridge != null) {
-            val ret = JSObject()
-            val clickResult = JSObject()
-            clickResult.put("actionId", event.result.actionId)
-            clickResult.put("url", event.result.url)
-            ret.put("result", clickResult)
-            ret.put("notification", serializeNotification(event.notification))
-            notifyListeners("notificationClick", ret)
-        } else {
-            pendingClickEvent = event
-        }
+        // retainUntilConsumed lets Capacitor hold this event until the JS-side
+        // click listener attaches. On Android the OneSignal SDK can deliver a
+        // cold-start click before the WebView has finished booting and the JS
+        // layer has called addEventListener('click', ...).
+        notifyListeners("notificationClick", buildClickEventJson(event), true)
     }
 
     private fun serializeNotification(notification: INotification): JSObject {

@@ -18,6 +18,11 @@ export default class InAppMessages implements OneSignalInAppMessagesAPI {
   private _didDisplayInAppMessageListeners: ((event: InAppMessageDidDisplayEvent) => void)[] = [];
   private _willDismissInAppMessageListeners: ((event: InAppMessageWillDismissEvent) => void)[] = [];
   private _didDismissInAppMessageListeners: ((event: InAppMessageDidDismissEvent) => void)[] = [];
+  private _hasRegisteredClickListener = false;
+  private _hasRegisteredWillDisplayListener = false;
+  private _hasRegisteredDidDisplayListener = false;
+  private _hasRegisteredWillDismissListener = false;
+  private _hasRegisteredDidDismissListener = false;
 
   constructor(plugin: OneSignalCapacitorPlugin) {
     this._plugin = plugin;
@@ -31,9 +36,10 @@ export default class InAppMessages implements OneSignalInAppMessagesAPI {
 
   /**
    * Add event listeners for In-App Message click and/or lifecycle events.
-   * @param event
-   * @param listener
-   * @returns
+   * Each native event channel is bridged once per namespace instance; subsequent
+   * subscribers are appended to the local list. Without this guard, hot-reload
+   * cycles and effect re-runs leak orphaned bridge subscriptions that fan a
+   * single native event into N JS callbacks.
    */
   addEventListener<K extends InAppMessageEventName>(
     event: K,
@@ -41,49 +47,64 @@ export default class InAppMessages implements OneSignalInAppMessagesAPI {
   ): void {
     if (event === 'click') {
       this._inAppMessageClickListeners.push(listener as (event: InAppMessageClickEvent) => void);
-      void this._plugin.addListener('inAppMessageClick', (json: InAppMessageClickEvent) => {
-        this._processFunctionList(this._inAppMessageClickListeners, json);
-      });
+      if (!this._hasRegisteredClickListener) {
+        this._hasRegisteredClickListener = true;
+        void this._plugin.addListener('inAppMessageClick', (json: InAppMessageClickEvent) => {
+          this._processFunctionList(this._inAppMessageClickListeners, json);
+        });
+      }
     } else if (event === 'willDisplay') {
       this._willDisplayInAppMessageListeners.push(
         listener as (event: InAppMessageWillDisplayEvent) => void,
       );
-      void this._plugin.addListener(
-        'inAppMessageWillDisplay',
-        (event: InAppMessageWillDisplayEvent) => {
-          this._processFunctionList(this._willDisplayInAppMessageListeners, event);
-        },
-      );
+      if (!this._hasRegisteredWillDisplayListener) {
+        this._hasRegisteredWillDisplayListener = true;
+        void this._plugin.addListener(
+          'inAppMessageWillDisplay',
+          (event: InAppMessageWillDisplayEvent) => {
+            this._processFunctionList(this._willDisplayInAppMessageListeners, event);
+          },
+        );
+      }
     } else if (event === 'didDisplay') {
       this._didDisplayInAppMessageListeners.push(
         listener as (event: InAppMessageDidDisplayEvent) => void,
       );
-      void this._plugin.addListener(
-        'inAppMessageDidDisplay',
-        (event: InAppMessageDidDisplayEvent) => {
-          this._processFunctionList(this._didDisplayInAppMessageListeners, event);
-        },
-      );
+      if (!this._hasRegisteredDidDisplayListener) {
+        this._hasRegisteredDidDisplayListener = true;
+        void this._plugin.addListener(
+          'inAppMessageDidDisplay',
+          (event: InAppMessageDidDisplayEvent) => {
+            this._processFunctionList(this._didDisplayInAppMessageListeners, event);
+          },
+        );
+      }
     } else if (event === 'willDismiss') {
       this._willDismissInAppMessageListeners.push(
         listener as (event: InAppMessageWillDismissEvent) => void,
       );
-      void this._plugin.addListener(
-        'inAppMessageWillDismiss',
-        (event: InAppMessageWillDismissEvent) => {
-          this._processFunctionList(this._willDismissInAppMessageListeners, event);
-        },
-      );
+      if (!this._hasRegisteredWillDismissListener) {
+        this._hasRegisteredWillDismissListener = true;
+        void this._plugin.addListener(
+          'inAppMessageWillDismiss',
+          (event: InAppMessageWillDismissEvent) => {
+            this._processFunctionList(this._willDismissInAppMessageListeners, event);
+          },
+        );
+      }
     } else if (event === 'didDismiss') {
       this._didDismissInAppMessageListeners.push(
         listener as (event: InAppMessageDidDismissEvent) => void,
       );
-      void this._plugin.addListener(
-        'inAppMessageDidDismiss',
-        (event: InAppMessageDidDismissEvent) => {
-          this._processFunctionList(this._didDismissInAppMessageListeners, event);
-        },
-      );
+      if (!this._hasRegisteredDidDismissListener) {
+        this._hasRegisteredDidDismissListener = true;
+        void this._plugin.addListener(
+          'inAppMessageDidDismiss',
+          (event: InAppMessageDidDismissEvent) => {
+            this._processFunctionList(this._didDismissInAppMessageListeners, event);
+          },
+        );
+      }
     }
   }
 

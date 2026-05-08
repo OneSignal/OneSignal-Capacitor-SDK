@@ -114,6 +114,14 @@ describe('PushSubscription', () => {
       expect(mockListener).toHaveBeenCalledWith(SUB_CHANGED_STATE);
       expect(mockListener2).toHaveBeenCalledWith(SUB_CHANGED_STATE);
     });
+
+    test('should register the bridge change listener only once across multiple subscriptions', () => {
+      pushSubscription.addEventListener('change', vi.fn());
+      pushSubscription.addEventListener('change', vi.fn());
+      pushSubscription.addEventListener('change', vi.fn());
+
+      expect(mockPlugin.addListener).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('removeEventListener', () => {

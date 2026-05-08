@@ -8,9 +8,16 @@ SDK_ROOT=$(cd "$ORIGINAL_DIR/../.." && pwd)
 info() { echo -e "\033[0;32m[setup]\033[0m $*"; }
 
 # ── Plugin tarball cache ─────────────────────────────────────────────────────
-# Skip rebuild/repack/`vp add` when plugin sources haven't changed.
-SDK_STAMP="$SDK_ROOT/.capacitor-sdk-source.stamp"
+# Two stamps: the SDK build is shared across demos (one tarball serves all),
+# but the `vp add` install is per-demo. Without the split, running setup in
+# `demo` first would leave the shared stamp at the new hash, and a follow-up
+# `demo_pods` setup would short-circuit the install and keep stale sources in
+# `demo_pods/node_modules/@onesignal/capacitor-plugin/` — which is what
+# CocoaPods path-references, so the native pod stays pre-fix.
+SDK_BUILD_STAMP="$SDK_ROOT/.capacitor-sdk-source.stamp"
+INSTALLED_STAMP="$ORIGINAL_DIR/.capacitor-sdk-installed.stamp"
 INSTALLED_DIR="$ORIGINAL_DIR/node_modules/@onesignal/capacitor-plugin"
+TARBALL="$SDK_ROOT/onesignal-capacitor-plugin.tgz"
 
 SDK_SRC_HASH=$(find "$SDK_ROOT/src" "$SDK_ROOT/android" "$SDK_ROOT/ios" \
                     "$SDK_ROOT/package.json" \
@@ -23,21 +30,46 @@ SDK_SRC_HASH=$(find "$SDK_ROOT/src" "$SDK_ROOT/android" "$SDK_ROOT/ios" \
                | shasum \
                | awk '{print $1}')
 
-if [[ -d "$INSTALLED_DIR" ]] && [[ -f "$SDK_STAMP" ]] && [[ "$(cat "$SDK_STAMP")" == "$SDK_SRC_HASH" ]]; then
-  info "Capacitor SDK source unchanged, skipping rebuild + repack"
+if [[ -f "$TARBALL" ]] && [[ -f "$SDK_BUILD_STAMP" ]] && [[ "$(cat "$SDK_BUILD_STAMP")" == "$SDK_SRC_HASH" ]]; then
+  info "Capacitor SDK tarball is up-to-date, skipping rebuild + repack"
 else
   info "Building Capacitor plugin & packing tarball..."
   (cd "$SDK_ROOT" && vp run build)
   (cd "$SDK_ROOT" && rm -f onesignal-capacitor-plugin*.tgz && vp pm pack && mv onesignal-capacitor-plugin-*.tgz onesignal-capacitor-plugin.tgz)
+  echo "$SDK_SRC_HASH" > "$SDK_BUILD_STAMP"
+fi
 
+if [[ -d "$INSTALLED_DIR" ]] && [[ -f "$INSTALLED_STAMP" ]] && [[ "$(cat "$INSTALLED_STAMP")" == "$SDK_SRC_HASH" ]]; then
+  info "Plugin already installed at current SDK hash, skipping vp add"
+else
   # Remove before add so bun.lock's integrity hash refreshes against the new
   # tarball; otherwise `vp add` hits a dependency-loop error under bun 1.3+.
   # Keep the relative `file:../../...` path to match package.json's spec.
   info "Registering tarball with vp (refreshes bun.lock integrity hash)..."
   vp remove @onesignal/capacitor-plugin 2>/dev/null || true
   vp add file:../../onesignal-capacitor-plugin.tgz
+  echo "$SDK_SRC_HASH" > "$INSTALLED_STAMP"
+fi
 
-  echo "$SDK_SRC_HASH" > "$SDK_STAMP"
+# ── Vite prebundle staleness check ───────────────────────────────────────────
+# Vite prebundles deps into node_modules/.vite/deps once at startup and keys
+# the cache on lockfileHash. file: deps don't always trip that hash, and a
+# long-running Vite (via dev-android.sh's "reuse existing dev server" path)
+# never re-bundles mid-session. Always check: if the prebundle predates the
+# installed dist, drop it and kill any Vite still on $DEV_PORT so the next
+# dev:* run re-bundles cleanly. Self-healing; runs regardless of whether the
+# SDK rebuild branch above fired.
+DEV_PORT="${DEV_PORT:-5173}"
+PREBUNDLE="$ORIGINAL_DIR/node_modules/.vite/deps/@onesignal_capacitor-plugin.js"
+INSTALLED_DIST="$INSTALLED_DIR/dist/index.js"
+if [[ -f "$INSTALLED_DIST" ]] && [[ -f "$PREBUNDLE" ]] && [[ "$INSTALLED_DIST" -nt "$PREBUNDLE" ]]; then
+  info "Vite prebundle is stale (installed dist is newer); invalidating..."
+  rm -rf "$ORIGINAL_DIR/node_modules/.vite"
+  if lsof -ti:"$DEV_PORT" >/dev/null 2>&1; then
+    info "Killing stale Vite on :$DEV_PORT so the rebuild takes effect..."
+    lsof -ti:"$DEV_PORT" | xargs kill 2>/dev/null || true
+    sleep 1
+  fi
 fi
 
 # ── Web bundle ───────────────────────────────────────────────────────────────

@@ -2,16 +2,12 @@ import Foundation
 import Capacitor
 import OneSignalFramework
 import OneSignalLiveActivities
+#if SWIFT_PACKAGE
+import OSCapacitorLaunchOptions
+#endif
 
 @objc(OneSignalCapacitorPlugin)
-public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
-    OSNotificationPermissionObserver,
-    OSNotificationLifecycleListener,
-    OSNotificationClickListener,
-    OSPushSubscriptionObserver,
-    OSInAppMessageLifecycleListener,
-    OSInAppMessageClickListener,
-    OSUserStateObserver {
+public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin {
 
     public let identifier = "OneSignalCapacitorPlugin"
     public let jsName = "OneSignalCapacitor"
@@ -72,8 +68,28 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
     ]
 
     private var notificationWillDisplayCache = [String: OSNotificationWillDisplayEvent]()
-    private var preventDefaultCache = [String: OSNotificationWillDisplayEvent]()
-    private var pendingClickEvent: OSNotificationClickEvent?
+    private var preventDefaultCache = Set<String>()
+    private var initialized = false
+
+    // Observer/listener forwarder. The iOS SDK strong-retains conformers of
+    // the lifecycle/click protocols (NSMutableArray-backed), so registering
+    // self directly creates a retain cycle that makes deinit unreachable.
+    // The proxy holds a weak ref back to us, so dropping the last external
+    // ref to the plugin lets deinit run and clean up the proxy registration.
+    private var listenerProxy: OneSignalListenerProxy?
+
+    deinit {
+        // Only present after initialize() ran. Removes are idempotent on the
+        // SDK side; we still gate to avoid touching an uninitialized SDK.
+        guard let listenerProxy = listenerProxy else { return }
+        OneSignal.Notifications.removePermissionObserver(listenerProxy)
+        OneSignal.Notifications.removeForegroundLifecycleListener(listenerProxy)
+        OneSignal.Notifications.removeClickListener(listenerProxy)
+        OneSignal.User.pushSubscription.removeObserver(listenerProxy)
+        OneSignal.User.removeObserver(listenerProxy)
+        OneSignal.InAppMessages.removeLifecycleListener(listenerProxy)
+        OneSignal.InAppMessages.removeClickListener(listenerProxy)
+    }
 
     // MARK: - Core
 
@@ -82,21 +98,56 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
             call.reject("appId is required")
             return
         }
+
+        // initialize() is idempotent: JS may call it multiple times per
+        // plugin instance (effect re-runs, hot reload). The iOS SDK's
+        // listener arrays don't dedupe, so unguarded re-entry would
+        // double-fire foreground/click events.
+        if initialized {
+            call.resolve()
+            return
+        }
+        initialized = true
+
         OneSignalWrapper.sdkType = "capacitor"
         OneSignalWrapper.sdkVersion = "010000"
-        OneSignal.initialize(appId, withLaunchOptions: nil)
-        OneSignal.Notifications.addPermissionObserver(self)
-        OneSignal.Notifications.addForegroundLifecycleListener(self)
-        OneSignal.Notifications.addClickListener(self)
-        OneSignal.User.pushSubscription.addObserver(self)
-        OneSignal.User.addObserver(self)
-        OneSignal.InAppMessages.addLifecycleListener(self)
-        OneSignal.InAppMessages.addClickListener(self)
+        // OSCapacitorLaunchOptions's +load captures the dictionary from
+        // UIApplicationDidFinishLaunchingNotification at process start (before
+        // main()), so cold-start notification taps that arrive via launchOptions
+        // are still available to the OneSignal iOS SDK when the JS layer
+        // initializes us.
+        OneSignal.initialize(appId, withLaunchOptions: OSCapacitorLaunchOptions.launchOptions)
 
-        if let pending = pendingClickEvent {
-            sendNotificationClickEvent(pending)
-            pendingClickEvent = nil
+        // The OneSignal iOS SDK drops cold-start UNNotificationResponse objects
+        // inside processNotificationResponse: when no appId is set yet, which
+        // is always true on cold start because iOS delivers the response before
+        // OneSignal.initialize() runs from JS. OSCapacitorLaunchOptions's
+        // delegate wrap queues every response that arrives in that window so we
+        // can replay them here, in arrival order, after initialize has set the
+        // appId. The queue can hold more than one entry if the user tapped a
+        // second notification from the shade while the JS bundle was loading.
+        for response in OSCapacitorLaunchOptions.pendingColdStartResponses {
+            OSNotificationsManager.processNotificationResponse(response)
         }
+        // Always consume, even if the queue was empty. consumeColdStartResponses
+        // also flips a one-way flag that tells the swizzle to stop capturing
+        // future taps; without this unconditional call, sessions that cold-start
+        // without a notification tap would never flip the flag and any later
+        // warm/background taps would accumulate in the static array forever.
+        OSCapacitorLaunchOptions.consumeColdStartResponses()
+
+        let proxy = OneSignalListenerProxy()
+        proxy.owner = self
+        listenerProxy = proxy
+
+        OneSignal.Notifications.addPermissionObserver(proxy)
+        OneSignal.Notifications.addForegroundLifecycleListener(proxy)
+        OneSignal.Notifications.addClickListener(proxy)
+        OneSignal.User.pushSubscription.addObserver(proxy)
+        OneSignal.User.addObserver(proxy)
+        OneSignal.InAppMessages.addLifecycleListener(proxy)
+        OneSignal.InAppMessages.addClickListener(proxy)
+
         call.resolve()
     }
 
@@ -320,7 +371,7 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
             return
         }
         event.preventDefault()
-        preventDefaultCache[notificationId] = event
+        preventDefaultCache.insert(notificationId)
         call.resolve()
     }
 
@@ -329,11 +380,15 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
             call.reject("notificationId is required")
             return
         }
-        guard let event = notificationWillDisplayCache[notificationId] else {
-            call.reject("Could not find notification will display event")
+        // JS always dispatches this after the listener loop, even when a
+        // listener already called display(). Missing entry = already handled.
+        guard let event = notificationWillDisplayCache.removeValue(forKey: notificationId) else {
+            preventDefaultCache.remove(notificationId)
+            call.resolve()
             return
         }
-        if preventDefaultCache[notificationId] == nil {
+        let wasPrevented = preventDefaultCache.remove(notificationId) != nil
+        if !wasPrevented {
             event.notification.display()
         }
         call.resolve()
@@ -344,10 +399,12 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
             call.reject("notificationId is required")
             return
         }
-        guard let event = notificationWillDisplayCache[notificationId] else {
-            call.reject("Could not find notification will display event")
+        guard let event = notificationWillDisplayCache.removeValue(forKey: notificationId) else {
+            preventDefaultCache.remove(notificationId)
+            call.resolve()
             return
         }
+        preventDefaultCache.remove(notificationId)
         event.notification.display()
         call.resolve()
     }
@@ -569,18 +626,16 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
     }
 
     public func onClick(event: OSNotificationClickEvent) {
-        if bridge != nil {
-            sendNotificationClickEvent(event)
-        } else {
-            pendingClickEvent = event
+        // retainUntilConsumed lets Capacitor hold this event until a JS click
+        // listener attaches. On cold start the plugin's initialize() replays
+        // the OneSignal click before JS has had a chance to call
+        // addEventListener('click', ...), so without this a cold-start tap
+        // would fire before any JS listener exists and be lost.
+        guard let data = event.stringify().data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return
         }
-    }
-
-    private func sendNotificationClickEvent(_ event: OSNotificationClickEvent) {
-        if let data = event.stringify().data(using: .utf8),
-           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-            notifyListeners("notificationClick", data: json)
-        }
+        notifyListeners("notificationClick", data: json, retainUntilConsumed: true)
     }
 
     @objc(onWillDisplayInAppMessage:)
@@ -635,5 +690,68 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
             "message": ["messageId": event.message.messageId],
             "result": clickResult
         ])
+    }
+}
+
+// Forwarding proxy for the OneSignal iOS SDK observer/listener APIs.
+// Registered with the SDK in place of the plugin so the SDK's strong
+// retention of click/lifecycle listeners (NSMutableArray-backed) does not
+// pin the plugin and make its deinit unreachable. The proxy holds a weak
+// ref back to the plugin; once external holders drop the plugin its
+// deinit runs, removes the proxy from the SDK, and the proxy is then
+// released too.
+final class OneSignalListenerProxy: NSObject,
+    OSNotificationPermissionObserver,
+    OSNotificationLifecycleListener,
+    OSNotificationClickListener,
+    OSPushSubscriptionObserver,
+    OSInAppMessageLifecycleListener,
+    OSInAppMessageClickListener,
+    OSUserStateObserver {
+
+    weak var owner: OneSignalCapacitorPlugin?
+
+    public func onNotificationPermissionDidChange(_ permission: Bool) {
+        owner?.onNotificationPermissionDidChange(permission)
+    }
+
+    public func onPushSubscriptionDidChange(state: OSPushSubscriptionChangedState) {
+        owner?.onPushSubscriptionDidChange(state: state)
+    }
+
+    public func onUserStateDidChange(state: OSUserChangedState) {
+        owner?.onUserStateDidChange(state: state)
+    }
+
+    public func onWillDisplay(event: OSNotificationWillDisplayEvent) {
+        owner?.onWillDisplay(event: event)
+    }
+
+    public func onClick(event: OSNotificationClickEvent) {
+        owner?.onClick(event: event)
+    }
+
+    @objc(onWillDisplayInAppMessage:)
+    public func onWillDisplay(event: OSInAppMessageWillDisplayEvent) {
+        owner?.onWillDisplay(event: event)
+    }
+
+    @objc(onDidDisplayInAppMessage:)
+    public func onDidDisplay(event: OSInAppMessageDidDisplayEvent) {
+        owner?.onDidDisplay(event: event)
+    }
+
+    @objc(onWillDismissInAppMessage:)
+    public func onWillDismiss(event: OSInAppMessageWillDismissEvent) {
+        owner?.onWillDismiss(event: event)
+    }
+
+    @objc(onDidDismissInAppMessage:)
+    public func onDidDismiss(event: OSInAppMessageDidDismissEvent) {
+        owner?.onDidDismiss(event: event)
+    }
+
+    public func onClick(event: OSInAppMessageClickEvent) {
+        owner?.onClick(event: event)
     }
 }
