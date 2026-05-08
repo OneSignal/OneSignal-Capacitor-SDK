@@ -19,13 +19,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (class, readonly, nullable) NSDictionary *launchOptions;
 
-/// The UNNotificationResponse delivered by iOS on cold start, if any.
-/// Returns nil for warm starts or once the response has been consumed.
-@property (class, readonly, nullable) UNNotificationResponse *pendingColdStartResponse;
+/// UNNotificationResponses delivered by iOS while the JS layer was still
+/// booting (i.e. before OneSignal.initialize ran and we drained the queue).
+/// Empty for warm starts and after consumeColdStartResponses has been called.
+/// Multiple entries are possible: the user can tap a second notification from
+/// the shade while the JS bundle is still loading, especially in dev builds.
+@property (class, readonly, nonnull) NSArray<UNNotificationResponse *> *pendingColdStartResponses;
 
-/// Mark the captured cold-start response as consumed so it is not replayed
-/// twice. Call after handing the response off to the OneSignal iOS SDK.
-+ (void)consumeColdStartResponse;
+/// Mark the captured cold-start responses as consumed so they are not replayed
+/// twice. Call after handing each response off to the OneSignal iOS SDK.
++ (void)consumeColdStartResponses;
 
 @end
 

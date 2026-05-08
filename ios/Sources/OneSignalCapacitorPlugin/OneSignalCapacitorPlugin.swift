@@ -122,11 +122,16 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin {
         // inside processNotificationResponse: when no appId is set yet, which
         // is always true on cold start because iOS delivers the response before
         // OneSignal.initialize() runs from JS. OSCapacitorLaunchOptions's
-        // delegate wrap captures the response so we can replay it here, after
-        // initialize has set the appId.
-        if let pending = OSCapacitorLaunchOptions.pendingColdStartResponse {
-            OSNotificationsManager.processNotificationResponse(pending)
-            OSCapacitorLaunchOptions.consumeColdStartResponse()
+        // delegate wrap queues every response that arrives in that window so we
+        // can replay them here, in arrival order, after initialize has set the
+        // appId. The queue can hold more than one entry if the user tapped a
+        // second notification from the shade while the JS bundle was loading.
+        let pending = OSCapacitorLaunchOptions.pendingColdStartResponses
+        for response in pending {
+            OSNotificationsManager.processNotificationResponse(response)
+        }
+        if !pending.isEmpty {
+            OSCapacitorLaunchOptions.consumeColdStartResponses()
         }
 
         let proxy = OneSignalListenerProxy()

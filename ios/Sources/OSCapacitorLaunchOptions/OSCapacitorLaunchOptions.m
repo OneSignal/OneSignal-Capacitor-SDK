@@ -6,9 +6,10 @@
 @implementation OSCapacitorLaunchOptions
 
 static NSDictionary *_capturedLaunchOptions = nil;
-static UNNotificationResponse *_capturedColdStartResponse = nil;
+static NSMutableArray<UNNotificationResponse *> *_capturedColdStartResponses = nil;
 
 + (void)load {
+    _capturedColdStartResponses = [NSMutableArray array];
     [[NSNotificationCenter defaultCenter]
         addObserver:self
            selector:@selector(applicationDidFinishLaunching:)
@@ -41,7 +42,13 @@ static UNNotificationResponse *_capturedColdStartResponse = nil;
 
     __block IMP originalIMP = method_getImplementation(original);
     IMP newIMP = imp_implementationWithBlock(^(id self_, UNUserNotificationCenter *center, UNNotificationResponse *response, void (^completionHandler)(void)) {
-        _capturedColdStartResponse = response;
+        // Queue every response that arrives before the JS layer drains us.
+        // The JS bundle can take multiple seconds to load on cold start (worse
+        // in dev builds), and the user can tap a second notification from the
+        // shade in that window. Overwriting would silently lose the earlier
+        // tap. consumeColdStartResponses clears the queue once initialize()
+        // has handed every response to OSNotificationsManager.
+        [_capturedColdStartResponses addObject:response];
         ((void(*)(id, SEL, UNUserNotificationCenter*, UNNotificationResponse*, void(^)(void)))originalIMP)(self_, didReceiveSel, center, response, completionHandler);
     });
 
@@ -59,12 +66,12 @@ static UNNotificationResponse *_capturedColdStartResponse = nil;
     return _capturedLaunchOptions;
 }
 
-+ (UNNotificationResponse *)pendingColdStartResponse {
-    return _capturedColdStartResponse;
++ (NSArray<UNNotificationResponse *> *)pendingColdStartResponses {
+    return [_capturedColdStartResponses copy];
 }
 
-+ (void)consumeColdStartResponse {
-    _capturedColdStartResponse = nil;
++ (void)consumeColdStartResponses {
+    [_capturedColdStartResponses removeAllObjects];
 }
 
 @end
