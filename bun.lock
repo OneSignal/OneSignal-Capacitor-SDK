@@ -5,7 +5,7 @@
     "": {
       "name": "@onesignal/capacitor-plugin",
       "devDependencies": {
-        "@capacitor/core": "^7.0.0",
+        "@capacitor/core": ">=7.0.0",
         "@capacitor/docgen": "^0.2.2",
         "@types/bun": "latest",
         "@vitest/coverage-v8": "^4.1.2",
@@ -15,7 +15,7 @@
         "vite-plus": "0.1.20",
       },
       "peerDependencies": {
-        "@capacitor/core": "^7.0.0",
+        "@capacitor/core": ">=7.0.0",
       },
     },
   },
