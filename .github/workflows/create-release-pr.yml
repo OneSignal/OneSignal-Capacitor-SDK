@@ -149,8 +149,19 @@ jobs:
         run: |
           NEW_VERSION="${{ inputs.capacitor_version }}"
 
+          # Convert version format for OneSignal wrapper (e.g., 1.2.15 -> 010215)
+          # For pre-releases, extract base version first (e.g., 1.2.15-alpha.1 -> 1.2.15)
+          BASE_VERSION=$(echo "$NEW_VERSION" | sed 's/-[a-z].*//')
+          WRAPPER_VERSION=$(echo "$BASE_VERSION" | awk -F'.' '{printf "%02d%02d%02d", $1, $2, $3}')
+
           # Update package.json version
           npm pkg set version="$NEW_VERSION"
+
+          # Update Android wrapper version
+          sed -i '' "s/OneSignalWrapper\.sdkVersion = \"[^\"]*\"/OneSignalWrapper.sdkVersion = \"$WRAPPER_VERSION\"/g" android/src/main/kotlin/com/onesignal/capacitor/OneSignalCapacitorPlugin.kt
+
+          # Update iOS wrapper version
+          sed -i '' "s/OneSignalWrapper\.sdkVersion = \"[^\"]*\"/OneSignalWrapper.sdkVersion = \"$WRAPPER_VERSION\"/g" ios/Sources/OneSignalCapacitorPlugin/OneSignalCapacitorPlugin.swift
 
           # Only commit if there are changes
           git add -A
