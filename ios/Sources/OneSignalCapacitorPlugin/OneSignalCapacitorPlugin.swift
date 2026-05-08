@@ -7,14 +7,7 @@ import OSCapacitorLaunchOptions
 #endif
 
 @objc(OneSignalCapacitorPlugin)
-public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
-    OSNotificationPermissionObserver,
-    OSNotificationLifecycleListener,
-    OSNotificationClickListener,
-    OSPushSubscriptionObserver,
-    OSInAppMessageLifecycleListener,
-    OSInAppMessageClickListener,
-    OSUserStateObserver {
+public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin {
 
     public let identifier = "OneSignalCapacitorPlugin"
     public let jsName = "OneSignalCapacitor"
@@ -78,16 +71,24 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
     private var preventDefaultCache = Set<String>()
     private var initialized = false
 
+    // Observer/listener forwarder. The iOS SDK strong-retains conformers of
+    // the lifecycle/click protocols (NSMutableArray-backed), so registering
+    // self directly creates a retain cycle that makes deinit unreachable.
+    // The proxy holds a weak ref back to us, so dropping the last external
+    // ref to the plugin lets deinit run and clean up the proxy registration.
+    private var listenerProxy: OneSignalListenerProxy?
+
     deinit {
-        // Detach observers so a stale plugin instance doesn't keep firing
-        // into a dead JS bridge if the WebView VC is ever released.
-        OneSignal.Notifications.removePermissionObserver(self)
-        OneSignal.Notifications.removeForegroundLifecycleListener(self)
-        OneSignal.Notifications.removeClickListener(self)
-        OneSignal.User.pushSubscription.removeObserver(self)
-        OneSignal.User.removeObserver(self)
-        OneSignal.InAppMessages.removeLifecycleListener(self)
-        OneSignal.InAppMessages.removeClickListener(self)
+        // Only present after initialize() ran. Removes are idempotent on the
+        // SDK side; we still gate to avoid touching an uninitialized SDK.
+        guard let listenerProxy = listenerProxy else { return }
+        OneSignal.Notifications.removePermissionObserver(listenerProxy)
+        OneSignal.Notifications.removeForegroundLifecycleListener(listenerProxy)
+        OneSignal.Notifications.removeClickListener(listenerProxy)
+        OneSignal.User.pushSubscription.removeObserver(listenerProxy)
+        OneSignal.User.removeObserver(listenerProxy)
+        OneSignal.InAppMessages.removeLifecycleListener(listenerProxy)
+        OneSignal.InAppMessages.removeClickListener(listenerProxy)
     }
 
     // MARK: - Core
@@ -128,13 +129,17 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
             OSCapacitorLaunchOptions.consumeColdStartResponse()
         }
 
-        OneSignal.Notifications.addPermissionObserver(self)
-        OneSignal.Notifications.addForegroundLifecycleListener(self)
-        OneSignal.Notifications.addClickListener(self)
-        OneSignal.User.pushSubscription.addObserver(self)
-        OneSignal.User.addObserver(self)
-        OneSignal.InAppMessages.addLifecycleListener(self)
-        OneSignal.InAppMessages.addClickListener(self)
+        let proxy = OneSignalListenerProxy()
+        proxy.owner = self
+        listenerProxy = proxy
+
+        OneSignal.Notifications.addPermissionObserver(proxy)
+        OneSignal.Notifications.addForegroundLifecycleListener(proxy)
+        OneSignal.Notifications.addClickListener(proxy)
+        OneSignal.User.pushSubscription.addObserver(proxy)
+        OneSignal.User.addObserver(proxy)
+        OneSignal.InAppMessages.addLifecycleListener(proxy)
+        OneSignal.InAppMessages.addClickListener(proxy)
 
         call.resolve()
     }
@@ -678,5 +683,68 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
             "message": ["messageId": event.message.messageId],
             "result": clickResult
         ])
+    }
+}
+
+// Forwarding proxy for the OneSignal iOS SDK observer/listener APIs.
+// Registered with the SDK in place of the plugin so the SDK's strong
+// retention of click/lifecycle listeners (NSMutableArray-backed) does not
+// pin the plugin and make its deinit unreachable. The proxy holds a weak
+// ref back to the plugin; once external holders drop the plugin its
+// deinit runs, removes the proxy from the SDK, and the proxy is then
+// released too.
+final class OneSignalListenerProxy: NSObject,
+    OSNotificationPermissionObserver,
+    OSNotificationLifecycleListener,
+    OSNotificationClickListener,
+    OSPushSubscriptionObserver,
+    OSInAppMessageLifecycleListener,
+    OSInAppMessageClickListener,
+    OSUserStateObserver {
+
+    weak var owner: OneSignalCapacitorPlugin?
+
+    public func onNotificationPermissionDidChange(_ permission: Bool) {
+        owner?.onNotificationPermissionDidChange(permission)
+    }
+
+    public func onPushSubscriptionDidChange(state: OSPushSubscriptionChangedState) {
+        owner?.onPushSubscriptionDidChange(state: state)
+    }
+
+    public func onUserStateDidChange(state: OSUserChangedState) {
+        owner?.onUserStateDidChange(state: state)
+    }
+
+    public func onWillDisplay(event: OSNotificationWillDisplayEvent) {
+        owner?.onWillDisplay(event: event)
+    }
+
+    public func onClick(event: OSNotificationClickEvent) {
+        owner?.onClick(event: event)
+    }
+
+    @objc(onWillDisplayInAppMessage:)
+    public func onWillDisplay(event: OSInAppMessageWillDisplayEvent) {
+        owner?.onWillDisplay(event: event)
+    }
+
+    @objc(onDidDisplayInAppMessage:)
+    public func onDidDisplay(event: OSInAppMessageDidDisplayEvent) {
+        owner?.onDidDisplay(event: event)
+    }
+
+    @objc(onWillDismissInAppMessage:)
+    public func onWillDismiss(event: OSInAppMessageWillDismissEvent) {
+        owner?.onWillDismiss(event: event)
+    }
+
+    @objc(onDidDismissInAppMessage:)
+    public func onDidDismiss(event: OSInAppMessageDidDismissEvent) {
+        owner?.onDidDismiss(event: event)
+    }
+
+    public func onClick(event: OSInAppMessageClickEvent) {
+        owner?.onClick(event: event)
     }
 }
