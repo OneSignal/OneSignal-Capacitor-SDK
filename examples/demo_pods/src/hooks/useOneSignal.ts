@@ -153,6 +153,8 @@ export function useOneSignal(): UseOneSignalReturn {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
     const handleIamWillDisplay = (e: InAppMessageWillDisplayEvent) => {
       console.log(`IAM willDisplay: ${e.message.messageId}`);
     };
@@ -271,6 +273,7 @@ export function useOneSignal(): UseOneSignalReturn {
         OneSignal.User.pushSubscription.getOptedInAsync(),
         OneSignal.Notifications.hasPermission(),
       ]);
+      if (cancelled) return;
 
       setAppId(nextAppId);
       setConsentRequiredState(nextConsentRequired);
@@ -284,6 +287,7 @@ export function useOneSignal(): UseOneSignalReturn {
       setIsReady(true);
 
       const initialOnesignalId = await OneSignal.User.getOnesignalId();
+      if (cancelled) return;
       if (initialOnesignalId) {
         await fetchUserDataFromApi();
       }
@@ -296,6 +300,7 @@ export function useOneSignal(): UseOneSignalReturn {
 
     console.log('Loaded OneSignal');
     return () => {
+      cancelled = true;
       console.log('Cleaning up OneSignal listeners');
       OneSignal.InAppMessages.removeEventListener('willDisplay', handleIamWillDisplay);
       OneSignal.InAppMessages.removeEventListener('didDisplay', handleIamDidDisplay);
