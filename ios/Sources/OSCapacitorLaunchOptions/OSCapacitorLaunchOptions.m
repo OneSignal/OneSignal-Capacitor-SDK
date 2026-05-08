@@ -35,7 +35,8 @@ static UNNotificationResponse *_capturedColdStartResponse = nil;
     if (!unDelegate) return;
 
     SEL didReceiveSel = NSSelectorFromString(@"userNotificationCenter:didReceiveNotificationResponse:withCompletionHandler:");
-    Method original = class_getInstanceMethod([unDelegate class], didReceiveSel);
+    Class delegateClass = [unDelegate class];
+    Method original = class_getInstanceMethod(delegateClass, didReceiveSel);
     if (!original) return;
 
     __block IMP originalIMP = method_getImplementation(original);
@@ -43,7 +44,15 @@ static UNNotificationResponse *_capturedColdStartResponse = nil;
         _capturedColdStartResponse = response;
         ((void(*)(id, SEL, UNUserNotificationCenter*, UNNotificationResponse*, void(^)(void)))originalIMP)(self_, didReceiveSel, center, response, completionHandler);
     });
-    method_setImplementation(original, newIMP);
+
+    // Try to add the method to the delegate's exact class first. If it succeeds,
+    // the IMP came from a parent class (inherited) and we've safely shadowed it
+    // on this subclass only, leaving sibling subclasses untouched. If it fails,
+    // the method is owned by this exact class and method_setImplementation is
+    // safe — it won't leak the wrap up the inheritance chain.
+    if (!class_addMethod(delegateClass, didReceiveSel, newIMP, method_getTypeEncoding(original))) {
+        method_setImplementation(original, newIMP);
+    }
 }
 
 + (NSDictionary *)launchOptions {
