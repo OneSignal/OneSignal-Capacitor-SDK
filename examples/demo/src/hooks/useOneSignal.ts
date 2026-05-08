@@ -229,8 +229,8 @@ export function useOneSignal(): UseOneSignalReturn {
     const load = async () => {
       // Uncomment if you want so you have time to see logs while trying to open
       // safari web inspector. Not an issue for chrome web inspector.
-      await new Promise((resolve) => setTimeout(resolve, 10_000));
-      if (cancelled) return;
+      // await new Promise((resolve) => setTimeout(resolve, 10_000));
+      // if (cancelled) return;
 
       const nextAppId = resolveAppId();
       const nextConsentRequired = preferences.getConsentRequired();
