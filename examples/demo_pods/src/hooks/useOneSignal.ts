@@ -7,6 +7,7 @@ import OneSignal, {
   type InAppMessageWillDisplayEvent,
   type NotificationClickEvent,
   type NotificationWillDisplayEvent,
+  type PushSubscriptionChangedState,
   type UserChangedState,
 } from '@onesignal/capacitor-plugin';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -200,13 +201,14 @@ export function useOneSignal(): UseOneSignalReturn {
       e.getNotification().display();
     };
 
-    const pushSubHandler = async () => {
-      const [id, optedIn] = await Promise.all([
-        OneSignal.User.pushSubscription.getIdAsync(),
-        OneSignal.User.pushSubscription.getOptedInAsync(),
-      ]);
-      setPushSubscriptionId(id ?? undefined);
-      setIsPushEnabled(optedIn);
+    const pushSubHandler = (event: PushSubscriptionChangedState) => {
+      const { previous, current } = event;
+      const fmtToken = (t: string | undefined) => (t ? `${t.slice(0, 8)}…` : 'null');
+      console.log(
+        `Push subscription changed: id=${previous.id ?? 'null'} → ${current.id ?? 'null'}, optedIn=${previous.optedIn} → ${current.optedIn}, token=${fmtToken(previous.token)} → ${fmtToken(current.token)}`,
+      );
+      setPushSubscriptionId(current.id ?? undefined);
+      setIsPushEnabled(current.optedIn);
     };
 
     const permissionHandler = (granted: boolean) => {
