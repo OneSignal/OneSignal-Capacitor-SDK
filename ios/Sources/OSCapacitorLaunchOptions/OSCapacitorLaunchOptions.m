@@ -7,6 +7,13 @@
 
 static NSDictionary *_capturedLaunchOptions = nil;
 static NSMutableArray<UNNotificationResponse *> *_capturedColdStartResponses = nil;
+// Flips to YES the first time consumeColdStartResponses runs (i.e. after the JS
+// layer has called OneSignal.initialize and drained whatever was queued). The
+// swizzle stays installed for the process lifetime, so without this flag every
+// subsequent warm/background tap would be retained in the array forever and
+// _capturedColdStartResponses would grow monotonically. Once consumed, new
+// taps fall through to the host delegate without being captured.
+static BOOL _coldStartResponsesConsumed = NO;
 
 + (void)load {
     _capturedColdStartResponses = [NSMutableArray array];
@@ -46,9 +53,13 @@ static NSMutableArray<UNNotificationResponse *> *_capturedColdStartResponses = n
         // The JS bundle can take multiple seconds to load on cold start (worse
         // in dev builds), and the user can tap a second notification from the
         // shade in that window. Overwriting would silently lose the earlier
-        // tap. consumeColdStartResponses clears the queue once initialize()
-        // has handed every response to OSNotificationsManager.
-        [_capturedColdStartResponses addObject:response];
+        // tap. consumeColdStartResponses clears the queue and flips the
+        // _coldStartResponsesConsumed flag once initialize() has handed every
+        // response to OSNotificationsManager; from that point on, taps fall
+        // straight through to the host delegate so the array can't grow.
+        if (!_coldStartResponsesConsumed) {
+            [_capturedColdStartResponses addObject:response];
+        }
         ((void(*)(id, SEL, UNUserNotificationCenter*, UNNotificationResponse*, void(^)(void)))originalIMP)(self_, didReceiveSel, center, response, completionHandler);
     });
 
@@ -71,6 +82,7 @@ static NSMutableArray<UNNotificationResponse *> *_capturedColdStartResponses = n
 }
 
 + (void)consumeColdStartResponses {
+    _coldStartResponsesConsumed = YES;
     [_capturedColdStartResponses removeAllObjects];
 }
 

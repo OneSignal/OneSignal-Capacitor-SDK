@@ -126,13 +126,15 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin {
         // can replay them here, in arrival order, after initialize has set the
         // appId. The queue can hold more than one entry if the user tapped a
         // second notification from the shade while the JS bundle was loading.
-        let pending = OSCapacitorLaunchOptions.pendingColdStartResponses
-        for response in pending {
+        for response in OSCapacitorLaunchOptions.pendingColdStartResponses {
             OSNotificationsManager.processNotificationResponse(response)
         }
-        if !pending.isEmpty {
-            OSCapacitorLaunchOptions.consumeColdStartResponses()
-        }
+        // Always consume, even if the queue was empty. consumeColdStartResponses
+        // also flips a one-way flag that tells the swizzle to stop capturing
+        // future taps; without this unconditional call, sessions that cold-start
+        // without a notification tap would never flip the flag and any later
+        // warm/background taps would accumulate in the static array forever.
+        OSCapacitorLaunchOptions.consumeColdStartResponses()
 
         let proxy = OneSignalListenerProxy()
         proxy.owner = self
