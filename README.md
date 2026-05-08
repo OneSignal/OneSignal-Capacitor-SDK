@@ -24,13 +24,13 @@ See the `examples/demo` directory for a full working example.
 
 <docgen-index>
 
-- [`initialize(...)`](#initialize)
-- [`login(...)`](#login)
-- [`logout()`](#logout)
-- [`setConsentRequired(...)`](#setconsentrequired)
-- [`setConsentGiven(...)`](#setconsentgiven)
-- [Interfaces](#interfaces)
-- [Type Aliases](#type-aliases)
+* [`initialize(...)`](#initialize)
+* [`login(...)`](#login)
+* [`logout()`](#logout)
+* [`setConsentRequired(...)`](#setconsentrequired)
+* [`setConsentGiven(...)`](#setconsentgiven)
+* [Interfaces](#interfaces)
+* [Type Aliases](#type-aliases)
 
 </docgen-index>
 
@@ -51,7 +51,8 @@ Initialize the SDK with your OneSignal app ID. Call during app startup.
 | ----------- | ------------------- |
 | **`appId`** | <code>string</code> |
 
----
+--------------------
+
 
 ### login(...)
 
@@ -65,7 +66,8 @@ Log in to OneSignal as the user identified by `externalId`, switching the user c
 | ---------------- | ------------------- |
 | **`externalId`** | <code>string</code> |
 
----
+--------------------
+
 
 ### logout()
 
@@ -75,7 +77,8 @@ logout() => Promise<void>
 
 Log out the current user. The SDK will reference a new device-scoped user.
 
----
+--------------------
+
 
 ### setConsentRequired(...)
 
@@ -89,7 +92,8 @@ Set whether user privacy consent is required before sending data to OneSignal. C
 | -------------- | -------------------- |
 | **`required`** | <code>boolean</code> |
 
----
+--------------------
+
 
 ### setConsentGiven(...)
 
@@ -103,9 +107,11 @@ Indicate whether the user has granted privacy consent.
 | ------------- | -------------------- |
 | **`granted`** | <code>boolean</code> |
 
----
+--------------------
+
 
 ### Interfaces
+
 
 #### OneSignalDebugAPI
 
@@ -115,6 +121,7 @@ Debug helpers exposed via `OneSignal.Debug`.
 | ----------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | **setLogLevel**   | (logLevel: <a href="#loglevel">LogLevel</a>) =&gt; void       | Set the log level printed to LogCat (Android) or the Xcode console (iOS). |
 | **setAlertLevel** | (visualLogLevel: <a href="#loglevel">LogLevel</a>) =&gt; void | Set the log level shown to the user as alert dialogs.                     |
+
 
 #### OneSignalUserAPI
 
@@ -146,11 +153,13 @@ Current-user operations exposed via `OneSignal.User`.
 | **getExternalId**       | () =&gt; Promise&lt;string \| null&gt;                                                                       | Get the external ID set via `login`, or null if the user is anonymous.                    |
 | **trackEvent**          | (name: string, properties?: object \| undefined) =&gt; Promise&lt;void&gt;                                   | Track a custom event with an optional set of JSON-serializable properties.                |
 
+
 #### UserChangedState
 
 | Prop          | Type                                            |
 | ------------- | ----------------------------------------------- |
 | **`current`** | <code><a href="#userstate">UserState</a></code> |
+
 
 #### UserState
 
@@ -158,6 +167,7 @@ Current-user operations exposed via `OneSignal.User`.
 | ----------------- | ------------------- |
 | **`onesignalId`** | <code>string</code> |
 | **`externalId`**  | <code>string</code> |
+
 
 #### OneSignalPushSubscriptionAPI
 
@@ -173,12 +183,14 @@ Push subscription state and controls exposed via `OneSignal.User.pushSubscriptio
 | **optIn**               | () =&gt; Promise&lt;void&gt;                                                                                                         | Opt the user in to push notifications. Prompts for permission if needed.                                                                                                                            |
 | **optOut**              | () =&gt; Promise&lt;void&gt;                                                                                                         | Opt the user out of push notifications on this device.                                                                                                                                              |
 
+
 #### PushSubscriptionChangedState
 
 | Prop           | Type                                                                    |
 | -------------- | ----------------------------------------------------------------------- |
 | **`previous`** | <code><a href="#pushsubscriptionstate">PushSubscriptionState</a></code> |
 | **`current`**  | <code><a href="#pushsubscriptionstate">PushSubscriptionState</a></code> |
+
 
 #### PushSubscriptionState
 
@@ -187,6 +199,7 @@ Push subscription state and controls exposed via `OneSignal.User.pushSubscriptio
 | **`id`**      | <code>string</code>  |
 | **`token`**   | <code>string</code>  |
 | **`optedIn`** | <code>boolean</code> |
+
 
 #### OneSignalNotificationsAPI
 
@@ -205,6 +218,7 @@ Notification permission and event handling exposed via `OneSignal.Notifications`
 | **removeNotification**                  | (id: number) =&gt; Promise&lt;void&gt;                                                                                                                       | Android only. Cancel a single notification by its Android notification ID.               |
 | **removeGroupedNotifications**          | (id: string) =&gt; Promise&lt;void&gt;                                                                                                                       | Android only. Cancel a group of notifications by group key.                              |
 
+
 #### NotificationClickEvent
 
 | Prop               | Type                                                                        |
@@ -212,12 +226,14 @@ Notification permission and event handling exposed via `OneSignal.Notifications`
 | **`result`**       | <code><a href="#notificationclickresult">NotificationClickResult</a></code> |
 | **`notification`** | <code>OSNotification</code>                                                 |
 
+
 #### NotificationClickResult
 
 | Prop           | Type                |
 | -------------- | ------------------- |
 | **`actionId`** | <code>string</code> |
 | **`url`**      | <code>string</code> |
+
 
 #### OneSignalInAppMessagesAPI
 
@@ -235,6 +251,7 @@ In-app message triggers and event handling exposed via `OneSignal.InAppMessages`
 | **setPaused**           | (pause: boolean) =&gt; void                                                                                                                                  | Pause or resume the display of in-app messages.                                                     |
 | **getPaused**           | () =&gt; Promise&lt;boolean&gt;                                                                                                                              | Whether in-app messaging is currently paused.                                                       |
 
+
 #### InAppMessageClickEvent
 
 | Prop          | Type                                                                        |
@@ -242,11 +259,13 @@ In-app message triggers and event handling exposed via `OneSignal.InAppMessages`
 | **`message`** | <code><a href="#osinappmessage">OSInAppMessage</a></code>                   |
 | **`result`**  | <code><a href="#inappmessageclickresult">InAppMessageClickResult</a></code> |
 
+
 #### OSInAppMessage
 
 | Prop            | Type                |
 | --------------- | ------------------- |
 | **`messageId`** | <code>string</code> |
+
 
 #### InAppMessageClickResult
 
@@ -257,11 +276,13 @@ In-app message triggers and event handling exposed via `OneSignal.InAppMessages`
 | **`url`**            | <code>string</code>                                                             |
 | **`urlTarget`**      | <code><a href="#inappmessageactionurltype">InAppMessageActionUrlType</a></code> |
 
+
 #### InAppMessageWillDisplayEvent
 
 | Prop          | Type                                                      |
 | ------------- | --------------------------------------------------------- |
 | **`message`** | <code><a href="#osinappmessage">OSInAppMessage</a></code> |
+
 
 #### InAppMessageDidDisplayEvent
 
@@ -269,17 +290,20 @@ In-app message triggers and event handling exposed via `OneSignal.InAppMessages`
 | ------------- | --------------------------------------------------------- |
 | **`message`** | <code><a href="#osinappmessage">OSInAppMessage</a></code> |
 
+
 #### InAppMessageWillDismissEvent
 
 | Prop          | Type                                                      |
 | ------------- | --------------------------------------------------------- |
 | **`message`** | <code><a href="#osinappmessage">OSInAppMessage</a></code> |
 
+
 #### InAppMessageDidDismissEvent
 
 | Prop          | Type                                                      |
 | ------------- | --------------------------------------------------------- |
 | **`message`** | <code><a href="#osinappmessage">OSInAppMessage</a></code> |
+
 
 #### OneSignalSessionAPI
 
@@ -291,6 +315,7 @@ Outcome reporting exposed via `OneSignal.Session`.
 | **addUniqueOutcome**    | (name: string) =&gt; Promise&lt;void&gt;                | <a href="#record">Record</a> a unique outcome with the given name against the current session.     |
 | **addOutcomeWithValue** | (name: string, value: number) =&gt; Promise&lt;void&gt; | <a href="#record">Record</a> an outcome with the given name and value against the current session. |
 
+
 #### OneSignalLocationAPI
 
 Location permission and sharing exposed via `OneSignal.Location`.
@@ -300,6 +325,7 @@ Location permission and sharing exposed via `OneSignal.Location`.
 | **requestPermission** | () =&gt; Promise&lt;void&gt;    | Prompt the user for location permission to enable geotagging.   |
 | **setShared**         | (shared: boolean) =&gt; void    | Enable or disable sharing the device location with OneSignal.   |
 | **isShared**          | () =&gt; Promise&lt;boolean&gt; | Whether the device location is currently shared with OneSignal. |
+
 
 #### OneSignalLiveActivitiesAPI
 
@@ -314,48 +340,56 @@ Live activity controls exposed via `OneSignal.LiveActivities`. iOS only unless n
 | **setupDefault**           | (options?: <a href="#liveactivitysetupoptions">LiveActivitySetupOptions</a> \| undefined) =&gt; Promise&lt;void&gt;                                                           | Set up the OneSignal default live activity, optionally enabling pushToStart/pushToUpdate. |
 | **startDefault**           | (activityId: string, attributes: <a href="#record">Record</a>&lt;string, unknown&gt;, content: <a href="#record">Record</a>&lt;string, unknown&gt;) =&gt; Promise&lt;void&gt; | Start a live activity backed by the OneSignal default attributes type.                    |
 
+
 ### Type Aliases
+
 
 #### LogLevel
 
 <code>(typeof <a href="#loglevel">LogLevel</a>)[keyof typeof LogLevel]</code>
 
+
 #### Record
 
 Construct a type with a set of properties K of type T
 
-<code>{
-[P in K]: T;
-}</code>
+<code>{ [P in K]: T; }</code>
+
 
 #### OSNotificationPermission
 
 <code>(typeof <a href="#osnotificationpermission">OSNotificationPermission</a>)[keyof typeof OSNotificationPermission]</code>
 
+
 #### NotificationEventName
 
 <code>'click' | 'foregroundWillDisplay' | 'permissionChange'</code>
+
 
 #### NotificationEventTypeMap
 
 <code>{ click: <a href="#notificationclickevent">NotificationClickEvent</a>; foregroundWillDisplay: NotificationWillDisplayEvent; permissionChange: boolean; }</code>
 
+
 #### InAppMessageEventName
 
 <code>'click' | 'willDisplay' | 'didDisplay' | 'willDismiss' | 'didDismiss'</code>
+
 
 #### InAppMessageEventTypeMap
 
 <code>{ click: <a href="#inappmessageclickevent">InAppMessageClickEvent</a>; willDisplay: <a href="#inappmessagewilldisplayevent">InAppMessageWillDisplayEvent</a>; didDisplay: <a href="#inappmessagediddisplayevent">InAppMessageDidDisplayEvent</a>; willDismiss: <a href="#inappmessagewilldismissevent">InAppMessageWillDismissEvent</a>; didDismiss: <a href="#inappmessagediddismissevent">InAppMessageDidDismissEvent</a>; }</code>
 
+
 #### InAppMessageActionUrlType
 
 <code>'browser' | 'webview' | 'replacement'</code>
+
 
 #### LiveActivitySetupOptions
 
 The setup options for `OneSignal.LiveActivities.setupDefault`.
 
-<code>{ /** _ When true, OneSignal will listen for pushToStart tokens for the `OneSignalLiveActivityAttributes` structure. _/ enablePushToStart: boolean; /** _ When true, OneSignal will listen for pushToUpdate tokens for each start live activity that uses the _ `OneSignalLiveActivityAttributes` structure. \*/ enablePushToUpdate: boolean; }</code>
+<code>{ /** * When true, OneSignal will listen for pushToStart tokens for the `OneSignalLiveActivityAttributes` structure. */ enablePushToStart: boolean; /** * When true, OneSignal will listen for pushToUpdate tokens for each start live activity that uses the * `OneSignalLiveActivityAttributes` structure. */ enablePushToUpdate: boolean; }</code>
 
 </docgen-api>
