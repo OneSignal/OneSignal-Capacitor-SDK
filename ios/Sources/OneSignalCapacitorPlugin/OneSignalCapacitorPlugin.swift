@@ -2,7 +2,9 @@ import Foundation
 import Capacitor
 import OneSignalFramework
 import OneSignalLiveActivities
+#if SWIFT_PACKAGE
 import OSCapacitorLaunchOptions
+#endif
 
 @objc(OneSignalCapacitorPlugin)
 public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin,
