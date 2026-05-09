@@ -258,11 +258,12 @@ export function useOneSignal(): UseOneSignalReturn {
 
       console.log(`OneSignal initialized with app ID: ${nextAppId}`);
 
-      const externalId = await OneSignal.User.getExternalId();
-      const [pushId, pushOptedIn, hasPerm] = await Promise.all([
+      const [externalId, pushId, pushOptedIn, hasPerm, initialOnesignalId] = await Promise.all([
+        OneSignal.User.getExternalId(),
         OneSignal.User.pushSubscription.getIdAsync(),
         OneSignal.User.pushSubscription.getOptedInAsync(),
         OneSignal.Notifications.hasPermission(),
+        OneSignal.User.getOnesignalId(),
       ]);
       if (cancelled) return;
 
@@ -272,10 +273,8 @@ export function useOneSignal(): UseOneSignalReturn {
       setHasNotificationPermission(hasPerm);
       setIsReady(true);
 
-      const initialOnesignalId = await OneSignal.User.getOnesignalId();
-      if (cancelled) return;
       if (initialOnesignalId) {
-        await fetchUserDataFromApi();
+        void fetchUserDataFromApi();
       }
     };
 
