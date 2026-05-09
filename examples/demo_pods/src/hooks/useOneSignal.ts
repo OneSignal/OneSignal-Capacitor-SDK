@@ -13,13 +13,44 @@ import PreferencesService from '../services/PreferencesService';
 
 const APP_ID = import.meta.env.VITE_ONESIGNAL_APP_ID as string | undefined;
 const DEFAULT_APP_ID = '77e32082-ea27-42e3-a898-c72e141824ef';
-
-function resolveAppId(): string {
-  return APP_ID?.trim() || DEFAULT_APP_ID;
-}
+const RESOLVED_APP_ID = APP_ID?.trim() || DEFAULT_APP_ID;
 
 const apiService = OneSignalApiService.getInstance();
 const preferences = PreferencesService.getInstance();
+
+// One-shot SDK initialization at module-eval time. Capacitor's bridge queues
+// calls until native is ready, so no `deviceready` gating is required. The
+// downstream `OneSignal.initialize` short-circuits on the native side, but
+// running once here keeps JS-side log noise and listener-registration
+// ordering clean across StrictMode dual-mounts and HMR.
+let initialized = false;
+function initOneSignal(): void {
+  if (initialized) return;
+  initialized = true;
+
+  apiService.setAppId(RESOLVED_APP_ID);
+
+  OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+  OneSignal.setConsentRequired(preferences.getConsentRequired());
+  OneSignal.setConsentGiven(preferences.getConsentGiven());
+  void OneSignal.initialize(RESOLVED_APP_ID);
+
+  void OneSignal.LiveActivities.setupDefault({
+    enablePushToStart: true,
+    enablePushToUpdate: true,
+  });
+
+  OneSignal.InAppMessages.setPaused(preferences.getIamPaused());
+  OneSignal.Location.setShared(preferences.getLocationShared());
+
+  const storedExternalUserId = preferences.getExternalUserId();
+  if (storedExternalUserId) {
+    void OneSignal.login(storedExternalUserId);
+  }
+
+  console.log(`OneSignal initialized with app ID: ${RESOLVED_APP_ID}`);
+}
+initOneSignal();
 
 async function postNotification(type: NotificationType): Promise<boolean> {
   const subscriptionId = await OneSignal.User.pushSubscription.getIdAsync();
@@ -101,7 +132,6 @@ export type UseOneSignalReturn = {
 };
 
 export function useOneSignal(): UseOneSignalReturn {
-  const [appId] = useState(resolveAppId);
   const [consentRequired, setConsentRequiredState] = useState(() =>
     preferences.getConsentRequired(),
   );
@@ -213,50 +243,22 @@ export function useOneSignal(): UseOneSignalReturn {
       void fetchUserDataFromApi();
     };
 
+    OneSignal.InAppMessages.addEventListener('willDisplay', handleIamWillDisplay);
+    OneSignal.InAppMessages.addEventListener('didDisplay', handleIamDidDisplay);
+    OneSignal.InAppMessages.addEventListener('willDismiss', handleIamWillDismiss);
+    OneSignal.InAppMessages.addEventListener('didDismiss', handleIamDidDismiss);
+    OneSignal.InAppMessages.addEventListener('click', handleIamClick);
+    OneSignal.Notifications.addEventListener('click', handleNotificationClick);
+    OneSignal.Notifications.addEventListener('permissionChange', permissionHandler);
+    OneSignal.Notifications.addEventListener('foregroundWillDisplay', handleForegroundWillDisplay);
+    OneSignal.User.pushSubscription.addEventListener('change', pushSubHandler);
+    OneSignal.User.addEventListener('change', userChangeHandler);
+
     const load = async () => {
       // Uncomment if you want so you have time to see logs while trying to open
       // safari web inspector. Not an issue for chrome web inspector.
       // await new Promise((resolve) => setTimeout(resolve, 10_000));
       // if (cancelled) return;
-
-      const nextAppId = resolveAppId();
-      const storedExternalUserId = preferences.getExternalUserId() ?? undefined;
-
-      apiService.setAppId(nextAppId);
-
-      OneSignal.Debug.setLogLevel(LogLevel.Verbose);
-      OneSignal.setConsentRequired(preferences.getConsentRequired());
-      OneSignal.setConsentGiven(preferences.getConsentGiven());
-      void OneSignal.initialize(nextAppId);
-
-      void OneSignal.LiveActivities.setupDefault({
-        enablePushToStart: true,
-        enablePushToUpdate: true,
-      });
-
-      OneSignal.InAppMessages.setPaused(preferences.getIamPaused());
-      OneSignal.Location.setShared(preferences.getLocationShared());
-
-      if (storedExternalUserId) {
-        void OneSignal.login(storedExternalUserId);
-      }
-
-      OneSignal.InAppMessages.addEventListener('willDisplay', handleIamWillDisplay);
-      OneSignal.InAppMessages.addEventListener('didDisplay', handleIamDidDisplay);
-      OneSignal.InAppMessages.addEventListener('willDismiss', handleIamWillDismiss);
-      OneSignal.InAppMessages.addEventListener('didDismiss', handleIamDidDismiss);
-      OneSignal.InAppMessages.addEventListener('click', handleIamClick);
-      OneSignal.Notifications.addEventListener('click', handleNotificationClick);
-      OneSignal.Notifications.addEventListener('permissionChange', permissionHandler);
-      OneSignal.Notifications.addEventListener(
-        'foregroundWillDisplay',
-        handleForegroundWillDisplay,
-      );
-
-      OneSignal.User.pushSubscription.addEventListener('change', pushSubHandler);
-      OneSignal.User.addEventListener('change', userChangeHandler);
-
-      console.log(`OneSignal initialized with app ID: ${nextAppId}`);
 
       const [externalId, pushId, pushOptedIn, hasPerm, initialOnesignalId] = await Promise.all([
         OneSignal.User.getExternalId(),
@@ -267,7 +269,7 @@ export function useOneSignal(): UseOneSignalReturn {
       ]);
       if (cancelled) return;
 
-      setExternalUserId(externalId ?? storedExternalUserId);
+      setExternalUserId(externalId ?? preferences.getExternalUserId() ?? undefined);
       setPushSubscriptionId(pushId ?? undefined);
       setIsPushEnabled(pushOptedIn);
       setHasNotificationPermission(hasPerm);
@@ -531,7 +533,7 @@ export function useOneSignal(): UseOneSignalReturn {
   };
 
   return {
-    appId,
+    appId: RESOLVED_APP_ID,
     consentRequired,
     privacyConsentGiven,
     externalUserId,
