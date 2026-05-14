@@ -9,7 +9,7 @@ The plugin module declares its own `buildscript` classpath for the Android Gradl
 Defaults live in [`gradle/libs.versions.toml`](gradle/libs.versions.toml):
 
 - `kotlin = "2.2.20"` – the compiler version used to build this module. Matches the Capacitor 8 upgrade guide's recommended `kotlin_version`, and a 2.2.x compiler reads `kotlin-stdlib` bytecode from both 1.x and 2.x, which is what makes a single artifact work on Capacitor 7 hosts (Kotlin 1.9.x stdlib) and Capacitor 8 hosts (Kotlin 2.2.x stdlib).
-- `androidGradlePlugin = "8.7.3"` – tracks Capacitor 8's AGP. Plugin-only Gradle invocations target this version; under a Cap 7 host the host's AGP wins, which is fine because both 8.2.x and 8.7.x compile this source set.
+- `androidGradlePlugin = "8.7.3"` – intentionally stays below Capacitor 8's recommended 8.13.0 so plugin-only Gradle invocations still work from a freshly scaffolded Capacitor 7 project (Gradle 8.11.1). In host builds the host's AGP wins regardless.
 
 Host apps that need to pin a different Kotlin compiler can do so by setting `rootProject.ext.kotlin_version` in their root `build.gradle`. The plugin reads it via `propertyOrCatalog("kotlin_version", "kotlin")`.
 

@@ -30,7 +30,7 @@ bunx cap add android
 bunx cap add ios    # optional
 ```
 
-`bunx cap add android` scaffolds a Capacitor 7 Android project (AGP 8.7.x, no root Kotlin Gradle Plugin classpath). The OneSignal plugin module compiles against the Kotlin 2.1.20 compiler it ships in its own buildscript, which reads both 1.x and 2.x `kotlin-stdlib` bytecode.
+`bunx cap add android` scaffolds a Capacitor 7 Android project (AGP 8.7.x, no root Kotlin Gradle Plugin classpath). The OneSignal plugin module compiles against the Kotlin 2.2.20 compiler it ships in its own buildscript, which reads both 1.x and 2.x `kotlin-stdlib` bytecode.
 
 `ONESIGNAL_APP_ID` in `src/app/app.component.ts` defaults to the shared OneSignal demo app id (same one used by `examples/demo`). Swap it for your own app id before pointing the demo at a production environment.
 

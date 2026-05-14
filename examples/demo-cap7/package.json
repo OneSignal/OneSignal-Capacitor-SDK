@@ -20,7 +20,7 @@
     "@onesignal/capacitor-plugin": "file:../../onesignal-capacitor-plugin.tgz",
     "rxjs": "^7.8.1",
     "tslib": "^2.7.0",
-    "zone.js": "~0.15.0"
+    "zone.js": "~0.14.10"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^18.2.0",
