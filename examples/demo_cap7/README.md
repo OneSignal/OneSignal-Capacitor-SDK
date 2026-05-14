@@ -14,6 +14,7 @@ Minimal Capacitor 7 + Angular sample used to verify the OneSignal Capacitor plug
 1. Initialize OneSignal
 2. Request notification permission
 3. Show the OneSignal user / push subscription id (paste it into the OneSignal dashboard to send a test push)
+4. Send Test Notification – POSTs `{ headings: 'Simple Notification', contents: 'This is a simple push notification' }` to the OneSignal REST API (`v1/notifications`) targeting the current push subscription id. Mirrors the Simple notification button in `examples/demo`; no REST API key needed since the call targets the device's own subscription id.
 
 ## First-time setup
 
