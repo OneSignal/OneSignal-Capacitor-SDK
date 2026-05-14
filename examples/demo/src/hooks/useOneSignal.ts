@@ -216,7 +216,12 @@ export function useOneSignal(): UseOneSignalReturn {
 
     const handleForegroundWillDisplay = (e: NotificationWillDisplayEvent) => {
       console.log(`Notification foregroundWillDisplay: ${e.getNotification().title ?? ''}`);
-      e.getNotification().display();
+
+      // uncomment to test preventing the default display behavior
+      // e.preventDefault();
+
+      // can call this after preventDefault to force display of notification
+      // e.getNotification().display();
     };
 
     const pushSubHandler = (event: PushSubscriptionChangedState) => {
