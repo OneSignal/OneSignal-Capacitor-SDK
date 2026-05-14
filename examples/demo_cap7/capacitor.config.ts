@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.onesignal.example.cap7',
+  appId: 'com.onesignal.example',
   appName: 'OneSignal Cap7 Demo',
   webDir: 'dist/browser',
   loggingBehavior: 'debug',
