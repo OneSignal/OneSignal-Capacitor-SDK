@@ -1,9 +1,59 @@
-// The Android Gradle Plugin and Kotlin Gradle Plugin are intentionally NOT
-// classpathed here. Capacitor host apps already provide both in their root
-// buildscript, and inheriting from the consumer is what lets this plugin
-// compile under both Capacitor 7 (Kotlin 1.9.x / AGP 8.2.x) and Capacitor 8
-// (Kotlin 2.1.x / AGP 8.7+) without forcing a toolchain mismatch.
+buildscript {
+    val catalogFile = file("gradle/libs.versions.toml")
 
+    // Lightweight reader for the [versions] table of libs.versions.toml.
+    // Inlined here because buildscript {} is evaluated before the rest of the
+    // script body, and Gradle's built-in version catalog APIs aren't available
+    // to a Capacitor plugin consumed as a sub-project.
+    fun fromCatalog(key: String): String {
+        var inVersions = false
+        var result: String? = null
+        catalogFile.forEachLine { raw ->
+            if (result != null) return@forEachLine
+            val line = raw.substringBefore("#").trim()
+            when {
+                line.startsWith("[") && line.endsWith("]") -> inVersions = (line == "[versions]")
+                inVersions && "=" in line -> {
+                    val (rawKey, rawValue) = line.split("=", limit = 2)
+                    if (rawKey.trim() == key) {
+                        result = rawValue.trim().trim('"')
+                    }
+                }
+            }
+        }
+        return result ?: error("Version '$key' not found in ${catalogFile.name}")
+    }
+
+    // Both AGP and Kotlin Gradle Plugin are classpathed here so the plugin
+    // builds inside Capacitor 7 hosts, whose root build.gradle does not
+    // provide either for sub-projects. Capacitor 8 hosts that already pin
+    // their own kotlin_version can override via rootProject.ext.kotlin_version.
+    //
+    // The catalog default matches the Capacitor 8 upgrade guide's
+    // recommended kotlin_version (2.2.20). That matters because the host
+    // classpath can resolve kotlin-stdlib to 2.x; the 1.9 compiler can't
+    // read 2.x metadata, which is exactly what broke 1.0.2 on Capacitor 8
+    // (issue #18). A 2.2.x compiler reads both 1.x and 2.x stdlib bytecode,
+    // so the plugin works under Cap 7 and Cap 8.
+    val kotlinVersion: String = if (project.hasProperty("kotlin_version")) {
+        rootProject.extra["kotlin_version"] as String
+    } else {
+        fromCatalog("kotlin")
+    }
+    val androidGradlePluginVersion: String = fromCatalog("androidGradlePlugin")
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:$androidGradlePluginVersion")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+    }
+}
+
+// Duplicates the buildscript-local reader intentionally: the buildscript block
+// closes over its own scope, so this helper is reused for the module body.
 fun catalogVersion(key: String): String {
     val toml = file("gradle/libs.versions.toml")
     var inVersions = false
@@ -69,7 +119,7 @@ configure<com.android.build.gradle.LibraryExtension> {
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    kotlinOptions.jvmTarget = "17"
+    compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
 }
 
 repositories {
