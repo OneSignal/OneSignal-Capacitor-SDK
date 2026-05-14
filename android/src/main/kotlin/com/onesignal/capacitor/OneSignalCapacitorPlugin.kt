@@ -134,7 +134,7 @@ class OneSignalCapacitorPlugin : Plugin(),
         initialized = true
 
         OneSignalWrapper.sdkType = "capacitor"
-        OneSignalWrapper.sdkVersion = "010002"
+        OneSignalWrapper.sdkVersion = "010003"
         OneSignal.initWithContext(context, appId)
 
         // If the SDK was initialized from a non-Activity context (FCM/work

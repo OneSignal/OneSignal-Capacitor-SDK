@@ -1,6 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { IonContent, IonPage, IonToast } from '@ionic/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 
 import oneSignalLogo from '../assets/onesignal_logo.svg';
@@ -53,15 +53,19 @@ type DialogState =
   | { type: 'trackEvent' }
   | { type: 'customNotification' };
 
+type ToastState = { id: number; message: string };
+
+const TOAST_DURATION_MS = 1600;
+
 const HomeScreen: React.FC = () => {
   const os = useOneSignal();
 
   const history = useHistory();
   const [dialog, setDialog] = useState<DialogState>({ type: 'none' });
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastOpen, setToastOpen] = useState(false);
   const [tooltipVisible, setTooltipVisible] = useState(false);
   const [activeTooltip, setActiveTooltip] = useState<TooltipData | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
+  const toastCounterRef = useRef(0);
 
   const aliasItems = useMemo(
     () =>
@@ -79,13 +83,10 @@ const HomeScreen: React.FC = () => {
     [os.triggersList],
   );
 
-  const showToast = (message: string) => {
-    setToastOpen(false);
-    setTimeout(() => {
-      setToastMessage(message);
-      setToastOpen(true);
-    }, 0);
-  };
+  const showToast = useCallback((message: string): void => {
+    toastCounterRef.current += 1;
+    setToast({ id: toastCounterRef.current, message });
+  }, []);
 
   const closeDialog = () => {
     setDialog({ type: 'none' });
@@ -439,18 +440,22 @@ const HomeScreen: React.FC = () => {
           }}
         />
 
-        <IonToast
-          isOpen={toastOpen}
-          message={toastMessage}
-          duration={1600}
-          onDidDismiss={() => setToastOpen(false)}
-          data-testid="snackbar_toast"
-        />
         <TooltipModal
           open={tooltipVisible}
           tooltip={activeTooltip}
           onClose={() => setTooltipVisible(false)}
         />
+
+        {toast && (
+          <IonToast
+            key={toast.id}
+            isOpen
+            message={toast.message}
+            duration={TOAST_DURATION_MS}
+            onDidDismiss={() => setToast((current) => (current?.id === toast.id ? null : current))}
+            data-testid="snackbar_toast"
+          />
+        )}
       </IonContent>
     </IonPage>
   );
