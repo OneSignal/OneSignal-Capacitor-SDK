@@ -196,10 +196,10 @@ export function useOneSignal(): UseOneSignalReturn {
       }
     };
 
-    // const handleForegroundWillDisplay = (e: NotificationWillDisplayEvent) => {
-    //   console.log(`Notification foregroundWillDisplay: ${e.getNotification().title ?? ''}`);
-    //   e.getNotification().display();
-    // };
+    const handleForegroundWillDisplay = (e: NotificationWillDisplayEvent) => {
+      console.log(`Notification foregroundWillDisplay: ${e.getNotification().title ?? ''}`);
+      e.getNotification().display();
+    };
 
     const pushSubHandler = (event: PushSubscriptionChangedState) => {
       const { previous, current } = event;
@@ -265,10 +265,10 @@ export function useOneSignal(): UseOneSignalReturn {
       OneSignal.InAppMessages.addEventListener('click', handleIamClick);
       OneSignal.Notifications.addEventListener('click', handleNotificationClick);
       OneSignal.Notifications.addEventListener('permissionChange', permissionHandler);
-      // OneSignal.Notifications.addEventListener(
-      //   'foregroundWillDisplay',
-      //   handleForegroundWillDisplay,
-      // );
+      OneSignal.Notifications.addEventListener(
+        'foregroundWillDisplay',
+        handleForegroundWillDisplay,
+      );
 
       OneSignal.User.pushSubscription.addEventListener('change', pushSubHandler);
       OneSignal.User.addEventListener('change', userChangeHandler);
@@ -317,10 +317,10 @@ export function useOneSignal(): UseOneSignalReturn {
       OneSignal.InAppMessages.removeEventListener('click', handleIamClick);
       OneSignal.Notifications.removeEventListener('click', handleNotificationClick);
       OneSignal.Notifications.removeEventListener('permissionChange', permissionHandler);
-      // OneSignal.Notifications.removeEventListener(
-      //   'foregroundWillDisplay',
-      //   handleForegroundWillDisplay,
-      // );
+      OneSignal.Notifications.removeEventListener(
+        'foregroundWillDisplay',
+        handleForegroundWillDisplay,
+      );
       OneSignal.User.pushSubscription.removeEventListener('change', pushSubHandler);
       OneSignal.User.removeEventListener('change', userChangeHandler);
     };
