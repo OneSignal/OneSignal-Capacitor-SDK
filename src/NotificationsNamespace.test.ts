@@ -259,6 +259,37 @@ describe('Notifications', () => {
       },
     );
 
+    test('should remove foregroundWillDisplay bridge listener after last local listener is removed', async () => {
+      const remove = vi.fn().mockResolvedValue(undefined);
+      mockPlugin.addListener.mockResolvedValue({ remove });
+      const mockListener = vi.fn();
+
+      notifications.addEventListener('foregroundWillDisplay', mockListener);
+      notifications.removeEventListener('foregroundWillDisplay', mockListener);
+
+      await vi.waitFor(() => {
+        expect(remove).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    test('should re-register foregroundWillDisplay bridge listener after all listeners are removed', async () => {
+      const firstRemove = vi.fn().mockResolvedValue(undefined);
+      mockPlugin.addListener
+        .mockResolvedValueOnce({ remove: firstRemove })
+        .mockResolvedValueOnce({ remove: vi.fn() });
+      const firstListener = vi.fn();
+      const secondListener = vi.fn();
+
+      notifications.addEventListener('foregroundWillDisplay', firstListener);
+      notifications.removeEventListener('foregroundWillDisplay', firstListener);
+      notifications.addEventListener('foregroundWillDisplay', secondListener);
+
+      expect(mockPlugin.addListener).toHaveBeenCalledTimes(2);
+      await vi.waitFor(() => {
+        expect(firstRemove).toHaveBeenCalledTimes(1);
+      });
+    });
+
     test('should not remove listener for unknown event type', () => {
       vi.spyOn(helpers, 'removeListener').mockImplementation(() => {});
       const mockListener = vi.fn();
