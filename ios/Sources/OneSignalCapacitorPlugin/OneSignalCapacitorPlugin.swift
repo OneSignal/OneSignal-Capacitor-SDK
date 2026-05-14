@@ -616,6 +616,11 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     public func onWillDisplay(event: OSNotificationWillDisplayEvent) {
+        // Match Cordova's default-display behavior: if no JS listener has
+        // subscribed via Notifications.addEventListener('foregroundWillDisplay'),
+        // leave the event untouched so the OneSignal native SDK falls back to
+        // its default behavior and displays the notification automatically.
+        guard hasListeners("notificationForegroundWillDisplay") else { return }
         guard let notificationId = event.notification.notificationId else { return }
         notificationWillDisplayCache[notificationId] = event
         event.preventDefault()

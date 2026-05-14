@@ -1,3 +1,5 @@
+import type { PluginListenerHandle } from '@capacitor/core';
+
 import type { OneSignalNotificationsAPI } from './api';
 import type { OneSignalCapacitorPlugin } from './definitions';
 import { removeListener } from './helpers';
@@ -28,6 +30,7 @@ export default class Notifications implements OneSignalNotificationsAPI {
   private _hasRegisteredClickListener = false;
   private _hasRegisteredForegroundWillDisplayListener = false;
   private _hasRegisteredPermissionListener = false;
+  private _foregroundWillDisplayListenerHandle?: Promise<PluginListenerHandle>;
 
   constructor(plugin: OneSignalCapacitorPlugin) {
     this._plugin = plugin;
@@ -122,7 +125,7 @@ export default class Notifications implements OneSignalNotificationsAPI {
       );
       if (!this._hasRegisteredForegroundWillDisplayListener) {
         this._hasRegisteredForegroundWillDisplayListener = true;
-        void this._plugin.addListener(
+        this._foregroundWillDisplayListenerHandle = this._plugin.addListener(
           'notificationForegroundWillDisplay',
           (notification: OSNotification) => {
             this._notificationWillDisplayListeners.forEach((listener) => {
@@ -165,6 +168,12 @@ export default class Notifications implements OneSignalNotificationsAPI {
         this._notificationWillDisplayListeners,
         listener as (event: NotificationWillDisplayEvent) => void,
       );
+      if (this._notificationWillDisplayListeners.length === 0) {
+        this._hasRegisteredForegroundWillDisplayListener = false;
+        const listenerHandle = this._foregroundWillDisplayListenerHandle;
+        this._foregroundWillDisplayListenerHandle = undefined;
+        void listenerHandle?.then((handle) => handle.remove());
+      }
     } else if (event === 'permissionChange') {
       removeListener(this._permissionObserverList, listener as (event: boolean) => void);
     }
