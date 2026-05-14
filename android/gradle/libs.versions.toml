@@ -9,21 +9,24 @@
 #   from 1.x and 2.x without metadata version errors, which is what makes a
 #   single artifact compile under both Capacitor 7 hosts (Kotlin 1.9.x
 #   stdlib) and Capacitor 8 hosts (Kotlin 2.2.x stdlib).
-# androidGradlePlugin: any 8.2+ AGP works for the source set; we track
-#   Capacitor 8's choice (8.7.3) so plugin-only Gradle invocations succeed
-#   on a Cap 8 environment.
+# androidGradlePlugin: kept at 8.7.3. Cap 8 recommends 8.13.0, but bumping
+#   here would force Gradle 8.13+ in standalone plugin builds, which a
+#   freshly scaffolded Cap 7 project (Gradle 8.11.1) cannot supply. In host
+#   builds the host's AGP wins regardless.
+# SDK levels / library versions: bumped to Capacitor 8's recommended floors
+#   for documentation parity. Host apps still override via rootProject.ext.
 
 [versions]
 androidGradlePlugin = "8.7.3"
-androidxAppCompat = "1.7.0"
-androidxEspresso = "3.6.1"
-androidxTestJunit = "1.2.1"
-compileSdk = "35"
+androidxAppCompat = "1.7.1"
+androidxEspresso = "3.7.0"
+androidxTestJunit = "1.3.0"
+compileSdk = "36"
 junit = "4.13.2"
 kotlin = "2.2.20"
-minSdk = "23"
+minSdk = "24"
 onesignal = "5.9.1"
-targetSdk = "35"
+targetSdk = "36"
 
 [libraries]
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidxAppCompat" }

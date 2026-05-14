@@ -15,7 +15,7 @@ Host apps that need to pin a different Kotlin compiler can do so by setting `roo
 
 ## SDK levels
 
-`compileSdk`, `minSdk`, and `targetSdk` default to the Capacitor 7 floors (35 / 23 / 35). Host apps override any of them by setting the matching `rootProject.ext.<name>Version` (this is what `examples/demo` does for Capacitor 8 with `compileSdk = 36`, `minSdk = 24`, `targetSdk = 36`).
+`compileSdk`, `minSdk`, and `targetSdk` default to the Capacitor 8 floors (36 / 24 / 36). Host apps override any of them by setting the matching `rootProject.ext.<name>Version` – Capacitor 7 host apps that ship with `variables.gradle` defaults of 35 / 23 / 35 will continue to take precedence over the catalog defaults.
 
 ## Library versions
 

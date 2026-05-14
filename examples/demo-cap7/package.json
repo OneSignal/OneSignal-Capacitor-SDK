@@ -2,24 +2,31 @@
   "name": "demo-cap7",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "scripts": {
-    "android": "vpx cap run android",
-    "build": "vp build",
-    "dev": "vp dev --host --port 5173",
-    "ios": "vpx cap run ios",
-    "setup": "../setup.sh",
-    "sync": "vpx cap sync"
+    "android": "bunx cap run android",
+    "build": "ng build",
+    "dev": "ng serve --host 0.0.0.0 --port 5173",
+    "ios": "bunx cap run ios",
+    "sync": "bunx cap sync"
   },
   "dependencies": {
+    "@angular/common": "^18.2.0",
+    "@angular/compiler": "^18.2.0",
+    "@angular/core": "^18.2.0",
+    "@angular/platform-browser": "^18.2.0",
     "@capacitor/android": "^7.4.3",
     "@capacitor/core": "^7.4.3",
     "@capacitor/ios": "^7.4.3",
-    "@onesignal/capacitor-plugin": "file:../../onesignal-capacitor-plugin.tgz"
+    "@onesignal/capacitor-plugin": "file:../../onesignal-capacitor-plugin.tgz",
+    "rxjs": "^7.8.1",
+    "tslib": "^2.7.0",
+    "zone.js": "~0.15.0"
   },
   "devDependencies": {
+    "@angular-devkit/build-angular": "^18.2.0",
+    "@angular/cli": "^18.2.0",
+    "@angular/compiler-cli": "^18.2.0",
     "@capacitor/cli": "^7.4.3",
-    "typescript": "^5.6.3"
-  },
-  "packageManager": "bun@1.3.13"
+    "typescript": "~5.5.4"
+  }
 }

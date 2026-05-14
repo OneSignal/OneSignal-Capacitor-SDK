@@ -1,0 +1,8 @@
+# Angular CLI cache + intermediate TS output
+.angular/
+out-tsc/
+
+# Capacitor-generated native projects
+# (reproducible via `bunx cap add android` / `bunx cap add ios`)
+android/
+ios/

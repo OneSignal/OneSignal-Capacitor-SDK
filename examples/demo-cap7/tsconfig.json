@@ -1,13 +1,26 @@
 {
+  "compileOnSave": false,
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "outDir": "./dist/out-tsc",
     "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
-    "esModuleInterop": true,
     "isolatedModules": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"]
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "useDefineForClassFields": false,
+    "lib": ["ES2022", "dom"]
   },
-  "include": ["src", "vite.config.ts", "capacitor.config.ts"]
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  }
 }
