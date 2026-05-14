@@ -35,11 +35,12 @@ buildscript {
     // read 2.x metadata, which is exactly what broke 1.0.2 on Capacitor 8
     // (issue #18). A 2.2.x compiler reads both 1.x and 2.x stdlib bytecode,
     // so the plugin works under Cap 7 and Cap 8.
-    val kotlinVersion: String = if (project.hasProperty("kotlin_version")) {
-        rootProject.extra["kotlin_version"] as String
-    } else {
-        fromCatalog("kotlin")
-    }
+    // findProperty matches hasProperty's broad source set (extras, gradle.properties,
+    // -P flags, ORG_GRADLE_PROJECT_* env vars). Reading rootProject.extra directly
+    // would only see ext { ... } values and crash on the others with
+    // UnknownPropertyException, so prefer findProperty + toString().
+    val kotlinVersion: String =
+        project.findProperty("kotlin_version")?.toString() ?: fromCatalog("kotlin")
     val androidGradlePluginVersion: String = fromCatalog("androidGradlePlugin")
 
     repositories {
@@ -74,19 +75,14 @@ fun catalogVersion(key: String): String {
     return result ?: error("Version '$key' not found in ${toml.name}")
 }
 
+// See the kotlin_version note in buildscript {}: findProperty honors every property
+// source hasProperty does (extras, gradle.properties, -P, env), and toString()
+// avoids the String/Int cast hazard since gradle.properties values are always String.
 fun propertyOrCatalog(propertyName: String, catalogKey: String): String =
-    if (project.hasProperty(propertyName)) {
-        rootProject.extra[propertyName] as String
-    } else {
-        catalogVersion(catalogKey)
-    }
+    project.findProperty(propertyName)?.toString() ?: catalogVersion(catalogKey)
 
 fun intPropertyOrCatalog(propertyName: String, catalogKey: String): Int =
-    if (project.hasProperty(propertyName)) {
-        rootProject.extra[propertyName] as Int
-    } else {
-        catalogVersion(catalogKey).toInt()
-    }
+    project.findProperty(propertyName)?.toString()?.toInt() ?: catalogVersion(catalogKey).toInt()
 
 val junitVersion: String = propertyOrCatalog("junitVersion", "junit")
 val androidxAppCompatVersion: String = propertyOrCatalog("androidxAppCompatVersion", "androidxAppCompat")

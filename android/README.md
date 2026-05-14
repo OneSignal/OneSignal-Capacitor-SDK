@@ -11,12 +11,12 @@ Defaults live in [`gradle/libs.versions.toml`](gradle/libs.versions.toml):
 - `kotlin = "2.2.20"` – the compiler version used to build this module. Matches the Capacitor 8 upgrade guide's recommended `kotlin_version`, and a 2.2.x compiler reads `kotlin-stdlib` bytecode from both 1.x and 2.x, which is what makes a single artifact work on Capacitor 7 hosts (Kotlin 1.9.x stdlib) and Capacitor 8 hosts (Kotlin 2.2.x stdlib).
 - `androidGradlePlugin = "8.7.3"` – intentionally stays below Capacitor 8's recommended 8.13.0 so plugin-only Gradle invocations still work from a freshly scaffolded Capacitor 7 project (Gradle 8.11.1). In host builds the host's AGP wins regardless.
 
-Host apps that need to pin a different Kotlin compiler can do so by setting `rootProject.ext.kotlin_version` in their root `build.gradle`. The plugin reads it via `propertyOrCatalog("kotlin_version", "kotlin")`.
+Host apps that need to pin a different Kotlin compiler can do so via any standard Gradle property source — `rootProject.ext.kotlin_version` in their root `build.gradle`, `kotlin_version=…` in `gradle.properties`, or `-Pkotlin_version=…` on the command line. The plugin's buildscript block reads the value through `project.findProperty("kotlin_version")` and falls back to the catalog default.
 
 ## SDK levels
 
-`compileSdk`, `minSdk`, and `targetSdk` default to the Capacitor 8 floors (36 / 24 / 36). Host apps override any of them by setting the matching `rootProject.ext.<name>Version` – Capacitor 7 host apps that ship with `variables.gradle` defaults of 35 / 23 / 35 will continue to take precedence over the catalog defaults.
+`compileSdk`, `minSdk`, and `targetSdk` default to the Capacitor 8 floors (36 / 24 / 36). Host apps override any of them by setting the matching `<name>Version` property through any Gradle property source (`rootProject.ext`, `gradle.properties`, or `-P`) — Capacitor 7 host apps that ship with `variables.gradle` defaults of 35 / 23 / 35 will continue to take precedence over the catalog defaults.
 
 ## Library versions
 
-`androidx.appcompat`, `junit`, espresso, and the OneSignal native SDK versions also live in [`gradle/libs.versions.toml`](gradle/libs.versions.toml). `androidxAppCompatVersion` and `junitVersion` can be overridden per-project via `rootProject.ext`.
+`androidx.appcompat`, `junit`, espresso, and the OneSignal native SDK versions also live in [`gradle/libs.versions.toml`](gradle/libs.versions.toml). `androidxAppCompatVersion` and `junitVersion` can be overridden per-project through any Gradle property source (`rootProject.ext`, `gradle.properties`, or `-P`).
