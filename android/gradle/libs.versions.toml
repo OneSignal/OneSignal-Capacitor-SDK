@@ -1,18 +1,20 @@
 # Version catalog for the OneSignal Capacitor Android plugin.
-# Defaults below can be overridden by the consuming app via gradle
-# properties or rootProject.extra (see android/build.gradle.kts).
 #
-# compileSdk / minSdk / targetSdk / kotlin / appcompat / junit follow
-# Capacitor 7's required versions, not the OneSignal Android SDK's.
+# The Kotlin Gradle Plugin and Android Gradle Plugin are intentionally NOT
+# listed here. The plugin inherits both from the host Capacitor app's root
+# buildscript so the same artifact works on Capacitor 7 (Kotlin 1.9.x /
+# AGP 8.2.x) and Capacitor 8 (Kotlin 2.1.x / AGP 8.7+).
+#
+# compileSdk / minSdk / targetSdk / appcompat / junit defaults follow
+# Capacitor 7's required floors. Host apps can override any of them by
+# setting rootProject.ext.<key>Version (see android/build.gradle.kts).
 
 [versions]
-androidGradlePlugin = "8.7.3"
 androidxAppCompat = "1.7.0"
 androidxEspresso = "3.6.1"
 androidxTestJunit = "1.2.1"
 compileSdk = "35"
 junit = "4.13.2"
-kotlin = "1.9.25"
 minSdk = "23"
 onesignal = "5.9.1"
 targetSdk = "35"

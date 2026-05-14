@@ -1,48 +1,9 @@
-buildscript {
-    val catalogFile = file("gradle/libs.versions.toml")
+// The Android Gradle Plugin and Kotlin Gradle Plugin are intentionally NOT
+// classpathed here. Capacitor host apps already provide both in their root
+// buildscript, and inheriting from the consumer is what lets this plugin
+// compile under both Capacitor 7 (Kotlin 1.9.x / AGP 8.2.x) and Capacitor 8
+// (Kotlin 2.1.x / AGP 8.7+) without forcing a toolchain mismatch.
 
-    // Lightweight reader for the [versions] table of libs.versions.toml.
-    // Inlined here because buildscript {} is evaluated before the rest of the
-    // script body, and Gradle's built-in version catalog APIs aren't available
-    // to a Capacitor plugin consumed as a sub-project.
-    fun fromCatalog(key: String): String {
-        var inVersions = false
-        var result: String? = null
-        catalogFile.forEachLine { raw ->
-            if (result != null) return@forEachLine
-            val line = raw.substringBefore("#").trim()
-            when {
-                line.startsWith("[") && line.endsWith("]") -> inVersions = (line == "[versions]")
-                inVersions && "=" in line -> {
-                    val (rawKey, rawValue) = line.split("=", limit = 2)
-                    if (rawKey.trim() == key) {
-                        result = rawValue.trim().trim('"')
-                    }
-                }
-            }
-        }
-        return result ?: error("Version '$key' not found in ${catalogFile.name}")
-    }
-
-    val kotlinVersion: String = if (project.hasProperty("kotlin_version")) {
-        rootProject.extra["kotlin_version"] as String
-    } else {
-        fromCatalog("kotlin")
-    }
-    val androidGradlePluginVersion: String = fromCatalog("androidGradlePlugin")
-
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath("com.android.tools.build:gradle:$androidGradlePluginVersion")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
-    }
-}
-
-// Duplicates the buildscript-local reader intentionally: the buildscript block
-// closes over its own scope, so this helper is reused for the module body.
 fun catalogVersion(key: String): String {
     val toml = file("gradle/libs.versions.toml")
     var inVersions = false
