@@ -49,7 +49,7 @@ jobs:
       - name: Resolve OneSignal Android SDK version
         id: android-sdk-version
         run: |
-          VERSION=$(grep -E '^onesignal\s*=' android/gradle/libs.versions.toml | sed -E 's/.*"([^"]+)".*/\1/')
+          VERSION=$(grep -E '^onesignal\s*=\s*"' android/gradle/libs.versions.toml | sed -E 's/.*"([^"]+)".*/\1/')
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Wait for OneSignal Android SDK on Maven Central
