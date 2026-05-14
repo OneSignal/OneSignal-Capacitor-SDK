@@ -7,7 +7,7 @@ Minimal Capacitor 7 + Angular sample used to verify the OneSignal Capacitor plug
 - Capacitor 7 (`@capacitor/core` `^7.4.3`)
 - Angular 18 standalone components, bootstrapped with `bootstrapApplication`
 - Angular CLI (`ng build` / `ng serve`) – no Ionic, no extra build tooling
-- Single root component with three buttons and a signal-backed log
+- Single root component with four buttons and a signal-backed log
 
 ## What the demo does
 
@@ -26,7 +26,7 @@ vp run build
 vp pm pack && mv onesignal-capacitor-plugin-*.tgz onesignal-capacitor-plugin.tgz
 
 # in this folder: install deps and the local plugin tarball
-cd examples/demo-cap7
+cd examples/demo_cap7
 bun install
 ```
 
