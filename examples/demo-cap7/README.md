@@ -17,20 +17,19 @@ Minimal Capacitor 7 + Angular sample used to verify the OneSignal Capacitor plug
 
 ## First-time setup
 
+The `android/` and `ios/` projects are committed (scaffolded via Capacitor 7's CLI, AGP 8.7.x, no root Kotlin Gradle Plugin classpath), so the only setup is dependencies and the plugin tarball.
+
 ```bash
 # from the repo root: build + pack the plugin tarball
 vp run build
 vp pm pack && mv onesignal-capacitor-plugin-*.tgz onesignal-capacitor-plugin.tgz
 
-# in this folder: install deps, build the web bundle, add native platforms
+# in this folder: install deps and the local plugin tarball
 cd examples/demo-cap7
 bun install
-bun run build
-bunx cap add android
-bunx cap add ios    # optional
 ```
 
-`bunx cap add android` scaffolds a Capacitor 7 Android project (AGP 8.7.x, no root Kotlin Gradle Plugin classpath). The OneSignal plugin module compiles against the Kotlin 2.2.20 compiler it ships in its own buildscript, which reads both 1.x and 2.x `kotlin-stdlib` bytecode.
+The OneSignal plugin module compiles against the Kotlin 2.2.20 compiler it ships in its own buildscript classpath, which reads both 1.x and 2.x `kotlin-stdlib` bytecode.
 
 `ONESIGNAL_APP_ID` in `src/app/app.component.ts` defaults to the shared OneSignal demo app id (same one used by `examples/demo`). Swap it for your own app id before pointing the demo at a production environment.
 
