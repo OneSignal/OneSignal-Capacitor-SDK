@@ -1,0 +1,3 @@
+# Angular CLI cache + intermediate TS output
+.angular/
+out-tsc/
