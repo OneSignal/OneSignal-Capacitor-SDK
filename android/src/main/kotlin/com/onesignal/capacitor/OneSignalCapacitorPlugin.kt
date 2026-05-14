@@ -718,6 +718,11 @@ class OneSignalCapacitorPlugin : Plugin(),
     // region Observer Callbacks
 
     override fun onWillDisplay(event: INotificationWillDisplayEvent) {
+        // Match Cordova's default-display behavior: if no JS listener has
+        // subscribed via Notifications.addEventListener('foregroundWillDisplay'),
+        // leave the event untouched so the OneSignal native SDK falls back to
+        // its default behavior and displays the notification automatically.
+        if (!hasListeners("notificationForegroundWillDisplay")) return
         // No retainUntilConsumed needed: foreground will-display only fires
         // while the app is foregrounded, so the JS layer's listener is
         // already attached. Contrast with onClick() below, which can fire
