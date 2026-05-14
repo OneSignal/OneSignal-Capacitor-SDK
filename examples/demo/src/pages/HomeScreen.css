@@ -41,6 +41,7 @@
 
 .brand-header {
   background: var(--os-primary);
+  border-bottom: 1px solid #fff;
   color: #fff;
   min-height: var(--demo-header-height);
   padding-top: var(--ion-safe-area-top);
@@ -51,9 +52,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow:
-    0 1px 2px rgb(0 0 0 / 8%),
-    0 2px 4px rgb(0 0 0 / 6%);
 }
 
 .brand-title {
