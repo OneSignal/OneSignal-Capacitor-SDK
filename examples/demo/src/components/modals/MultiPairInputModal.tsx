@@ -4,7 +4,10 @@ import { MdClose } from 'react-icons/md';
 
 import ModalShell from './ModalShell';
 
-type Row = { key: string; value: string };
+type Row = { id: number; key: string; value: string };
+
+let nextRowId = 0;
+const createRow = (): Row => ({ id: nextRowId++, key: '', value: '' });
 
 interface MultiPairInputModalProps {
   open: boolean;
@@ -23,11 +26,11 @@ const MultiPairInputModal: FC<MultiPairInputModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const [rows, setRows] = useState<Row[]>([{ key: '', value: '' }]);
+  const [rows, setRows] = useState<Row[]>(() => [createRow()]);
 
   useEffect(() => {
     if (open) {
-      setRows([{ key: '', value: '' }]);
+      setRows([createRow()]);
     }
   }, [open]);
 
@@ -57,14 +60,14 @@ const MultiPairInputModal: FC<MultiPairInputModalProps> = ({
       >
         <h3>{title}</h3>
         {rows.map((row, index) => (
-          <div key={`row-${index}`}>
+          <div key={row.id}>
             <div className="inline-fields row-with-remove">
               <input
                 value={row.key}
                 onChange={(event) =>
                   setRows((prev) =>
-                    prev.map((entry, entryIndex) =>
-                      entryIndex === index ? { ...entry, key: event.target.value } : entry,
+                    prev.map((entry) =>
+                      entry.id === row.id ? { ...entry, key: event.target.value } : entry,
                     ),
                   )
                 }
@@ -75,8 +78,8 @@ const MultiPairInputModal: FC<MultiPairInputModalProps> = ({
                 value={row.value}
                 onChange={(event) =>
                   setRows((prev) =>
-                    prev.map((entry, entryIndex) =>
-                      entryIndex === index ? { ...entry, value: event.target.value } : entry,
+                    prev.map((entry) =>
+                      entry.id === row.id ? { ...entry, value: event.target.value } : entry,
                     ),
                   )
                 }
@@ -87,9 +90,7 @@ const MultiPairInputModal: FC<MultiPairInputModalProps> = ({
                 <button
                   type="button"
                   className="delete-btn"
-                  onClick={() =>
-                    setRows((prev) => prev.filter((_, entryIndex) => entryIndex !== index))
-                  }
+                  onClick={() => setRows((prev) => prev.filter((entry) => entry.id !== row.id))}
                 >
                   <MdClose />
                 </button>
@@ -101,7 +102,7 @@ const MultiPairInputModal: FC<MultiPairInputModalProps> = ({
         <button
           type="button"
           className="text-btn text-btn-center"
-          onClick={() => setRows((prev) => [...prev, { key: '', value: '' }])}
+          onClick={() => setRows((prev) => [...prev, createRow()])}
           data-testid="multipair_add_row_button"
         >
           + Add Row
