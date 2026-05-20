@@ -90,26 +90,42 @@ export class AppComponent {
         return;
       }
 
-      const response = await CapacitorHttp.post({
-        url: 'https://onesignal.com/api/v1/notifications',
-        headers: {
-          Accept: 'application/vnd.onesignal.v1+json',
-          'Content-Type': 'application/json',
-        },
-        data: {
-          app_id: ONESIGNAL_APP_ID,
-          include_subscription_ids: [subscriptionId],
-          headings: { en: 'Simple Notification' },
-          contents: { en: 'This is a simple push notification' },
-        },
-      });
+      const body = {
+        app_id: ONESIGNAL_APP_ID,
+        include_subscription_ids: [subscriptionId],
+        headings: { en: 'Simple Notification' },
+        contents: { en: 'This is a simple push notification' },
+      };
+      const maxAttempts = 3;
 
-      if (response.status < 200 || response.status >= 300) {
-        this.log(`Send failed (${response.status}): ${JSON.stringify(response.data)}`);
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        const response = await CapacitorHttp.post({
+          url: 'https://onesignal.com/api/v1/notifications',
+          headers: {
+            Accept: 'application/vnd.onesignal.v1+json',
+            'Content-Type': 'application/json',
+          },
+          data: body,
+        });
+
+        if (response.status < 200 || response.status >= 300) {
+          this.log(`Send failed (${response.status}): ${JSON.stringify(response.data)}`);
+          return;
+        }
+
+        const invalidIds = response.data?.errors?.invalid_player_ids;
+        if (Array.isArray(invalidIds) && invalidIds.length > 0) {
+          if (attempt < maxAttempts) {
+            await new Promise((resolve) => setTimeout(resolve, 3_000 * attempt));
+            continue;
+          }
+          this.log(`Send failed: invalid_player_ids ${JSON.stringify(invalidIds)}`);
+          return;
+        }
+
+        this.log(`Sent. response: ${JSON.stringify(response.data)}`);
         return;
       }
-
-      this.log(`Sent. response: ${JSON.stringify(response.data)}`);
     } catch (err) {
       this.log(`sendTestNotification error: ${String(err)}`);
     } finally {

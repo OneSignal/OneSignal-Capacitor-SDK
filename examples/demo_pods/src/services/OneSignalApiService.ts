@@ -82,10 +82,12 @@ class OneSignalApiService {
       ...extra,
     };
 
-    // Retry once on `invalid_player_ids` to absorb the brief race where the
+    const maxAttempts = 3;
+
+    // Retry on `invalid_player_ids` to absorb the brief race where the
     // subscription has been created locally but is not yet visible to the
     // /notifications endpoint.
-    for (let attempt = 0; attempt < 2; attempt++) {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         const response = await CapacitorHttp.post({
           url: 'https://onesignal.com/api/v1/notifications',
@@ -101,11 +103,10 @@ class OneSignalApiService {
           return false;
         }
 
-        const data = response.data as { errors?: { invalid_player_ids?: unknown } } | undefined;
-        const invalidIds = data?.errors?.invalid_player_ids;
+        const invalidIds = response.data?.errors?.invalid_player_ids;
         if (Array.isArray(invalidIds) && invalidIds.length > 0) {
-          if (attempt === 0) {
-            await new Promise((resolve) => setTimeout(resolve, 3_000));
+          if (attempt < maxAttempts) {
+            await new Promise((resolve) => setTimeout(resolve, 3_000 * attempt));
             continue;
           }
           console.error(

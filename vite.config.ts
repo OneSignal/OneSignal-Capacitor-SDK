@@ -32,7 +32,7 @@ export default defineConfig({
   },
   test: {
     clearMocks: true,
-    environment: 'happy-dom',
+    environment: 'node',
     include: ['**/*.test.ts', '**/*.test.tsx'],
     coverage: {
       exclude: ['mocks/**', 'src/helpers.ts'],
