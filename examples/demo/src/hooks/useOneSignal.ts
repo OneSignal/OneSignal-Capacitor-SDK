@@ -18,6 +18,18 @@ const RESOLVED_APP_ID = APP_ID?.trim() || DEFAULT_APP_ID;
 const apiService = OneSignalApiService.getInstance();
 const preferences = PreferencesService.getInstance();
 
+// uncomment to debug ios logs in safari web inspector
+// const buf: string[] = [];
+// (['log', 'warn', 'error'] as const).forEach((level) => {
+//   const orig = console[level].bind(console);
+//   console[level] = (...args) => {
+//     buf.push(`[${level}] ${args.map(String).join(' ')}`);
+//     localStorage.setItem('__logs', JSON.stringify(buf.slice(-500)));
+//     orig(...args);
+//   };
+// });
+// then later call JSON.parse(localStorage.getItem('__logs')).forEach(l => console.log(l))
+
 // One-shot SDK initialization at module-eval time. Capacitor's bridge queues
 // calls until native is ready, so no `deviceready` gating is required. The
 // downstream `OneSignal.initialize` short-circuits on the native side, but
@@ -261,11 +273,6 @@ export function useOneSignal(): UseOneSignalReturn {
     OneSignal.User.addEventListener('change', userChangeHandler);
 
     const load = async () => {
-      // Uncomment if you want so you have time to see logs while trying to open
-      // safari web inspector. Not an issue for chrome web inspector.
-      // await new Promise((resolve) => setTimeout(resolve, 10_000));
-      // if (cancelled) return;
-
       const [externalId, pushId, pushOptedIn, hasPerm, initialOnesignalId] = await Promise.all([
         OneSignal.User.getExternalId(),
         OneSignal.User.pushSubscription.getIdAsync(),
