@@ -31,7 +31,6 @@ cp .env.example .env
 VITE_ONESIGNAL_APP_ID=<your_app_id>
 VITE_ONESIGNAL_API_KEY=<your_rest_api_key>
 VITE_ONESIGNAL_ANDROID_CHANNEL_ID=
-VITE_E2E_MODE=false
 ```
 
 ---

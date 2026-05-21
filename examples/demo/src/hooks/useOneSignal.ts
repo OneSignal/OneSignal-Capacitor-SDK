@@ -59,8 +59,6 @@ function initOneSignal(): void {
   if (storedExternalUserId) {
     void OneSignal.login(storedExternalUserId);
   }
-
-  console.log(`OneSignal initialized with app ID: ${RESOLVED_APP_ID}`);
 }
 initOneSignal();
 
@@ -91,6 +89,7 @@ export type UseOneSignalReturn = {
   consentRequired: boolean;
   privacyConsentGiven: boolean;
   externalUserId: string | undefined;
+  oneSignalId: string | undefined;
   pushSubscriptionId: string | undefined;
   isPushEnabled: boolean;
   hasNotificationPermission: boolean;
@@ -151,6 +150,7 @@ export function useOneSignal(): UseOneSignalReturn {
     preferences.getConsentGiven(),
   );
   const [externalUserId, setExternalUserId] = useState<string | undefined>(undefined);
+  const [oneSignalId, setOneSignalId] = useState<string | undefined>(undefined);
   const [pushSubscriptionId, setPushSubscriptionId] = useState<string | undefined>(undefined);
   const [isPushEnabled, setIsPushEnabled] = useState(false);
   const [hasNotificationPermission, setHasNotificationPermission] = useState(false);
@@ -208,22 +208,6 @@ export function useOneSignal(): UseOneSignalReturn {
 
     const handleNotificationClick = (e: NotificationClickEvent) => {
       console.log(`Notification click: ${e.notification.title ?? ''}`);
-      // Persist to localStorage so cold-start clicks are still inspectable
-      // after the Safari Web Inspector reattaches to the WKWebView.
-      try {
-        const existing = JSON.parse(localStorage.getItem('lastNotificationClicks') ?? '[]');
-        existing.push({
-          notificationId: e.notification.notificationId,
-          title: e.notification.title ?? null,
-          body: e.notification.body ?? null,
-          actionId: e.result.actionId ?? null,
-          url: e.result.url ?? null,
-          receivedAt: new Date().toISOString(),
-        });
-        localStorage.setItem('lastNotificationClicks', JSON.stringify(existing.slice(-20)));
-      } catch (err) {
-        console.warn('Failed to persist notification click to localStorage', err);
-      }
     };
 
     const handleForegroundWillDisplay = (e: NotificationWillDisplayEvent) => {
@@ -257,6 +241,8 @@ export function useOneSignal(): UseOneSignalReturn {
         `User changed: onesignalId=${nextOnesignalId ?? 'null'}, externalId=${event.current.externalId ?? 'null'}`,
       );
 
+      setOneSignalId(nextOnesignalId ?? undefined);
+
       if (nextOnesignalId === null) return;
       void fetchUserDataFromApi();
     };
@@ -283,6 +269,7 @@ export function useOneSignal(): UseOneSignalReturn {
       if (cancelled) return;
 
       setExternalUserId(externalId ?? preferences.getExternalUserId() ?? undefined);
+      setOneSignalId(initialOnesignalId ?? undefined);
       setPushSubscriptionId(pushId ?? undefined);
       setIsPushEnabled(pushOptedIn);
       setHasNotificationPermission(hasPerm);
@@ -550,6 +537,7 @@ export function useOneSignal(): UseOneSignalReturn {
     consentRequired,
     privacyConsentGiven,
     externalUserId,
+    oneSignalId,
     pushSubscriptionId,
     isPushEnabled,
     hasNotificationPermission,

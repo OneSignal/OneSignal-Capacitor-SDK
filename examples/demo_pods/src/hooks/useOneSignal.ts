@@ -59,8 +59,6 @@ function initOneSignal(): void {
   if (storedExternalUserId) {
     void OneSignal.login(storedExternalUserId);
   }
-
-  console.log(`OneSignal initialized with app ID: ${RESOLVED_APP_ID}`);
 }
 initOneSignal();
 
@@ -91,6 +89,7 @@ export type UseOneSignalReturn = {
   consentRequired: boolean;
   privacyConsentGiven: boolean;
   externalUserId: string | undefined;
+  oneSignalId: string | undefined;
   pushSubscriptionId: string | undefined;
   isPushEnabled: boolean;
   hasNotificationPermission: boolean;
@@ -151,6 +150,7 @@ export function useOneSignal(): UseOneSignalReturn {
     preferences.getConsentGiven(),
   );
   const [externalUserId, setExternalUserId] = useState<string | undefined>(undefined);
+  const [oneSignalId, setOneSignalId] = useState<string | undefined>(undefined);
   const [pushSubscriptionId, setPushSubscriptionId] = useState<string | undefined>(undefined);
   const [isPushEnabled, setIsPushEnabled] = useState(false);
   const [hasNotificationPermission, setHasNotificationPermission] = useState(false);
@@ -212,7 +212,12 @@ export function useOneSignal(): UseOneSignalReturn {
 
     const handleForegroundWillDisplay = (e: NotificationWillDisplayEvent) => {
       console.log(`Notification foregroundWillDisplay: ${e.getNotification().title ?? ''}`);
-      e.getNotification().display();
+
+      // uncomment to test preventing the default display behavior
+      // e.preventDefault();
+
+      // can call this after preventDefault to force display of notification
+      // e.getNotification().display();
     };
 
     const pushSubHandler = (event: PushSubscriptionChangedState) => {
@@ -226,6 +231,7 @@ export function useOneSignal(): UseOneSignalReturn {
     };
 
     const permissionHandler = (granted: boolean) => {
+      console.log(`Permission changed: ${granted}`);
       setHasNotificationPermission(granted);
     };
 
@@ -234,6 +240,8 @@ export function useOneSignal(): UseOneSignalReturn {
       console.log(
         `User changed: onesignalId=${nextOnesignalId ?? 'null'}, externalId=${event.current.externalId ?? 'null'}`,
       );
+
+      setOneSignalId(nextOnesignalId ?? undefined);
 
       if (nextOnesignalId === null) return;
       void fetchUserDataFromApi();
@@ -261,6 +269,7 @@ export function useOneSignal(): UseOneSignalReturn {
       if (cancelled) return;
 
       setExternalUserId(externalId ?? preferences.getExternalUserId() ?? undefined);
+      setOneSignalId(initialOnesignalId ?? undefined);
       setPushSubscriptionId(pushId ?? undefined);
       setIsPushEnabled(pushOptedIn);
       setHasNotificationPermission(hasPerm);
@@ -528,6 +537,7 @@ export function useOneSignal(): UseOneSignalReturn {
     consentRequired,
     privacyConsentGiven,
     externalUserId,
+    oneSignalId,
     pushSubscriptionId,
     isPushEnabled,
     hasNotificationPermission,
