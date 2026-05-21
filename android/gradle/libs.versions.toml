@@ -25,7 +25,7 @@ compileSdk = "36"
 junit = "4.13.2"
 kotlin = "2.2.20"
 minSdk = "24"
-onesignal = "5.9.1"
+onesignal = "5.9.2"
 targetSdk = "36"
 
 [libraries]

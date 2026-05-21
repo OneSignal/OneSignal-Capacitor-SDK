@@ -274,10 +274,8 @@ examples/
     │   │       ├── CustomEventsSection.tsx
     │   │       ├── LocationSection.tsx
     │   │       └── LiveActivitySection.tsx
-    │   ├── theme/
-    │   │   └── variables.css
-    │   └── utils/
-    │       └── maskValue.ts        # E2E_MODE bullet masking helper
+    │   └── theme/
+    │       └── variables.css
     ├── android/                    # Capacitor Android project
     └── ios/
         └── App/

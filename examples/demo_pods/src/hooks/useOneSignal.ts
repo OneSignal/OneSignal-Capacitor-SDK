@@ -18,6 +18,18 @@ const RESOLVED_APP_ID = APP_ID?.trim() || DEFAULT_APP_ID;
 const apiService = OneSignalApiService.getInstance();
 const preferences = PreferencesService.getInstance();
 
+// uncomment to debug ios logs in safari web inspector
+// const buf: string[] = [];
+// (['log', 'warn', 'error'] as const).forEach((level) => {
+//   const orig = console[level].bind(console);
+//   console[level] = (...args) => {
+//     buf.push(`[${level}] ${args.map(String).join(' ')}`);
+//     localStorage.setItem('__logs', JSON.stringify(buf.slice(-500)));
+//     orig(...args);
+//   };
+// });
+// then later call JSON.parse(localStorage.getItem('__logs')).forEach(l => console.log(l))
+
 // One-shot SDK initialization at module-eval time. Capacitor's bridge queues
 // calls until native is ready, so no `deviceready` gating is required. The
 // downstream `OneSignal.initialize` short-circuits on the native side, but
@@ -47,8 +59,6 @@ function initOneSignal(): void {
   if (storedExternalUserId) {
     void OneSignal.login(storedExternalUserId);
   }
-
-  console.log(`OneSignal initialized with app ID: ${RESOLVED_APP_ID}`);
 }
 initOneSignal();
 
@@ -79,6 +89,7 @@ export type UseOneSignalReturn = {
   consentRequired: boolean;
   privacyConsentGiven: boolean;
   externalUserId: string | undefined;
+  oneSignalId: string | undefined;
   pushSubscriptionId: string | undefined;
   isPushEnabled: boolean;
   hasNotificationPermission: boolean;
@@ -139,6 +150,7 @@ export function useOneSignal(): UseOneSignalReturn {
     preferences.getConsentGiven(),
   );
   const [externalUserId, setExternalUserId] = useState<string | undefined>(undefined);
+  const [oneSignalId, setOneSignalId] = useState<string | undefined>(undefined);
   const [pushSubscriptionId, setPushSubscriptionId] = useState<string | undefined>(undefined);
   const [isPushEnabled, setIsPushEnabled] = useState(false);
   const [hasNotificationPermission, setHasNotificationPermission] = useState(false);
@@ -196,27 +208,16 @@ export function useOneSignal(): UseOneSignalReturn {
 
     const handleNotificationClick = (e: NotificationClickEvent) => {
       console.log(`Notification click: ${e.notification.title ?? ''}`);
-      // Persist to localStorage so cold-start clicks are still inspectable
-      // after the Safari Web Inspector reattaches to the WKWebView.
-      try {
-        const existing = JSON.parse(localStorage.getItem('lastNotificationClicks') ?? '[]');
-        existing.push({
-          notificationId: e.notification.notificationId,
-          title: e.notification.title ?? null,
-          body: e.notification.body ?? null,
-          actionId: e.result.actionId ?? null,
-          url: e.result.url ?? null,
-          receivedAt: new Date().toISOString(),
-        });
-        localStorage.setItem('lastNotificationClicks', JSON.stringify(existing.slice(-20)));
-      } catch (err) {
-        console.warn('Failed to persist notification click to localStorage', err);
-      }
     };
 
     const handleForegroundWillDisplay = (e: NotificationWillDisplayEvent) => {
       console.log(`Notification foregroundWillDisplay: ${e.getNotification().title ?? ''}`);
-      e.getNotification().display();
+
+      // uncomment to test preventing the default display behavior
+      // e.preventDefault();
+
+      // can call this after preventDefault to force display of notification
+      // e.getNotification().display();
     };
 
     const pushSubHandler = (event: PushSubscriptionChangedState) => {
@@ -230,6 +231,7 @@ export function useOneSignal(): UseOneSignalReturn {
     };
 
     const permissionHandler = (granted: boolean) => {
+      console.log(`Permission changed: ${granted}`);
       setHasNotificationPermission(granted);
     };
 
@@ -238,6 +240,8 @@ export function useOneSignal(): UseOneSignalReturn {
       console.log(
         `User changed: onesignalId=${nextOnesignalId ?? 'null'}, externalId=${event.current.externalId ?? 'null'}`,
       );
+
+      setOneSignalId(nextOnesignalId ?? undefined);
 
       if (nextOnesignalId === null) return;
       void fetchUserDataFromApi();
@@ -255,11 +259,6 @@ export function useOneSignal(): UseOneSignalReturn {
     OneSignal.User.addEventListener('change', userChangeHandler);
 
     const load = async () => {
-      // Uncomment if you want so you have time to see logs while trying to open
-      // safari web inspector. Not an issue for chrome web inspector.
-      // await new Promise((resolve) => setTimeout(resolve, 10_000));
-      // if (cancelled) return;
-
       const [externalId, pushId, pushOptedIn, hasPerm, initialOnesignalId] = await Promise.all([
         OneSignal.User.getExternalId(),
         OneSignal.User.pushSubscription.getIdAsync(),
@@ -270,6 +269,7 @@ export function useOneSignal(): UseOneSignalReturn {
       if (cancelled) return;
 
       setExternalUserId(externalId ?? preferences.getExternalUserId() ?? undefined);
+      setOneSignalId(initialOnesignalId ?? undefined);
       setPushSubscriptionId(pushId ?? undefined);
       setIsPushEnabled(pushOptedIn);
       setHasNotificationPermission(hasPerm);
@@ -537,6 +537,7 @@ export function useOneSignal(): UseOneSignalReturn {
     consentRequired,
     privacyConsentGiven,
     externalUserId,
+    oneSignalId,
     pushSubscriptionId,
     isPushEnabled,
     hasNotificationPermission,
