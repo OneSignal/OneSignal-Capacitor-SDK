@@ -113,8 +113,15 @@
 
 .section-head .icon-btn {
   margin-left: auto;
+  margin-right: -11px;
   color: var(--os-grey-500);
   font-size: 18px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .card {

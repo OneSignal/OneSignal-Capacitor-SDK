@@ -4,6 +4,18 @@ import OneSignal, { LogLevel } from '@onesignal/capacitor-plugin';
 
 const ONESIGNAL_APP_ID = '77e32082-ea27-42e3-a898-c72e141824ef';
 
+function isTransientSendFailure(data: unknown): boolean {
+  if (!data || typeof data !== 'object') return false;
+  const record = data as { id?: unknown; errors?: unknown; recipients?: unknown };
+  const errors = record.errors;
+  const hasErrors =
+    (Array.isArray(errors) && errors.length > 0) ||
+    (errors != null && typeof errors === 'object' && Object.keys(errors).length > 0);
+  const missingId = typeof record.id !== 'string' || record.id.length === 0;
+  const zeroRecipients = typeof record.recipients === 'number' && record.recipients === 0;
+  return hasErrors || missingId || zeroRecipients;
+}
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -98,6 +110,14 @@ export class AppComponent {
       };
       const maxAttempts = 3;
 
+      // Retry while the OneSignal backend hasn't yet indexed the freshly
+      // created subscription. The /notifications endpoint reports this race
+      // in a few different shapes, all of which return HTTP 200:
+      //   {"id":"...","recipients":0}                       (user just switched, push token not yet attached)
+      //   {"id":"...","errors":{"invalid_player_ids":[...]}}
+      //   {"id":"","errors":["All included players are not subscribed"]}
+      //   {"id":"","errors":[...]}
+      // Treat any 200 response with no real id, populated errors, or recipients=0 as transient.
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         const response = await CapacitorHttp.post({
           url: 'https://onesignal.com/api/v1/notifications',
@@ -113,13 +133,12 @@ export class AppComponent {
           return;
         }
 
-        const invalidIds = response.data?.errors?.invalid_player_ids;
-        if (Array.isArray(invalidIds) && invalidIds.length > 0) {
+        if (isTransientSendFailure(response.data)) {
           if (attempt < maxAttempts) {
             await new Promise((resolve) => setTimeout(resolve, 3_000 * attempt));
             continue;
           }
-          this.log(`Send failed: invalid_player_ids ${JSON.stringify(invalidIds)}`);
+          this.log(`Send failed: ${JSON.stringify(response.data)}`);
           return;
         }
 
