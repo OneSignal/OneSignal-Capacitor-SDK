@@ -228,17 +228,6 @@
   font-size: 18px;
 }
 
-.action-btn.iam-btn {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 0 18px;
-}
-
-.action-btn.iam-btn .action-btn-content {
-  justify-content: flex-start;
-}
-
 .action-btn:disabled {
   background: var(--os-grey-500);
   color: #fff;

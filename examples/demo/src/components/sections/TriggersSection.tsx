@@ -1,67 +1,111 @@
 import type { FC } from 'react';
+import { useMemo, useState } from 'react';
 
 import ActionButton from '../ActionButton';
-import type { PairItem } from '../ListWidgets';
 import { PairList } from '../ListWidgets';
+import MultiPairInputModal from '../modals/MultiPairInputModal';
+import MultiSelectRemoveModal from '../modals/MultiSelectRemoveModal';
+import PairInputModal from '../modals/PairInputModal';
 import SectionCard from '../SectionCard';
 
 interface TriggersSectionProps {
-  triggerItems: PairItem[];
+  triggers: [string, string][];
+  onAdd: (key: string, value: string) => void;
+  onAddMultiple: (pairs: Record<string, string>) => void;
+  onRemoveSelected: (keys: string[]) => void;
+  onClearAll: () => void;
   onInfoTap: () => void;
-  onRemoveTrigger: (key: string) => void;
-  onAddTrigger: () => void;
-  onAddMultipleTriggers: () => void;
-  onRemoveSelectedTriggers: () => void;
-  onClearTriggers: () => void;
 }
 
 const TriggersSection: FC<TriggersSectionProps> = ({
-  triggerItems,
+  triggers,
+  onAdd,
+  onAddMultiple,
+  onRemoveSelected,
+  onClearAll,
   onInfoTap,
-  onRemoveTrigger,
-  onAddTrigger,
-  onAddMultipleTriggers,
-  onRemoveSelectedTriggers,
-  onClearTriggers,
-}) => (
-  <SectionCard title="TRIGGERS" sectionKey="triggers" onInfoTap={onInfoTap}>
-    <PairList
-      items={triggerItems}
-      emptyText="No triggers added"
-      onRemove={onRemoveTrigger}
-      sectionKey="triggers"
-    />
-    <ActionButton type="button" onClick={onAddTrigger} data-testid="add_trigger_button">
-      ADD
-    </ActionButton>
-    <ActionButton
-      type="button"
-      onClick={onAddMultipleTriggers}
-      data-testid="add_multiple_triggers_button"
-    >
-      ADD MULTIPLE
-    </ActionButton>
-    {triggerItems.length ? (
-      <ActionButton
-        variant="outline"
-        type="button"
-        onClick={onRemoveSelectedTriggers}
-        data-testid="remove_triggers_button"
-      >
-        REMOVE SELECTED
+}) => {
+  const [addOpen, setAddOpen] = useState(false);
+  const [addMultipleOpen, setAddMultipleOpen] = useState(false);
+  const [removeOpen, setRemoveOpen] = useState(false);
+
+  const items = useMemo(() => triggers.map(([key, value]) => ({ key, value })), [triggers]);
+
+  return (
+    <SectionCard title="TRIGGERS" sectionKey="triggers" onInfoTap={onInfoTap}>
+      <PairList
+        items={items}
+        emptyText="No triggers added"
+        onRemove={(key) => onRemoveSelected([key])}
+        sectionKey="triggers"
+      />
+      <ActionButton type="button" onClick={() => setAddOpen(true)} data-testid="add_trigger_button">
+        ADD TRIGGER
       </ActionButton>
-    ) : null}
-    {triggerItems.length ? (
       <ActionButton
-        variant="outline"
         type="button"
-        onClick={onClearTriggers}
-        data-testid="clear_triggers_button"
+        onClick={() => setAddMultipleOpen(true)}
+        data-testid="add_multiple_triggers_button"
       >
-        CLEAR ALL
+        ADD MULTIPLE TRIGGERS
       </ActionButton>
-    ) : null}
-  </SectionCard>
-);
+      {triggers.length > 0 ? (
+        <>
+          <ActionButton
+            variant="outline"
+            type="button"
+            onClick={() => setRemoveOpen(true)}
+            data-testid="remove_triggers_button"
+          >
+            REMOVE TRIGGERS
+          </ActionButton>
+          <ActionButton
+            variant="outline"
+            type="button"
+            onClick={onClearAll}
+            data-testid="clear_triggers_button"
+          >
+            CLEAR ALL TRIGGERS
+          </ActionButton>
+        </>
+      ) : null}
+      <PairInputModal
+        open={addOpen}
+        title="Add Trigger"
+        keyPlaceholder="Key"
+        valuePlaceholder="Value"
+        confirmLabel="Add"
+        keyTestID="trigger_key_input"
+        valueTestID="trigger_value_input"
+        onClose={() => setAddOpen(false)}
+        onSubmit={(key, value) => {
+          onAdd(key, value);
+          setAddOpen(false);
+        }}
+      />
+      <MultiPairInputModal
+        open={addMultipleOpen}
+        title="Add Multiple Triggers"
+        keyPlaceholder="Key"
+        valuePlaceholder="Value"
+        onClose={() => setAddMultipleOpen(false)}
+        onSubmit={(pairs) => {
+          onAddMultiple(pairs);
+          setAddMultipleOpen(false);
+        }}
+      />
+      <MultiSelectRemoveModal
+        open={removeOpen}
+        title="Remove Triggers"
+        items={triggers}
+        onClose={() => setRemoveOpen(false)}
+        onSubmit={(keys) => {
+          onRemoveSelected(keys);
+          setRemoveOpen(false);
+        }}
+      />
+    </SectionCard>
+  );
+};
 
 export default TriggersSection;

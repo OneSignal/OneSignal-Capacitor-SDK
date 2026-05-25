@@ -1,18 +1,11 @@
 import { Capacitor } from '@capacitor/core';
-import { IonContent, IonPage, IonToast } from '@ionic/react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { IonContent, IonPage } from '@ionic/react';
+import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 
 import oneSignalLogo from '../assets/onesignal_logo.svg';
 import ActionButton from '../components/ActionButton';
-import CustomNotificationModal from '../components/modals/CustomNotificationModal';
-import MultiPairInputModal from '../components/modals/MultiPairInputModal';
-import MultiSelectRemoveModal from '../components/modals/MultiSelectRemoveModal';
-import OutcomeModal from '../components/modals/OutcomeModal';
-import PairInputModal from '../components/modals/PairInputModal';
-import SingleInputModal from '../components/modals/SingleInputModal';
 import TooltipModal from '../components/modals/TooltipModal';
-import TrackEventModal from '../components/modals/TrackEventModal';
 import AliasesSection from '../components/sections/AliasesSection';
 import AppSection from '../components/sections/AppSection';
 import CustomEventsSection from '../components/sections/CustomEventsSection';
@@ -36,61 +29,12 @@ import TooltipHelper from '../services/TooltipHelper';
 
 import './HomeScreen.css';
 
-type DialogState =
-  | { type: 'none' }
-  | { type: 'login' }
-  | { type: 'addAlias' }
-  | { type: 'addMultipleAliases' }
-  | { type: 'addTrigger' }
-  | { type: 'addMultipleTriggers' }
-  | { type: 'addEmail' }
-  | { type: 'addSms' }
-  | { type: 'addTag' }
-  | { type: 'addMultipleTags' }
-  | { type: 'removeSelectedTags' }
-  | { type: 'removeSelectedTriggers' }
-  | { type: 'sendOutcome' }
-  | { type: 'trackEvent' }
-  | { type: 'customNotification' };
-
-type ToastState = { id: number; message: string };
-
-const TOAST_DURATION_MS = 1600;
-
 const HomeScreen: React.FC = () => {
   const os = useOneSignal();
 
   const history = useHistory();
-  const [dialog, setDialog] = useState<DialogState>({ type: 'none' });
-  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
   const [activeTooltip, setActiveTooltip] = useState<TooltipData | null>(null);
-  const [toast, setToast] = useState<ToastState | null>(null);
-  const toastCounterRef = useRef(0);
-
-  const aliasItems = useMemo(
-    () =>
-      os.aliasesList
-        .filter(([label]) => label !== 'external_id' && label !== 'onesignal_id')
-        .map(([label, id]) => ({ key: label, value: id })),
-    [os.aliasesList],
-  );
-  const tagItems = useMemo(
-    () => os.tagsList.map(([key, value]) => ({ key, value })),
-    [os.tagsList],
-  );
-  const triggerItems = useMemo(
-    () => os.triggersList.map(([key, value]) => ({ key, value })),
-    [os.triggersList],
-  );
-
-  const showToast = useCallback((message: string): void => {
-    toastCounterRef.current += 1;
-    setToast({ id: toastCounterRef.current, message });
-  }, []);
-
-  const closeDialog = () => {
-    setDialog({ type: 'none' });
-  };
 
   useEffect(() => {
     void TooltipHelper.getInstance().init();
@@ -104,7 +48,7 @@ const HomeScreen: React.FC = () => {
     const tooltip = TooltipHelper.getInstance().getTooltip(key);
     if (tooltip) {
       setActiveTooltip(tooltip);
-      setTooltipVisible(true);
+      setTooltipOpen(true);
     }
   };
 
@@ -130,11 +74,8 @@ const HomeScreen: React.FC = () => {
 
             <UserSection
               externalUserId={os.externalUserId}
-              onLogin={() => setDialog({ type: 'login' })}
-              onLogout={async () => {
-                await os.logoutUser();
-                showToast('User logged out');
-              }}
+              onLogin={(value) => os.loginUser(value)}
+              onLogout={() => os.logoutUser()}
             />
 
             <PushSection
@@ -151,7 +92,7 @@ const HomeScreen: React.FC = () => {
               onSendSimple={() => void os.sendNotification(NotificationType.Simple)}
               onSendImage={() => void os.sendNotification(NotificationType.WithImage)}
               onSendSound={() => void os.sendNotification(NotificationType.WithSound)}
-              onSendCustom={() => setDialog({ type: 'customNotification' })}
+              onSendCustomNotification={(title, body) => os.sendCustomNotification(title, body)}
               onClearAll={() => os.clearAllNotifications()}
             />
 
@@ -170,57 +111,57 @@ const HomeScreen: React.FC = () => {
             />
 
             <AliasesSection
-              aliasItems={aliasItems}
+              aliases={os.aliasesList}
               loading={os.isLoading}
               onInfoTap={() => showTooltipModal('aliases')}
-              onAddAlias={() => setDialog({ type: 'addAlias' })}
-              onAddMultipleAliases={() => setDialog({ type: 'addMultipleAliases' })}
+              onAdd={(label, id) => os.addAlias(label, id)}
+              onAddMultiple={(pairs) => os.addAliases(pairs)}
             />
 
             <EmailsSection
               emails={os.emailsList}
               loading={os.isLoading}
               onInfoTap={() => showTooltipModal('emails')}
-              onAddEmail={() => setDialog({ type: 'addEmail' })}
-              onRemoveEmail={(email) => os.removeEmail(email)}
+              onAdd={(email) => os.addEmail(email)}
+              onRemove={(email) => os.removeEmail(email)}
             />
 
             <SmsSection
               smsNumbers={os.smsNumbersList}
               loading={os.isLoading}
               onInfoTap={() => showTooltipModal('sms')}
-              onAddSms={() => setDialog({ type: 'addSms' })}
-              onRemoveSms={(sms) => os.removeSms(sms)}
+              onAdd={(sms) => os.addSms(sms)}
+              onRemove={(sms) => os.removeSms(sms)}
             />
 
             <TagsSection
-              tagItems={tagItems}
+              tags={os.tagsList}
               loading={os.isLoading}
               onInfoTap={() => showTooltipModal('tags')}
-              onRemoveTag={(key) => os.removeSelectedTags([key])}
-              onAddTag={() => setDialog({ type: 'addTag' })}
-              onAddMultipleTags={() => setDialog({ type: 'addMultipleTags' })}
-              onRemoveSelectedTags={() => setDialog({ type: 'removeSelectedTags' })}
+              onAdd={(key, value) => os.addTag(key, value)}
+              onAddMultiple={(pairs) => os.addTags(pairs)}
+              onRemoveSelected={(keys) => os.removeSelectedTags(keys)}
             />
 
             <OutcomesSection
               onInfoTap={() => showTooltipModal('outcomes')}
-              onSendOutcome={() => setDialog({ type: 'sendOutcome' })}
+              onSendNormal={(name) => os.sendOutcome(name)}
+              onSendUnique={(name) => os.sendUniqueOutcome(name)}
+              onSendWithValue={(name, value) => os.sendOutcomeWithValue(name, value)}
             />
 
             <TriggersSection
-              triggerItems={triggerItems}
+              triggers={os.triggersList}
               onInfoTap={() => showTooltipModal('triggers')}
-              onRemoveTrigger={(key) => os.removeSelectedTriggers([key])}
-              onAddTrigger={() => setDialog({ type: 'addTrigger' })}
-              onAddMultipleTriggers={() => setDialog({ type: 'addMultipleTriggers' })}
-              onRemoveSelectedTriggers={() => setDialog({ type: 'removeSelectedTriggers' })}
-              onClearTriggers={() => os.clearTriggers()}
+              onAdd={(key, value) => os.addTrigger(key, value)}
+              onAddMultiple={(pairs) => os.addTriggers(pairs)}
+              onRemoveSelected={(keys) => os.removeSelectedTriggers(keys)}
+              onClearAll={() => os.clearTriggers()}
             />
 
             <CustomEventsSection
               onInfoTap={() => showTooltipModal('customEvents')}
-              onTrackEvent={() => setDialog({ type: 'trackEvent' })}
+              onTrackEvent={(name, properties) => os.trackEvent(name, properties)}
             />
 
             <LocationSection
@@ -228,10 +169,7 @@ const HomeScreen: React.FC = () => {
               onInfoTap={() => showTooltipModal('location')}
               onToggleLocationShared={(checked) => void os.setLocationShared(checked)}
               onPromptLocation={() => os.requestLocationPermission()}
-              onCheckLocationShared={async () => {
-                const shared = await os.checkLocationShared();
-                showToast(`Location shared: ${shared}`);
-              }}
+              onCheckLocationShared={() => os.checkLocationShared()}
             />
 
             {Capacitor.getPlatform() === 'ios' && (
@@ -260,202 +198,11 @@ const HomeScreen: React.FC = () => {
           </main>
         </div>
 
-        <SingleInputModal
-          open={dialog.type === 'login'}
-          title="Login User"
-          placeholder="External User Id"
-          confirmLabel="Login"
-          inputTestId="login_user_id_input"
-          onClose={closeDialog}
-          onSubmit={async (value) => {
-            closeDialog();
-            await os.loginUser(value);
-            showToast(`Logged in as ${value}`);
-          }}
-        />
-
-        <PairInputModal
-          open={dialog.type === 'addAlias'}
-          title="Add Alias"
-          keyPlaceholder="Label"
-          valuePlaceholder="ID"
-          confirmLabel="Add"
-          keyTestID="alias_label_input"
-          valueTestID="alias_id_input"
-          onClose={closeDialog}
-          onSubmit={(label, id) => {
-            os.addAlias(label, id);
-            closeDialog();
-          }}
-        />
-
-        <SingleInputModal
-          open={dialog.type === 'addEmail'}
-          title="Add Email"
-          placeholder="Email Address"
-          confirmLabel="Add"
-          inputTestId="email_input"
-          onClose={closeDialog}
-          onSubmit={(value) => {
-            os.addEmail(value);
-            closeDialog();
-          }}
-        />
-
-        <SingleInputModal
-          open={dialog.type === 'addSms'}
-          title="Add SMS"
-          placeholder="Phone Number"
-          confirmLabel="Add"
-          inputTestId="sms_input"
-          onClose={closeDialog}
-          onSubmit={(value) => {
-            os.addSms(value);
-            closeDialog();
-          }}
-        />
-
-        <PairInputModal
-          open={dialog.type === 'addTag'}
-          title="Add Tag"
-          keyPlaceholder="Key"
-          valuePlaceholder="Value"
-          confirmLabel="Add"
-          keyTestID="tag_key_input"
-          valueTestID="tag_value_input"
-          onClose={closeDialog}
-          onSubmit={(key, value) => {
-            os.addTag(key, value);
-            closeDialog();
-          }}
-        />
-
-        <PairInputModal
-          open={dialog.type === 'addTrigger'}
-          title="Add Trigger"
-          keyPlaceholder="Key"
-          valuePlaceholder="Value"
-          confirmLabel="Add"
-          keyTestID="trigger_key_input"
-          valueTestID="trigger_value_input"
-          onClose={closeDialog}
-          onSubmit={(key, value) => {
-            os.addTrigger(key, value);
-            closeDialog();
-          }}
-        />
-
-        <MultiPairInputModal
-          open={dialog.type === 'addMultipleAliases'}
-          title="Add Multiple Aliases"
-          keyPlaceholder="Label"
-          valuePlaceholder="ID"
-          onClose={closeDialog}
-          onSubmit={(pairs) => {
-            os.addAliases(pairs);
-            closeDialog();
-          }}
-        />
-
-        <MultiPairInputModal
-          open={dialog.type === 'addMultipleTriggers'}
-          title="Add Multiple Triggers"
-          keyPlaceholder="Key"
-          valuePlaceholder="Value"
-          onClose={closeDialog}
-          onSubmit={(pairs) => {
-            os.addTriggers(pairs);
-            closeDialog();
-          }}
-        />
-
-        <MultiPairInputModal
-          open={dialog.type === 'addMultipleTags'}
-          title="Add Multiple Tags"
-          keyPlaceholder="Key"
-          valuePlaceholder="Value"
-          onClose={closeDialog}
-          onSubmit={(pairs) => {
-            os.addTags(pairs);
-            closeDialog();
-          }}
-        />
-
-        <MultiSelectRemoveModal
-          open={dialog.type === 'removeSelectedTags'}
-          title="Remove Tags"
-          items={os.tagsList}
-          onClose={closeDialog}
-          onSubmit={(keys) => {
-            os.removeSelectedTags(keys);
-            closeDialog();
-          }}
-        />
-
-        <MultiSelectRemoveModal
-          open={dialog.type === 'removeSelectedTriggers'}
-          title="Remove Triggers"
-          items={os.triggersList}
-          onClose={closeDialog}
-          onSubmit={(keys) => {
-            os.removeSelectedTriggers(keys);
-            closeDialog();
-          }}
-        />
-
-        <OutcomeModal
-          open={dialog.type === 'sendOutcome'}
-          onClose={closeDialog}
-          onSubmit={(name, mode, value) => {
-            if (mode === 'unique') {
-              os.sendUniqueOutcome(name);
-              showToast(`Unique outcome sent: ${name}`);
-            } else if (mode === 'value' && value !== null) {
-              os.sendOutcomeWithValue(name, value);
-              showToast(`Outcome sent: ${name} = ${value}`);
-            } else {
-              os.sendOutcome(name);
-              showToast(`Outcome sent: ${name}`);
-            }
-            closeDialog();
-          }}
-        />
-
-        <TrackEventModal
-          open={dialog.type === 'trackEvent'}
-          onClose={closeDialog}
-          onSubmit={(name, properties) => {
-            os.trackEvent(name, properties);
-            showToast(`Event tracked: ${name}`);
-            closeDialog();
-          }}
-        />
-
-        <CustomNotificationModal
-          open={dialog.type === 'customNotification'}
-          onClose={closeDialog}
-          onSubmit={async (title, body) => {
-            await os.sendCustomNotification(title, body);
-            closeDialog();
-          }}
-        />
-
         <TooltipModal
-          open={tooltipVisible}
+          open={tooltipOpen}
           tooltip={activeTooltip}
-          onClose={() => setTooltipVisible(false)}
+          onClose={() => setTooltipOpen(false)}
         />
-
-        {toast && (
-          <IonToast
-            key={toast.id}
-            isOpen
-            message={toast.message}
-            duration={TOAST_DURATION_MS}
-            onDidDismiss={() => setToast((current) => (current?.id === toast.id ? null : current))}
-            data-testid="snackbar_toast"
-          />
-        )}
       </IonContent>
     </IonPage>
   );
