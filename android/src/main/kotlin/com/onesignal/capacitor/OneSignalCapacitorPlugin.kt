@@ -1,6 +1,5 @@
 package com.onesignal.capacitor
 
-import android.app.Application
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
@@ -8,7 +7,6 @@ import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import com.onesignal.OneSignal
 import com.onesignal.common.OneSignalWrapper
-import com.onesignal.core.internal.application.IApplicationService
 import com.onesignal.inAppMessages.IInAppMessageClickEvent
 import com.onesignal.inAppMessages.IInAppMessageClickListener
 import com.onesignal.inAppMessages.IInAppMessageDidDismissEvent
@@ -137,11 +135,6 @@ class OneSignalCapacitorPlugin : Plugin(),
         OneSignalWrapper.sdkVersion = "010005"
         OneSignal.initWithContext(context, appId)
 
-        // If the SDK was initialized from a non-Activity context (FCM/work
-        // managers) before this call, its ALC missed MainActivity.onResume
-        // and isInForeground stays false. Forward the missed events now.
-        nudgeApplicationServiceForeground()
-
         OneSignal.Notifications.addPermissionObserver(permissionObserver)
         OneSignal.Notifications.addForegroundLifecycleListener(this)
         OneSignal.Notifications.addClickListener(this)
@@ -151,17 +144,6 @@ class OneSignalCapacitorPlugin : Plugin(),
         OneSignal.InAppMessages.addClickListener(this)
 
         call.resolve()
-    }
-
-    /** Forward the missed activity-resume to the SDK so isInForeground is
-     *  correct on cold start. No-op if the SDK already saw the resume. */
-    private fun nudgeApplicationServiceForeground() {
-        val activity = activity ?: return
-        val appSvc = runCatching { OneSignal.getServiceOrNull<IApplicationService>() }.getOrNull() ?: return
-        if (appSvc.isInForeground && appSvc.current === activity) return
-        val callbacks = appSvc as? Application.ActivityLifecycleCallbacks ?: return
-        callbacks.onActivityStarted(activity)
-        callbacks.onActivityResumed(activity)
     }
 
     private fun buildClickEventJson(event: INotificationClickEvent): JSObject {
