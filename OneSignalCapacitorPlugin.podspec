@@ -20,5 +20,5 @@ Pod::Spec.new do |s|
   s.swift_version = '5.9'
 
   s.dependency 'Capacitor'
-  s.dependency 'OneSignalXCFramework', '5.5.1'
+  s.dependency 'OneSignalXCFramework', '5.5.2'
 end
