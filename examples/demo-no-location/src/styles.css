@@ -44,6 +44,10 @@ button.secondary {
   color: #e54b4d;
 }
 
+button:disabled {
+  opacity: 0.5;
+}
+
 .app {
   background: #f8f9fa;
   min-height: 100vh;
@@ -78,7 +82,21 @@ button.secondary {
 .content {
   margin: 0 auto;
   max-width: 720px;
-  padding: 10px 12px 16px;
+  padding: 10px 12px 6px;
+}
+
+.section {
+  margin-bottom: 16px;
+}
+
+.section h2 {
+  color: #616161;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin: 0 0 6px;
+  padding: 0 4px;
+  text-transform: uppercase;
 }
 
 .card {
@@ -90,10 +108,9 @@ button.secondary {
   padding: 12px;
 }
 
-.card h2 {
-  font-size: 0.85rem;
-  margin: 0 0 8px;
-  text-transform: uppercase;
+.card p {
+  color: #616161;
+  margin: 0;
 }
 
 dl {
@@ -126,7 +143,10 @@ dd {
   color: #c9252d;
 }
 
-.result {
-  color: #6b7280;
-  font-size: 0.85rem;
+.button-spacer {
+  height: 8px;
+}
+
+.location-button-wrap {
+  margin-top: 12px;
 }

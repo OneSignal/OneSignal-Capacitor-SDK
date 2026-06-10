@@ -47,4 +47,4 @@ If you build Android another way, such as Android Studio or a raw `./gradlew` in
 
 ## App Code
 
-`src/App.tsx` initializes OneSignal and requests notification permission without calling the `OneSignal.Location` namespace during normal app flow. The optional location test button calls `OneSignal.Location.isShared()` to confirm the no-location bridge resolves safely.
+`src/App.tsx` initializes OneSignal and requests notification permission without calling the `OneSignal.Location` namespace during normal app flow. The optional location test button calls `OneSignal.Location.requestPermission()` to confirm the no-location bridge resolves safely.

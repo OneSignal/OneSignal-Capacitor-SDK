@@ -8,7 +8,8 @@ const isPlaceholder = (value: string): boolean => value.toLowerCase().startsWith
 export default function App() {
   const [permission, setPermission] = useState<boolean | null>(null);
   const [pushSubscriptionId, setPushSubscriptionId] = useState<string | null>(null);
-  const [permissionStatus, setPermissionStatus] = useState<string | null>(null);
+  const [requestingPermission, setRequestingPermission] = useState(false);
+  const [sending, setSending] = useState(false);
 
   const refreshPushState = useCallback(() => {
     void OneSignal.Notifications.hasPermission()
@@ -28,16 +29,15 @@ export default function App() {
   }, [refreshPushState]);
 
   const requestPermission = useCallback(async () => {
-    setPermissionStatus('Requesting notification permission...');
+    setRequestingPermission(true);
     try {
       const granted = await OneSignal.Notifications.requestPermission(false);
       setPermission(granted);
       refreshPushState();
-      setPermissionStatus(
-        granted ? 'Notification permission granted.' : 'Notification permission not granted.',
-      );
     } catch (error) {
-      setPermissionStatus(`Permission request failed: ${String(error)}`);
+      window.alert(`Permission Request Failed\n\n${String(error)}`);
+    } finally {
+      setRequestingPermission(false);
     }
   }, [refreshPushState]);
 
@@ -49,6 +49,53 @@ export default function App() {
     }
   }, []);
 
+  const sendTestNotification = useCallback(async () => {
+    if (isPlaceholder(ONESIGNAL_APP_ID)) {
+      window.alert(
+        'Configure OneSignal\n\nSet VITE_ONESIGNAL_APP_ID in .env before sending a test push.',
+      );
+      return;
+    }
+
+    if (!permission) {
+      window.alert(
+        'Notifications Disabled\n\nRequest notification permission before sending a test push.',
+      );
+      return;
+    }
+
+    if (!pushSubscriptionId) {
+      window.alert('No Push Subscription\n\nAllow notifications, then wait for a push ID.');
+      return;
+    }
+
+    setSending(true);
+    try {
+      const response = await fetch('https://onesignal.com/api/v1/notifications', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/vnd.onesignal.v1+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          app_id: ONESIGNAL_APP_ID,
+          include_subscription_ids: [pushSubscriptionId],
+          headings: { en: 'OneSignal No-Location Demo' },
+          contents: { en: 'This test push was sent without linking the location module.' },
+        }),
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        window.alert(`Send Failed\n\n${message}`);
+      }
+    } catch (error) {
+      window.alert(`Send Failed\n\n${String(error)}`);
+    } finally {
+      setSending(false);
+    }
+  }, [permission, pushSubscriptionId]);
+
   return (
     <main className="app">
       <header className="appbar">
@@ -59,53 +106,58 @@ export default function App() {
       </header>
 
       <div className="content">
-        <section className="card">
-          <h2>Configuration</h2>
-          <p>
-            This demo initializes OneSignal and requests notification permission only when you tap
-            the button below. Native build flags exclude the location module.
-          </p>
-          <dl>
-            <div>
-              <dt>App ID</dt>
-              <dd className={isPlaceholder(ONESIGNAL_APP_ID) ? 'warning' : undefined}>
-                {ONESIGNAL_APP_ID}
-              </dd>
-            </div>
-            <div>
-              <dt>Location module</dt>
-              <dd>Disabled at native dependency resolution</dd>
-            </div>
-          </dl>
+        <section className="section">
+          <h2>App</h2>
+          <div className="card">
+            <dl>
+              <div>
+                <dt>App ID</dt>
+                <dd className={isPlaceholder(ONESIGNAL_APP_ID) ? 'warning' : undefined}>
+                  {ONESIGNAL_APP_ID}
+                </dd>
+              </div>
+            </dl>
+          </div>
         </section>
 
-        <section className="card">
+        <section className="section">
           <h2>Push</h2>
-          <dl>
-            <div>
-              <dt>Permission</dt>
-              <dd>{permission == null ? 'Unknown' : permission ? 'Granted' : 'Not granted'}</dd>
-            </div>
-            <div>
-              <dt>Push ID</dt>
-              <dd>{pushSubscriptionId || '-'}</dd>
-            </div>
-          </dl>
-          <button type="button" onClick={requestPermission}>
-            REQUEST PERMISSION
-          </button>
-          {permissionStatus && <p className="result">{permissionStatus}</p>}
+          <div className="card">
+            <dl>
+              <div>
+                <dt>Permission</dt>
+                <dd>{permission == null ? 'Unknown' : permission ? 'Granted' : 'Not granted'}</dd>
+              </div>
+              <div>
+                <dt>Push ID</dt>
+                <dd>{pushSubscriptionId || '-'}</dd>
+              </div>
+            </dl>
+            <button type="button" onClick={requestPermission} disabled={requestingPermission}>
+              REQUEST PERMISSION
+            </button>
+            <div className="button-spacer" />
+            <button type="button" onClick={sendTestNotification} disabled={sending}>
+              SEND TEST NOTIFICATION
+            </button>
+          </div>
         </section>
 
-        <section className="card">
-          <h2>Location Bridge</h2>
-          <p>
-            The location test call may not log a JavaScript error; check Android Logcat or Xcode
-            logs for native diagnostics.
-          </p>
-          <button type="button" className="secondary" onClick={testLocationPermissionRequest}>
-            TEST LOCATION REQUEST
-          </button>
+        <section className="section">
+          <h2>Location Module</h2>
+          <div className="card">
+            <p>
+              This demo initializes OneSignal and requests notification permission only when you tap
+              the button above. Native build flags exclude the location module. The location test
+              call may not log a JavaScript error; check Android Logcat or Xcode logs for native
+              diagnostics.
+            </p>
+            <div className="location-button-wrap">
+              <button type="button" className="secondary" onClick={testLocationPermissionRequest}>
+                TEST LOCATION REQUEST
+              </button>
+            </div>
+          </div>
         </section>
       </div>
     </main>

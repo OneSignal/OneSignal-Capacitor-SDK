@@ -1,4 +1,4 @@
-package com.onesignal.example.nolocation;
+package com.onesignal.example;
 
 import com.getcapacitor.BridgeActivity;
 
