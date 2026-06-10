@@ -8,8 +8,7 @@ const isPlaceholder = (value: string): boolean => value.toLowerCase().startsWith
 export default function App() {
   const [permission, setPermission] = useState<boolean | null>(null);
   const [pushSubscriptionId, setPushSubscriptionId] = useState<string | null>(null);
-  const [locationShared, setLocationShared] = useState<boolean | null>(null);
-  const [status, setStatus] = useState('Ready');
+  const [permissionStatus, setPermissionStatus] = useState<string | null>(null);
 
   const refreshPushState = useCallback(() => {
     void OneSignal.Notifications.hasPermission()
@@ -29,27 +28,24 @@ export default function App() {
   }, [refreshPushState]);
 
   const requestPermission = useCallback(async () => {
-    setStatus('Requesting notification permission...');
+    setPermissionStatus('Requesting notification permission...');
     try {
       const granted = await OneSignal.Notifications.requestPermission(false);
       setPermission(granted);
       refreshPushState();
-      setStatus(
+      setPermissionStatus(
         granted ? 'Notification permission granted.' : 'Notification permission not granted.',
       );
     } catch (error) {
-      setStatus(`Permission request failed: ${String(error)}`);
+      setPermissionStatus(`Permission request failed: ${String(error)}`);
     }
   }, [refreshPushState]);
 
-  const checkLocationBridge = useCallback(async () => {
-    setStatus('Checking location bridge...');
+  const testLocationPermissionRequest = useCallback(async () => {
     try {
-      const shared = await OneSignal.Location.isShared();
-      setLocationShared(shared);
-      setStatus(`Location bridge resolved safely: shared=${String(shared)}.`);
+      await OneSignal.Location.requestPermission();
     } catch (error) {
-      setStatus(`Location bridge rejected: ${String(error)}`);
+      console.error('OneSignal.Location.requestPermission failed:', error);
     }
   }, []);
 
@@ -66,8 +62,8 @@ export default function App() {
         <section className="card">
           <h2>Configuration</h2>
           <p>
-            Builds with <code>ONESIGNAL_DISABLE_LOCATION=true</code> and avoids{' '}
-            <code>OneSignal.Location</code> in normal app flow.
+            This demo initializes OneSignal and requests notification permission only when you tap
+            the button below. Native build flags exclude the location module.
           </p>
           <dl>
             <div>
@@ -96,28 +92,20 @@ export default function App() {
             </div>
           </dl>
           <button type="button" onClick={requestPermission}>
-            Request Notification Permission
+            REQUEST PERMISSION
           </button>
+          {permissionStatus && <p className="result">{permissionStatus}</p>}
         </section>
 
         <section className="card">
           <h2>Location Bridge</h2>
           <p>
-            This optional check calls <code>OneSignal.Location.isShared()</code>. In a no-location
-            Android build it should resolve <code>false</code>; iOS should also remain safe when the
-            location product is omitted.
+            The location test call may not log a JavaScript error; check Android Logcat or Xcode
+            logs for native diagnostics.
           </p>
-          <button type="button" className="secondary" onClick={checkLocationBridge}>
-            Check Location Bridge
+          <button type="button" className="secondary" onClick={testLocationPermissionRequest}>
+            TEST LOCATION REQUEST
           </button>
-          <p className="result">
-            Last location value: {locationShared == null ? 'Not checked' : String(locationShared)}
-          </p>
-        </section>
-
-        <section className="card">
-          <h2>Status</h2>
-          <p>{status}</p>
         </section>
       </div>
     </main>
