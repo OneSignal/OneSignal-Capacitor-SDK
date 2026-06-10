@@ -84,10 +84,8 @@ fun propertyOrCatalog(propertyName: String, catalogKey: String): String =
 fun intPropertyOrCatalog(propertyName: String, catalogKey: String): Int =
     project.findProperty(propertyName)?.toString()?.toInt() ?: catalogVersion(catalogKey).toInt()
 
-fun flagOrProperty(envName: String, propertyName: String): Boolean {
+fun envFlag(envName: String): Boolean {
     val value = System.getenv(envName)
-        ?: project.findProperty(propertyName)?.toString()
-        ?: rootProject.findProperty(propertyName)?.toString()
     val normalizedValue = value?.trim()
     return normalizedValue.equals("true", ignoreCase = true) || normalizedValue == "1"
 }
@@ -95,7 +93,7 @@ fun flagOrProperty(envName: String, propertyName: String): Boolean {
 val junitVersion: String = propertyOrCatalog("junitVersion", "junit")
 val androidxAppCompatVersion: String = propertyOrCatalog("androidxAppCompatVersion", "androidxAppCompat")
 val oneSignalVersion: String = catalogVersion("onesignal")
-val oneSignalDisableLocation: Boolean = flagOrProperty("ONESIGNAL_DISABLE_LOCATION", "onesignal.disableLocation")
+val oneSignalDisableLocation: Boolean = envFlag("ONESIGNAL_DISABLE_LOCATION")
 
 extra["junitVersion"] = junitVersion
 extra["androidxAppCompatVersion"] = androidxAppCompatVersion
