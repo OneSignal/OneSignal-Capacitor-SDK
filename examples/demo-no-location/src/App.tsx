@@ -55,67 +55,71 @@ export default function App() {
 
   return (
     <main className="app">
-      <header className="hero">
-        <p className="eyebrow">OneSignal Capacitor</p>
-        <h1>No-Location Demo</h1>
-        <p className="hero-copy">
-          Builds with <span className="code-pill">ONESIGNAL_DISABLE_LOCATION=true</span> and avoids{' '}
-          <span className="code-pill">OneSignal.Location</span> in normal app flow.
-        </p>
+      <header className="appbar">
+        <div className="appbar-content">
+          <h1>OneSignal</h1>
+          <p>No-Location Demo</p>
+        </div>
       </header>
 
-      <section className="card">
-        <h2>Configuration</h2>
-        <dl>
-          <div>
-            <dt>App ID</dt>
-            <dd className={isPlaceholder(ONESIGNAL_APP_ID) ? 'warning' : undefined}>
-              {ONESIGNAL_APP_ID}
-            </dd>
-          </div>
-          <div>
-            <dt>Location module</dt>
-            <dd>Disabled at native dependency resolution</dd>
-          </div>
-        </dl>
-      </section>
+      <div className="content">
+        <section className="card">
+          <h2>Configuration</h2>
+          <p>
+            Builds with <code>ONESIGNAL_DISABLE_LOCATION=true</code> and avoids{' '}
+            <code>OneSignal.Location</code> in normal app flow.
+          </p>
+          <dl>
+            <div>
+              <dt>App ID</dt>
+              <dd className={isPlaceholder(ONESIGNAL_APP_ID) ? 'warning' : undefined}>
+                {ONESIGNAL_APP_ID}
+              </dd>
+            </div>
+            <div>
+              <dt>Location module</dt>
+              <dd>Disabled at native dependency resolution</dd>
+            </div>
+          </dl>
+        </section>
 
-      <section className="card">
-        <h2>Push</h2>
-        <dl>
-          <div>
-            <dt>Permission</dt>
-            <dd>{permission == null ? 'Unknown' : permission ? 'Granted' : 'Not granted'}</dd>
-          </div>
-          <div>
-            <dt>Push ID</dt>
-            <dd>{pushSubscriptionId || '-'}</dd>
-          </div>
-        </dl>
-        <button type="button" onClick={requestPermission}>
-          Request Notification Permission
-        </button>
-      </section>
+        <section className="card">
+          <h2>Push</h2>
+          <dl>
+            <div>
+              <dt>Permission</dt>
+              <dd>{permission == null ? 'Unknown' : permission ? 'Granted' : 'Not granted'}</dd>
+            </div>
+            <div>
+              <dt>Push ID</dt>
+              <dd>{pushSubscriptionId || '-'}</dd>
+            </div>
+          </dl>
+          <button type="button" onClick={requestPermission}>
+            Request Notification Permission
+          </button>
+        </section>
 
-      <section className="card">
-        <h2>Location Bridge</h2>
-        <p>
-          This optional check calls <code>OneSignal.Location.isShared()</code>. In a no-location
-          Android build it should resolve <code>false</code>; iOS should also remain safe when the
-          location product is omitted.
-        </p>
-        <button type="button" className="secondary" onClick={checkLocationBridge}>
-          Check Location Bridge
-        </button>
-        <p className="result">
-          Last location value: {locationShared == null ? 'Not checked' : String(locationShared)}
-        </p>
-      </section>
+        <section className="card">
+          <h2>Location Bridge</h2>
+          <p>
+            This optional check calls <code>OneSignal.Location.isShared()</code>. In a no-location
+            Android build it should resolve <code>false</code>; iOS should also remain safe when the
+            location product is omitted.
+          </p>
+          <button type="button" className="secondary" onClick={checkLocationBridge}>
+            Check Location Bridge
+          </button>
+          <p className="result">
+            Last location value: {locationShared == null ? 'Not checked' : String(locationShared)}
+          </p>
+        </section>
 
-      <section className="card">
-        <h2>Status</h2>
-        <p>{status}</p>
-      </section>
+        <section className="card">
+          <h2>Status</h2>
+          <p>{status}</p>
+        </section>
+      </div>
     </main>
   );
 }

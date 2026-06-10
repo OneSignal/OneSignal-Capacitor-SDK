@@ -44,53 +44,40 @@ button.secondary {
 }
 
 .app {
+  background: #f8f9fa;
+  min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.appbar {
+  background: #e54b4d;
+  color: #ffffff;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.appbar-content {
   margin: 0 auto;
   max-width: 720px;
-  padding: calc(env(safe-area-inset-top, 0px) + 24px) 24px
-    calc(env(safe-area-inset-bottom, 0px) + 24px);
+  padding: 14px 16px;
 }
 
-.hero {
-  background: #e54b4d;
-  border-radius: 18px;
+.appbar h1 {
   color: #ffffff;
-  margin-bottom: 20px;
-  padding: 28px;
-}
-
-.hero h1 {
-  font-size: clamp(2.25rem, 10vw, 3.25rem);
-  line-height: 1.05;
-  margin: 8px 0;
-}
-
-.hero p {
+  font-size: 22px;
+  font-weight: 700;
   margin: 0;
 }
 
-.hero-copy {
-  font-size: 1.1rem;
-  line-height: 1.35;
-}
-
-.code-pill {
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 6px;
+.appbar p {
   color: #ffffff;
-  display: inline-block;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
-  font-size: 0.9em;
-  margin: 2px 0;
-  overflow-wrap: anywhere;
-  padding: 2px 6px;
+  font-size: 14px;
+  margin: 2px 0 0;
 }
 
-.eyebrow {
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  opacity: 0.85;
-  text-transform: uppercase;
+.content {
+  margin: 0 auto;
+  max-width: 720px;
+  padding: 16px 16px 24px;
 }
 
 .card {
