@@ -58,9 +58,9 @@ export default function App() {
       <header className="hero">
         <p className="eyebrow">OneSignal Capacitor</p>
         <h1>No-Location Demo</h1>
-        <p>
-          Builds with <code>ONESIGNAL_DISABLE_LOCATION=true</code> and avoids `OneSignal.Location`
-          in normal app flow.
+        <p className="hero-copy">
+          Builds with <span className="code-pill">ONESIGNAL_DISABLE_LOCATION=true</span> and avoids{' '}
+          <span className="code-pill">OneSignal.Location</span> in normal app flow.
         </p>
       </header>
 

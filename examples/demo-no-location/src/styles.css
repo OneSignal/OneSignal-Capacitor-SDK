@@ -46,7 +46,8 @@ button.secondary {
 .app {
   margin: 0 auto;
   max-width: 720px;
-  padding: 24px;
+  padding: calc(env(safe-area-inset-top, 0px) + 24px) 24px
+    calc(env(safe-area-inset-bottom, 0px) + 24px);
 }
 
 .hero {
@@ -58,11 +59,30 @@ button.secondary {
 }
 
 .hero h1 {
+  font-size: clamp(2.25rem, 10vw, 3.25rem);
+  line-height: 1.05;
   margin: 8px 0;
 }
 
 .hero p {
   margin: 0;
+}
+
+.hero-copy {
+  font-size: 1.1rem;
+  line-height: 1.35;
+}
+
+.code-pill {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  color: #ffffff;
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.9em;
+  margin: 2px 0;
+  overflow-wrap: anywhere;
+  padding: 2px 6px;
 }
 
 .eyebrow {
