@@ -84,8 +84,18 @@ fun propertyOrCatalog(propertyName: String, catalogKey: String): String =
 fun intPropertyOrCatalog(propertyName: String, catalogKey: String): Int =
     project.findProperty(propertyName)?.toString()?.toInt() ?: catalogVersion(catalogKey).toInt()
 
+fun flagOrProperty(envName: String, propertyName: String): Boolean {
+    val value = System.getenv(envName)
+        ?: project.findProperty(propertyName)?.toString()
+        ?: rootProject.findProperty(propertyName)?.toString()
+    val normalizedValue = value?.trim()
+    return normalizedValue.equals("true", ignoreCase = true) || normalizedValue == "1"
+}
+
 val junitVersion: String = propertyOrCatalog("junitVersion", "junit")
 val androidxAppCompatVersion: String = propertyOrCatalog("androidxAppCompatVersion", "androidxAppCompat")
+val oneSignalVersion: String = catalogVersion("onesignal")
+val oneSignalDisableLocation: Boolean = flagOrProperty("ONESIGNAL_DISABLE_LOCATION", "onesignal.disableLocation")
 
 extra["junitVersion"] = junitVersion
 extra["androidxAppCompatVersion"] = androidxAppCompatVersion
@@ -126,7 +136,13 @@ repositories {
 dependencies {
     "implementation"(project(":capacitor-android"))
     "implementation"("androidx.appcompat:appcompat:$androidxAppCompatVersion")
-    "implementation"("com.onesignal:OneSignal:${catalogVersion("onesignal")}")
+    if (oneSignalDisableLocation) {
+        "implementation"("com.onesignal:core:$oneSignalVersion")
+        "implementation"("com.onesignal:notifications:$oneSignalVersion")
+        "implementation"("com.onesignal:in-app-messages:$oneSignalVersion")
+    } else {
+        "implementation"("com.onesignal:OneSignal:$oneSignalVersion")
+    }
     "testImplementation"("junit:junit:$junitVersion")
     "androidTestImplementation"("androidx.test.ext:junit:${catalogVersion("androidxTestJunit")}")
     "androidTestImplementation"("androidx.test.espresso:espresso-core:${catalogVersion("androidxEspresso")}")

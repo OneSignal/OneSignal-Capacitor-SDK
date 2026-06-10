@@ -30,6 +30,60 @@ bunx cap sync
 npx cap sync
 ```
 
+## Disabling OneSignal Location
+
+If your app does not use `OneSignal.Location`, you can exclude the native OneSignal location module from iOS and Android builds.
+
+Set `ONESIGNAL_DISABLE_LOCATION=true` in the environment before resolving or building native dependencies. The value is case-insensitive, and `1` is also accepted.
+
+```bash
+ONESIGNAL_DISABLE_LOCATION=true npx cap sync
+```
+
+In GitHub Actions, set it once at the job or step level so Swift Package Manager, CocoaPods, and Gradle builds inherit it:
+
+```yaml
+env:
+  ONESIGNAL_DISABLE_LOCATION: true
+```
+
+With the location module disabled, calls to `OneSignal.Location` are ignored on Android and `OneSignal.Location.isShared()` resolves `false`.
+
+### Applying the change
+
+The environment variable is read when native dependencies are resolved. If you change the variable in an existing project, clear the relevant cache and re-resolve in a shell where the variable is exported.
+
+> [!IMPORTANT]
+> When using Xcode or Android Studio, launch the IDE from a terminal that has `ONESIGNAL_DISABLE_LOCATION` exported. An IDE launched from the Dock/Finder does not inherit variables set only in your shell profile.
+
+Swift Package Manager:
+
+```bash
+rm -rf ~/Library/Caches/org.swift.swiftpm ~/Library/Developer/Xcode/DerivedData/*
+ONESIGNAL_DISABLE_LOCATION=true npx cap sync ios
+```
+
+In Xcode, you can instead use **File -> Packages -> Reset Package Caches** with the variable exported, then build.
+
+CocoaPods:
+
+```bash
+cd ios/App
+pod deintegrate
+rm -rf Pods Podfile.lock
+ONESIGNAL_DISABLE_LOCATION=true pod install
+```
+
+Android Gradle, which re-reads the variable on each configuration:
+
+```bash
+ONESIGNAL_DISABLE_LOCATION=true npx cap sync android
+cd android
+ONESIGNAL_DISABLE_LOCATION=true ./gradlew assembleDebug
+```
+
+On CI, key any DerivedData, SwiftPM, CocoaPods, or Gradle caches on the value of `ONESIGNAL_DISABLE_LOCATION` so a restored cache does not resurrect the location module.
+
 ## Usage
 
 ```ts

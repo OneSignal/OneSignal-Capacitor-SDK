@@ -1,6 +1,9 @@
 require 'json'
 
 package = JSON.parse(File.read(File.join(__dir__, 'package.json')))
+onesignal_xcframework_version = '5.5.2'
+onesignal_disable_location_env = ENV['ONESIGNAL_DISABLE_LOCATION'].to_s.strip.downcase
+onesignal_disable_location = ['true', '1'].include?(onesignal_disable_location_env)
 
 Pod::Spec.new do |s|
   s.name = 'OnesignalCapacitorPlugin'
@@ -20,5 +23,10 @@ Pod::Spec.new do |s|
   s.swift_version = '5.9'
 
   s.dependency 'Capacitor'
-  s.dependency 'OneSignalXCFramework', '5.5.2'
+  if onesignal_disable_location
+    s.dependency 'OneSignalXCFramework/OneSignal', onesignal_xcframework_version
+    s.dependency 'OneSignalXCFramework/OneSignalInAppMessages', onesignal_xcframework_version
+  else
+    s.dependency 'OneSignalXCFramework', onesignal_xcframework_version
+  end
 end
