@@ -7,6 +7,7 @@ import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import com.onesignal.OneSignal
 import com.onesignal.common.OneSignalWrapper
+import com.onesignal.debug.internal.logging.Logging
 import com.onesignal.inAppMessages.IInAppMessageClickEvent
 import com.onesignal.inAppMessages.IInAppMessageClickListener
 import com.onesignal.inAppMessages.IInAppMessageDidDismissEvent
@@ -44,6 +45,8 @@ class OneSignalCapacitorPlugin : Plugin(),
         // provisional (3), and ephemeral (4) states do not apply here.
         private const val PERMISSION_DENIED = 1
         private const val PERMISSION_AUTHORIZED = 2
+        private const val LOCATION_MODULE_NOT_AVAILABLE =
+            "OneSignal location module is not available. Add the location dependency to use OneSignal.Location."
     }
 
     private val notificationWillDisplayCache = mutableMapOf<String, INotificationWillDisplayEvent>()
@@ -55,6 +58,10 @@ class OneSignalCapacitorPlugin : Plugin(),
     // pending permission dialog that resolves after the activity dies cannot
     // call into the dead Capacitor bridge.
     private val pluginScope = MainScope()
+
+    private fun logLocationModuleNotAvailable(throwable: Throwable) {
+        Logging.error(LOCATION_MODULE_NOT_AVAILABLE, throwable)
+    }
 
     private val permissionObserver = object : IPermissionObserver {
         override fun onNotificationPermissionChange(permission: Boolean) {
@@ -640,7 +647,11 @@ class OneSignalCapacitorPlugin : Plugin(),
     @PluginMethod
     fun requestLocationPermission(call: PluginCall) {
         pluginScope.launch {
-            OneSignal.Location.requestPermission()
+            try {
+                OneSignal.Location.requestPermission()
+            } catch (t: Throwable) {
+                logLocationModuleNotAvailable(t)
+            }
             call.resolve()
         }
     }
@@ -648,14 +659,23 @@ class OneSignalCapacitorPlugin : Plugin(),
     @PluginMethod
     fun setLocationShared(call: PluginCall) {
         val shared = call.getBoolean("shared") ?: false
-        OneSignal.Location.isShared = shared
+        try {
+            OneSignal.Location.isShared = shared
+        } catch (t: Throwable) {
+            logLocationModuleNotAvailable(t)
+        }
         call.resolve()
     }
 
     @PluginMethod
     fun isLocationShared(call: PluginCall) {
         val ret = JSObject()
-        ret.put("shared", OneSignal.Location.isShared)
+        try {
+            ret.put("shared", OneSignal.Location.isShared)
+        } catch (t: Throwable) {
+            logLocationModuleNotAvailable(t)
+            ret.put("shared", false)
+        }
         call.resolve(ret)
     }
 

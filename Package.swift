@@ -1,6 +1,34 @@
 // swift-tools-version: 5.9
 
 import PackageDescription
+import Foundation
+
+func oneSignalEnvFlag(_ name: String) -> Bool {
+    let value = Context.environment[name]?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    return value == "true" || value == "1"
+}
+
+let oneSignalDisableLocation = oneSignalEnvFlag("ONESIGNAL_DISABLE_LOCATION")
+
+// InAppMessages, Location, and Extension are separate library products in
+// OneSignal-XCFramework and must be linked explicitly under SPM. Location can
+// be omitted for apps that do not use OneSignal.Location.
+var oneSignalDependencies: [Target.Dependency] = [
+    .product(name: "OneSignalFramework", package: "OneSignal-XCFramework"),
+    .product(name: "OneSignalInAppMessages", package: "OneSignal-XCFramework"),
+    .product(name: "OneSignalExtension", package: "OneSignal-XCFramework"),
+]
+
+if !oneSignalDisableLocation {
+    oneSignalDependencies.append(.product(name: "OneSignalLocation", package: "OneSignal-XCFramework"))
+}
+
+var capacitorPluginDependencies: [Target.Dependency] = [
+    .product(name: "Capacitor", package: "capacitor-swift-pm"),
+    .product(name: "Cordova", package: "capacitor-swift-pm"),
+]
+capacitorPluginDependencies.append(contentsOf: oneSignalDependencies)
+capacitorPluginDependencies.append("OSCapacitorLaunchOptions")
 
 let package = Package(
     name: "OnesignalCapacitorPlugin",
@@ -28,19 +56,7 @@ let package = Package(
         ),
         .target(
             name: "OnesignalCapacitorPlugin",
-            dependencies: [
-                .product(name: "Capacitor", package: "capacitor-swift-pm"),
-                .product(name: "Cordova", package: "capacitor-swift-pm"),
-                // InAppMessages and Location are separate library products in
-                // OneSignal-XCFramework and must be linked explicitly under SPM,
-                // otherwise their xcframeworks aren't loaded and the namespaces
-                // are silent no-ops at runtime.
-                .product(name: "OneSignalFramework", package: "OneSignal-XCFramework"),
-                .product(name: "OneSignalInAppMessages", package: "OneSignal-XCFramework"),
-                .product(name: "OneSignalLocation", package: "OneSignal-XCFramework"),
-                .product(name: "OneSignalExtension", package: "OneSignal-XCFramework"),
-                "OSCapacitorLaunchOptions"
-            ],
+            dependencies: capacitorPluginDependencies,
             path: "ios/Sources/OneSignalCapacitorPlugin"
         )
     ]
