@@ -12,7 +12,7 @@
     "ios": "ONESIGNAL_DISABLE_LOCATION=true bash ../run-ios.sh",
     "preandroid": "bun run setup",
     "preios": "bun run setup",
-    "setup": "ONESIGNAL_DISABLE_LOCATION=true bash ./setup.sh"
+    "setup": "bash ./setup.sh"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.0",

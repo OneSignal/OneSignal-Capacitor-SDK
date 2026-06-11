@@ -3,6 +3,7 @@ set -euo pipefail
 
 DEMO_DIR=$(cd "$(dirname "$0")" && pwd)
 SDK_ROOT=$(cd "$DEMO_DIR/../.." && pwd)
+export ONESIGNAL_DISABLE_LOCATION=true
 
 info() { echo -e "\033[0;32m[demo-no-location]\033[0m $*"; }
 
