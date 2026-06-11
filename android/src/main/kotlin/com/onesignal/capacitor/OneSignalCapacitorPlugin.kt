@@ -25,6 +25,7 @@ import com.onesignal.user.state.IUserStateObserver
 import com.onesignal.user.state.UserChangedState
 import com.onesignal.user.subscriptions.IPushSubscriptionObserver
 import com.onesignal.user.subscriptions.PushSubscriptionChangedState
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -45,8 +46,8 @@ class OneSignalCapacitorPlugin : Plugin(),
         // provisional (3), and ephemeral (4) states do not apply here.
         private const val PERMISSION_DENIED = 1
         private const val PERMISSION_AUTHORIZED = 2
-        private const val LOCATION_MODULE_NOT_AVAILABLE =
-            "OneSignal location module is not available. Add the location dependency to use OneSignal.Location."
+        private const val LOCATION_CALL_FAILED =
+            "OneSignal.Location call failed. The location module may not be included in this build."
     }
 
     private val notificationWillDisplayCache = mutableMapOf<String, INotificationWillDisplayEvent>()
@@ -59,8 +60,8 @@ class OneSignalCapacitorPlugin : Plugin(),
     // call into the dead Capacitor bridge.
     private val pluginScope = MainScope()
 
-    private fun logLocationModuleNotAvailable(throwable: Throwable) {
-        Logging.error(LOCATION_MODULE_NOT_AVAILABLE, throwable)
+    private fun logLocationCallFailed(throwable: Throwable) {
+        Logging.error(LOCATION_CALL_FAILED, throwable)
     }
 
     private val permissionObserver = object : IPermissionObserver {
@@ -649,8 +650,10 @@ class OneSignalCapacitorPlugin : Plugin(),
         pluginScope.launch {
             try {
                 OneSignal.Location.requestPermission()
+            } catch (e: CancellationException) {
+                throw e
             } catch (t: Throwable) {
-                logLocationModuleNotAvailable(t)
+                logLocationCallFailed(t)
             }
             call.resolve()
         }
@@ -662,7 +665,7 @@ class OneSignalCapacitorPlugin : Plugin(),
         try {
             OneSignal.Location.isShared = shared
         } catch (t: Throwable) {
-            logLocationModuleNotAvailable(t)
+            logLocationCallFailed(t)
         }
         call.resolve()
     }
@@ -673,7 +676,7 @@ class OneSignalCapacitorPlugin : Plugin(),
         try {
             ret.put("shared", OneSignal.Location.isShared)
         } catch (t: Throwable) {
-            logLocationModuleNotAvailable(t)
+            logLocationCallFailed(t)
             ret.put("shared", false)
         }
         call.resolve(ret)

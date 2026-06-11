@@ -40,6 +40,13 @@ Set `ONESIGNAL_DISABLE_LOCATION=true` in the environment before resolving or bui
 ONESIGNAL_DISABLE_LOCATION=true npx cap sync
 ```
 
+For day-to-day native builds and runs, keep the same environment variable set so Capacitor, Swift Package Manager, CocoaPods, and Gradle do not re-resolve with the location module included:
+
+```bash
+ONESIGNAL_DISABLE_LOCATION=true npx cap run ios
+ONESIGNAL_DISABLE_LOCATION=true npx cap run android
+```
+
 In GitHub Actions, set it once at the job or step level so Swift Package Manager, CocoaPods, and Gradle builds inherit it:
 
 ```yaml
