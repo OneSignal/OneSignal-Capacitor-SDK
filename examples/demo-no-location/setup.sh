@@ -12,7 +12,7 @@ info "Packing local Capacitor plugin..."
 (cd "$SDK_ROOT" && rm -f onesignal-capacitor-plugin*.tgz && bun pm pack --filename onesignal-capacitor-plugin.tgz >/dev/null)
 
 info "Installing demo dependencies..."
-(cd "$DEMO_DIR" && bun install)
+(cd "$DEMO_DIR" && bun update @onesignal/capacitor-plugin && bun install)
 
 info "Building web bundle..."
 (cd "$DEMO_DIR" && vp build)
