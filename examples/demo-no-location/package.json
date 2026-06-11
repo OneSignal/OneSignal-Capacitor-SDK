@@ -4,12 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "android": "bash ../run-android.sh",
+    "android": "ONESIGNAL_DISABLE_LOCATION=true bash ../run-android.sh",
     "build": "vp build",
     "clean:android": "rm -rf android/app/build android/app/.cxx android/build",
     "clean:ios": "rm -rf ios/App/build ios/DerivedData ios/App/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm",
     "dev": "vp dev --host --port 5173",
-    "ios": "bash ../run-ios.sh",
+    "ios": "ONESIGNAL_DISABLE_LOCATION=true bash ../run-ios.sh",
     "preandroid": "bun run setup",
     "preios": "bun run setup",
     "setup": "ONESIGNAL_DISABLE_LOCATION=true bash ./setup.sh"
