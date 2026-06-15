@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'vitest';
+import { describe, test, expect, beforeEach } from 'vite-plus/test';
 
 import { createMockPlugin } from '../mocks/capacitor';
 import Session from './SessionNamespace';
