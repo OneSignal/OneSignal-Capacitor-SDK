@@ -1,4 +1,4 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { describe, test, expect, vi, beforeEach } from 'vite-plus/test';
 
 import { createMockPlugin } from '../mocks/capacitor';
 import { PREV_SUB_ID, PREV_SUB_TOKEN, SUB_ID, SUB_TOKEN } from '../mocks/constants';
