@@ -1,0 +1,10 @@
+node_modules/
+dist/
+
+apps/shop/android/app/src/main/assets/
+apps/shop/android/app/src/main/res/xml/config.xml
+apps/shop/android/capacitor-cordova-android-plugins/
+apps/shop/ios/App/App/capacitor.config.json
+apps/shop/ios/App/App/config.xml
+apps/shop/ios/App/App/public/
+apps/shop/ios/capacitor-cordova-ios-plugins/
