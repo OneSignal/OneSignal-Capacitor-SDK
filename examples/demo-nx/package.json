@@ -1,0 +1,21 @@
+{
+  "name": "demo-nx",
+  "private": true,
+  "scripts": {
+    "prepare:web": "node -e \"const fs=require('fs');fs.mkdirSync('dist/apps/shop/browser',{recursive:true});fs.writeFileSync('dist/apps/shop/browser/index.html','<!doctype html><html><body>demo-nx</body></html>');\"",
+    "sync": "node -e \"const fs=require('fs');fs.mkdirSync('dist/apps/shop/browser',{recursive:true});fs.writeFileSync('dist/apps/shop/browser/index.html','<!doctype html><html><body>demo-nx</body></html>');\" && cd apps/shop && cap sync"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/core": "^8.4.0",
+    "@capacitor/ios": "^8.4.0",
+    "@capawesome/capacitor-app-update": "^8.0.3",
+    "@onesignal/capacitor-plugin": "1.1.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.4.0",
+    "nx": "23.0.0",
+    "typescript": "~5.9.2"
+  },
+  "packageManager": "pnpm@10.33.0"
+}
