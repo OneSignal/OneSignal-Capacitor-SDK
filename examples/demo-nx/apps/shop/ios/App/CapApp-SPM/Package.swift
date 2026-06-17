@@ -12,7 +12,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.4.0"),
-        .package(name: "CapawesomeCapacitorAppUpdate", path: "../../../../../node_modules/.pnpm/@capawesome+capacitor-app-update@8.0.3_@capacitor+core@8.4.0/node_modules/@capawesome/capacitor-app-update")
+        .package(name: "CapawesomeCapacitorAppUpdate", path: "../../../../../node_modules/.pnpm/@capawesome+capacitor-app-update@8.0.3_@capacitor+core@8.4.0/node_modules/@capawesome/capacitor-app-update"),
+        .package(name: "OnesignalCapacitorPlugin", path: "../../../../../node_modules/.pnpm/@onesignal+capacitor-plugin@file+..+..+onesignal-capacitor-plugin.tgz_@capacitor+core@8.4.0/node_modules/@onesignal/capacitor-plugin")
     ],
     targets: [
         .target(
@@ -20,7 +21,8 @@ let package = Package(
             dependencies: [
                 .product(name: "Capacitor", package: "capacitor-swift-pm"),
                 .product(name: "Cordova", package: "capacitor-swift-pm"),
-                .product(name: "CapawesomeCapacitorAppUpdate", package: "CapawesomeCapacitorAppUpdate")
+                .product(name: "CapawesomeCapacitorAppUpdate", package: "CapawesomeCapacitorAppUpdate"),
+                .product(name: "OnesignalCapacitorPlugin", package: "OnesignalCapacitorPlugin")
             ]
         )
     ]

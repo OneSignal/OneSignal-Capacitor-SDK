@@ -4,3 +4,6 @@ project(':capacitor-android').projectDir = new File('../../../node_modules/.pnpm
 
 include ':capawesome-capacitor-app-update'
 project(':capawesome-capacitor-app-update').projectDir = new File('../../../node_modules/.pnpm/@capawesome+capacitor-app-update@8.0.3_@capacitor+core@8.4.0/node_modules/@capawesome/capacitor-app-update/android')
+
+include ':onesignal-capacitor-plugin'
+project(':onesignal-capacitor-plugin').projectDir = new File('../../../node_modules/.pnpm/@onesignal+capacitor-plugin@file+..+..+onesignal-capacitor-plugin.tgz_@capacitor+core@8.4.0/node_modules/@onesignal/capacitor-plugin/android')

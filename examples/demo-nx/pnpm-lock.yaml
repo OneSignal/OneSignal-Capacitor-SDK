@@ -21,8 +21,8 @@ importers:
         specifier: ^8.0.3
         version: 8.0.3(@capacitor/core@8.4.0)
       '@onesignal/capacitor-plugin':
-        specifier: 1.1.1
-        version: 1.1.1(@capacitor/core@8.4.0)
+        specifier: file:../../onesignal-capacitor-plugin.tgz
+        version: file:../../onesignal-capacitor-plugin.tgz(@capacitor/core@8.4.0)
     devDependencies:
       '@capacitor/cli':
         specifier: ^8.4.0
@@ -165,8 +165,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@onesignal/capacitor-plugin@1.1.1':
-    resolution: {integrity: sha512-G6jP6FvlbO6VvM8APjw7Cf3+1R3xtiOoUnyyICxC2DTO5qbhTD75/IBpJ+Nrg9lLRGidsihWc45UG8VvmNoUxg==}
+  '@onesignal/capacitor-plugin@file:../../onesignal-capacitor-plugin.tgz':
+    resolution: {integrity: sha512-yw7Kz+COy3uoivrIvolVEgfLHVd3LyjAgmYJn8Pvp7feA9UOda4Jl01ot/axtIXrCVuG2REOaPMZa8sYYyUyag==, tarball: file:../../onesignal-capacitor-plugin.tgz}
+    version: 1.1.1
     peerDependencies:
       '@capacitor/core': '>=7.0.0'
 
@@ -979,7 +980,7 @@ snapshots:
   '@nx/nx-win32-x64-msvc@23.0.0':
     optional: true
 
-  '@onesignal/capacitor-plugin@1.1.1(@capacitor/core@8.4.0)':
+  '@onesignal/capacitor-plugin@file:../../onesignal-capacitor-plugin.tgz(@capacitor/core@8.4.0)':
     dependencies:
       '@capacitor/core': 8.4.0
 

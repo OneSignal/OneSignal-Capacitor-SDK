@@ -10,7 +10,7 @@
     "@capacitor/core": "^8.4.0",
     "@capacitor/ios": "^8.4.0",
     "@capawesome/capacitor-app-update": "^8.0.3",
-    "@onesignal/capacitor-plugin": "1.1.1"
+    "@onesignal/capacitor-plugin": "file:../../onesignal-capacitor-plugin.tgz"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.4.0",
