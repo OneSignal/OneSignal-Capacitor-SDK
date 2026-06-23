@@ -1,6 +1,6 @@
 {
   "name": "@onesignal/capacitor-plugin",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "OneSignal is a high volume Push Notification service for mobile apps. This is the pure Capacitor plugin for OneSignal, providing push notifications, in-app messaging, and more.",
   "keywords": [
     "apns",
