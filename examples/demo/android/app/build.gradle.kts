@@ -21,7 +21,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // Sign release with Android's auto-generated debug keystore so
             // `assembleRelease` produces an installable app-release.apk for
             // Appium E2E. Don't ship release builds to users this way.

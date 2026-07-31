@@ -4,7 +4,7 @@ Thin Capacitor wrapper around the OneSignal Android SDK. Designed to be consumed
 
 ## Kotlin / AGP toolchain
 
-The plugin module declares its own `buildscript` classpath for the Android Gradle Plugin and the Kotlin Gradle Plugin. This is required because Capacitor 7's host `build.gradle` does not classpath the Kotlin Gradle Plugin for sub-projects; without our own classpath the `kotlin-android` plugin would fail to resolve.
+The plugin module declares its own `buildscript` classpath for the Android Gradle Plugin and the Kotlin Gradle Plugin. This is required because Capacitor 7's host `build.gradle` does not classpath the Kotlin Gradle Plugin for sub-projects. Under AGP 8 the module applies `kotlin-android`; under AGP 9 it uses AGP's built-in Kotlin support instead.
 
 Defaults live in [`gradle/libs.versions.toml`](gradle/libs.versions.toml):
 
@@ -15,7 +15,7 @@ Host apps that need to pin a different Kotlin compiler can do so via any standar
 
 ## SDK levels
 
-`compileSdk`, `minSdk`, and `targetSdk` default to the Capacitor 8 floors (36 / 24 / 36). Host apps override any of them by setting the matching `<name>Version` property through any Gradle property source (`rootProject.ext`, `gradle.properties`, or `-P`) — Capacitor 7 host apps that ship with `variables.gradle` defaults of 35 / 23 / 35 will continue to take precedence over the catalog defaults.
+`compileSdk` and `minSdk` default to the Capacitor 8 floors (36 / 24). Host apps override either value by setting the matching `<name>Version` property through any Gradle property source (`rootProject.ext`, `gradle.properties`, or `-P`). The consuming application owns `targetSdk`; AGP 9 no longer exposes it in the Android library DSL.
 
 ## Library versions
 
