@@ -29,10 +29,6 @@ on:
   # For making a release pr from the github actions
   workflow_dispatch:
     inputs:
-      capacitor_version:
-        description: 'New Capacitor plugin version (e.g., 1.1.0 or 1.1.0-beta.1)'
-        required: true
-        type: string
       android_version:
         description: 'New Android SDK Version (e.g., 5.7.6). Leave blank to skip.'
         required: false
@@ -48,7 +44,23 @@ on:
         default: main
 
 jobs:
+  determine_version:
+    runs-on: ubuntu-latest
+    outputs:
+      capacitor_version: ${{ inputs.capacitor_version || steps.next_version.outputs.version }}
+
+    steps:
+      - name: Determine Capacitor plugin version
+        if: github.event_name == 'workflow_dispatch'
+        id: next_version
+        uses: OneSignal/sdk-shared/.github/actions/determine-next-version@main
+        with:
+          github-token: ${{ secrets.GH_PUSH_TOKEN || github.token }}
+          target-repo: OneSignal/OneSignal-Capacitor-SDK
+          target-branch: ${{ inputs.target_branch }}
+
   prep:
+    needs: determine_version
     uses: OneSignal/sdk-shared/.github/workflows/prep-release.yml@main
     secrets:
       # Need this cross-repo token (sdk-shared & this repo) to perform changes
@@ -56,11 +68,11 @@ jobs:
       GH_PUSH_TOKEN: ${{ secrets.GH_PUSH_TOKEN }}
     with:
       target_repo: OneSignal/OneSignal-Capacitor-SDK
-      version: ${{ inputs.capacitor_version }}
+      version: ${{ needs.determine_version.outputs.capacitor_version }}
 
   # Capacitor plugin: bump npm version + optional native SDK pins
   update_version:
-    needs: prep
+    needs: [determine_version, prep]
     runs-on: macos-latest
     outputs:
       capacitor_from: ${{ steps.current_versions.outputs.capacitor_from }}
@@ -154,9 +166,9 @@ jobs:
           git commit -m "Update iOS SDK to ${VERSION}" && git push
 
       - name: Update sdk version
+        env:
+          NEW_VERSION: ${{ needs.determine_version.outputs.capacitor_version }}
         run: |
-          NEW_VERSION="${{ inputs.capacitor_version }}"
-
           # Convert version format for OneSignal wrapper (e.g., 1.2.15 -> 010215)
           # For pre-releases, extract base version first (e.g., 1.2.15-alpha.1 -> 1.2.15)
           BASE_VERSION=$(echo "$NEW_VERSION" | sed 's/-[a-z].*//')
@@ -177,13 +189,15 @@ jobs:
           git commit -m "Release $NEW_VERSION" && git push
 
       - name: Regenerate API docs
+        env:
+          NEW_VERSION: ${{ needs.determine_version.outputs.capacitor_version }}
         run: |
           vp run docgen
 
           # Only commit if there are changes
           git add -A
           git diff --staged --quiet && exit 0
-          git commit -m "Regenerate docs for ${{ inputs.capacitor_version }}" && git push
+          git commit -m "Regenerate docs for $NEW_VERSION" && git push
 
   create-pr:
     needs: [prep, update_version]
