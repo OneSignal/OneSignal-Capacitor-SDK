@@ -29,6 +29,10 @@ on:
   # For making a release pr from the github actions
   workflow_dispatch:
     inputs:
+      capacitor_version:
+        description: 'Override the auto-detected version (e.g., 1.1.0 or 1.1.0-beta.1). Leave blank to auto-detect.'
+        required: false
+        type: string
       android_version:
         description: 'New Android SDK Version (e.g., 5.7.6). Leave blank to skip.'
         required: false
@@ -52,7 +56,7 @@ jobs:
 
     steps:
       - name: Determine Capacitor plugin version
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch' && inputs.capacitor_version == ''
         id: next_version
         uses: OneSignal/sdk-shared/.github/actions/determine-next-version@main
         with:
