@@ -140,7 +140,7 @@ class OneSignalCapacitorPlugin : Plugin(),
         initialized = true
 
         OneSignalWrapper.sdkType = "capacitor"
-        OneSignalWrapper.sdkVersion = "010105"
+        OneSignalWrapper.sdkVersion = "010106"
         OneSignal.initWithContext(context, appId)
 
         OneSignal.Notifications.addPermissionObserver(permissionObserver)
