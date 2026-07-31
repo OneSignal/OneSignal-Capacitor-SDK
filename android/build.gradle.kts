@@ -99,31 +99,29 @@ extra["junitVersion"] = junitVersion
 extra["androidxAppCompatVersion"] = androidxAppCompatVersion
 
 apply(plugin = "com.android.library")
-apply(plugin = "kotlin-android")
 
-configure<com.android.build.gradle.LibraryExtension> {
+val androidPluginVersion = com.android.build.api.AndroidPluginVersion.getCurrent()
+
+// AGP 9 provides Kotlin support itself, while AGP 8 hosts still require this plugin.
+if (androidPluginVersion < com.android.build.api.AndroidPluginVersion(9, 0)) {
+    apply(plugin = "kotlin-android")
+
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
+}
+
+configure<com.android.build.api.dsl.LibraryExtension> {
     namespace = "com.onesignal.capacitor"
     compileSdk = intPropertyOrCatalog("compileSdkVersion", "compileSdk")
     defaultConfig {
         minSdk = intPropertyOrCatalog("minSdkVersion", "minSdk")
-        @Suppress("DEPRECATION")
-        targetSdk = intPropertyOrCatalog("targetSdkVersion", "targetSdk")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
-        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-}
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
 }
 
 repositories {
