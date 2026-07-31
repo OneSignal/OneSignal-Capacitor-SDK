@@ -48,6 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       capacitor_version: ${{ inputs.capacitor_version || steps.next_version.outputs.version }}
+      release_needed: ${{ inputs.capacitor_version != '' || steps.next_version.outputs.release-needed == 'true' }}
 
     steps:
       - name: Determine Capacitor plugin version
@@ -61,6 +62,7 @@ jobs:
 
   prep:
     needs: determine_version
+    if: needs.determine_version.outputs.release_needed == 'true'
     uses: OneSignal/sdk-shared/.github/workflows/prep-release.yml@main
     secrets:
       # Need this cross-repo token (sdk-shared & this repo) to perform changes
