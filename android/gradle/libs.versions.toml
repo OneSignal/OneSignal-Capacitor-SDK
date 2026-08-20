@@ -25,7 +25,7 @@ compileSdk = "36"
 junit = "4.13.2"
 kotlin = "2.2.20"
 minSdk = "24"
-onesignal = "5.9.8"
+onesignal = "5.9.9"
 
 [libraries]
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidxAppCompat" }
