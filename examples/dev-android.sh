@@ -64,8 +64,14 @@ else
   for i in "${!labels[@]}"; do
     echo "  $((i+1))) ${labels[$i]}"
   done
-  printf "Choice [1]: "
-  read -r choice
+  choice="${1:-}"
+  if [ -z "$choice" ]; then
+    printf "Choice [1]: "
+    if ! read -r choice </dev/tty; then
+      echo "Unable to read a device choice. Pass it as an argument, for example: vp run dev:android 2"
+      exit 1
+    fi
+  fi
   choice=${choice:-1}
   idx=$((choice - 1))
   if [ "$idx" -lt 0 ] || [ "$idx" -ge ${#devices[@]} ]; then
