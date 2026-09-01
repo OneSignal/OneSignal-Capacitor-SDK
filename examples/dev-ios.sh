@@ -93,14 +93,25 @@ EOF
     echo "  $((i + 1)). $name ($udid)"
   done
 
+  choice="${1:-}"
   while true; do
-    printf "Enter number [1-%s]: " "${#options[@]}"
-    read -r choice
+    if [ -z "$choice" ]; then
+      printf "Enter number [1-%s]: " "${#options[@]}"
+      if ! read -r choice </dev/tty; then
+        echo "Unable to read a simulator choice. Pass it as an argument, for example: vp run dev:ios 2"
+        exit 1
+      fi
+    fi
     if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#options[@]}" ]; then
       selected="${options[$((choice - 1))]}"
       break
     fi
+    if [ -n "${1:-}" ]; then
+      echo "Invalid selection."
+      exit 1
+    fi
     echo "Invalid selection. Try again."
+    choice=""
   done
 fi
 
