@@ -10,14 +10,14 @@ function hasRecognizedIndexingError(errors: unknown): boolean {
   }
 
   if (!errors || typeof errors !== 'object' || Array.isArray(errors)) return false;
-  const invalidPlayerIds = (errors as Record<string, unknown>).invalid_player_ids;
+  const invalidPlayerIds = (errors as { invalid_player_ids?: unknown }).invalid_player_ids;
   return Array.isArray(invalidPlayerIds) && invalidPlayerIds.length > 0;
 }
 
 export function classifyNotificationResponse(data: unknown): NotificationResponseDisposition {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return 'failure';
 
-  const response = data as Record<string, unknown>;
+  const response = data as { id?: unknown; errors?: unknown; recipients?: unknown };
   if (typeof response.id !== 'string') return 'failure';
 
   if (response.errors !== undefined) {

@@ -2,19 +2,9 @@ import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { CapacitorHttp } from '@capacitor/core';
 import OneSignal, { LogLevel } from '@onesignal/capacitor-plugin';
 
-const ONESIGNAL_APP_ID = '77e32082-ea27-42e3-a898-c72e141824ef';
+import { classifyNotificationResponse } from './notification-response';
 
-function isTransientSendFailure(data: unknown): boolean {
-  if (!data || typeof data !== 'object') return false;
-  const record = data as { id?: unknown; errors?: unknown; recipients?: unknown };
-  const errors = record.errors;
-  const hasErrors =
-    (Array.isArray(errors) && errors.length > 0) ||
-    (errors != null && typeof errors === 'object' && Object.keys(errors).length > 0);
-  const missingId = typeof record.id !== 'string' || record.id.length === 0;
-  const zeroRecipients = typeof record.recipients === 'number' && record.recipients === 0;
-  return hasErrors || missingId || zeroRecipients;
-}
+const ONESIGNAL_APP_ID = '77e32082-ea27-42e3-a898-c72e141824ef';
 
 @Component({
   selector: 'app-root',
@@ -133,12 +123,18 @@ export class AppComponent {
           return;
         }
 
-        if (isTransientSendFailure(response.data)) {
+        const disposition = classifyNotificationResponse(response.data);
+        if (disposition === 'transient-failure') {
           if (attempt < maxAttempts) {
             await new Promise((resolve) => setTimeout(resolve, 3_000 * attempt));
             continue;
           }
           this.log(`Send failed: ${JSON.stringify(response.data)}`);
+          return;
+        }
+
+        if (disposition === 'failure') {
+          this.log(`Send failed: invalid response ${JSON.stringify(response.data)}`);
           return;
         }
 
