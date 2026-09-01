@@ -4,7 +4,6 @@ node_modules
 # Build & test output
 dist/
 coverage/
-.capacitor-sdk-source.stamp
 .capacitor-sdk-installed.stamp
 .cap-sync.stamp
 

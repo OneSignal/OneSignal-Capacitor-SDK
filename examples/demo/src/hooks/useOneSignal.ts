@@ -173,10 +173,10 @@ export function useOneSignal(): UseOneSignalReturn {
 
     try {
       const onesignalId = await OneSignal.User.getOnesignalId();
-      if (!onesignalId) return;
+      if (!onesignalId || requestSequenceRef.current !== requestId) return;
 
       const userData = await apiService.fetchUser(onesignalId);
-      if (!userData) return;
+      if (!userData || requestSequenceRef.current !== requestId) return;
 
       const externalId = await OneSignal.User.getExternalId();
 
@@ -187,6 +187,8 @@ export function useOneSignal(): UseOneSignalReturn {
       setEmailsList((prev) => mergeUnique(prev, userData.emails));
       setSmsNumbersList((prev) => mergeUnique(prev, userData.smsNumbers));
       setExternalUserId(externalId ?? userData.externalId);
+    } catch (err) {
+      console.error(`Fetch user error: ${String(err)}`);
     } finally {
       if (requestSequenceRef.current === requestId) {
         setIsLoading(false);
@@ -196,6 +198,9 @@ export function useOneSignal(): UseOneSignalReturn {
 
   useEffect(() => {
     let cancelled = false;
+    let pushChanged = false;
+    let permissionChanged = false;
+    let userChanged = false;
 
     const logIam = (kind: string) => (e: { message: { messageId: string } }) =>
       console.log(`IAM ${kind}: ${e.message.messageId}`);
@@ -221,6 +226,7 @@ export function useOneSignal(): UseOneSignalReturn {
     };
 
     const pushSubHandler = (event: PushSubscriptionChangedState) => {
+      pushChanged = true;
       const { previous, current } = event;
       const fmtToken = (t: string | undefined) => (t ? `${t.slice(0, 8)}…` : 'null');
       console.log(
@@ -231,19 +237,26 @@ export function useOneSignal(): UseOneSignalReturn {
     };
 
     const permissionHandler = (granted: boolean) => {
+      permissionChanged = true;
       console.log(`Permission changed: ${granted}`);
       setHasNotificationPermission(granted);
     };
 
     const userChangeHandler = (event: UserChangedState) => {
+      userChanged = true;
+      requestSequenceRef.current++;
       const nextOnesignalId = event.current.onesignalId ?? null;
       console.log(
         `User changed: onesignalId=${nextOnesignalId ?? 'null'}, externalId=${event.current.externalId ?? 'null'}`,
       );
 
       setOneSignalId(nextOnesignalId ?? undefined);
+      setExternalUserId(event.current.externalId ?? undefined);
 
-      if (nextOnesignalId === null) return;
+      if (nextOnesignalId === null) {
+        setIsLoading(false);
+        return;
+      }
       void fetchUserDataFromApi();
     };
 
@@ -268,19 +281,24 @@ export function useOneSignal(): UseOneSignalReturn {
       ]);
       if (cancelled) return;
 
-      setExternalUserId(externalId ?? preferences.getExternalUserId() ?? undefined);
-      setOneSignalId(initialOnesignalId ?? undefined);
-      setPushSubscriptionId(pushId ?? undefined);
-      setIsPushEnabled(pushOptedIn);
-      setHasNotificationPermission(hasPerm);
+      if (!userChanged) {
+        setExternalUserId(externalId ?? preferences.getExternalUserId() ?? undefined);
+        setOneSignalId(initialOnesignalId ?? undefined);
+      }
+      if (!pushChanged) {
+        setPushSubscriptionId(pushId ?? undefined);
+        setIsPushEnabled(pushOptedIn);
+      }
+      if (!permissionChanged) setHasNotificationPermission(hasPerm);
       setIsReady(true);
 
-      if (initialOnesignalId) {
+      if (!userChanged && initialOnesignalId) {
         void fetchUserDataFromApi();
       }
     };
 
     void load().catch((err) => {
+      if (cancelled) return;
       console.error(`Initial load error: ${String(err)}`);
       setIsLoading(false);
     });
@@ -288,6 +306,7 @@ export function useOneSignal(): UseOneSignalReturn {
     console.log('Loaded OneSignal');
     return () => {
       cancelled = true;
+      requestSequenceRef.current++;
       console.log('Cleaning up OneSignal listeners');
       OneSignal.InAppMessages.removeEventListener('willDisplay', handleIamWillDisplay);
       OneSignal.InAppMessages.removeEventListener('didDisplay', handleIamDidDisplay);
@@ -314,6 +333,7 @@ export function useOneSignal(): UseOneSignalReturn {
   };
 
   const loginUser = async (nextExternalUserId: string) => {
+    requestSequenceRef.current++;
     clearUserData();
     setIsLoading(true);
 
@@ -331,6 +351,8 @@ export function useOneSignal(): UseOneSignalReturn {
   };
 
   const logoutUser = async () => {
+    requestSequenceRef.current++;
+    setIsLoading(false);
     void OneSignal.logout();
     preferences.setExternalUserId(null);
     setExternalUserId(undefined);
