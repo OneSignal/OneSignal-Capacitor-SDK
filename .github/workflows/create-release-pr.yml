@@ -75,6 +75,7 @@ jobs:
     with:
       target_repo: OneSignal/OneSignal-Capacitor-SDK
       version: ${{ needs.determine_version.outputs.capacitor_version }}
+      target_branch: ${{ inputs.target_branch }}
 
   # Capacitor plugin: bump npm version + optional native SDK pins
   update_version:
