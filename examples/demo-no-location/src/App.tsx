@@ -88,6 +88,12 @@ export default function App() {
       if (!response.ok) {
         const message = await response.text();
         window.alert(`Send Failed\n\n${message}`);
+        return;
+      }
+
+      const data: unknown = await response.json();
+      if (!data || typeof data !== 'object' || Array.isArray(data)) {
+        window.alert('Send Failed\n\nInvalid notification response.');
       }
     } catch (error) {
       window.alert(`Send Failed\n\n${String(error)}`);
