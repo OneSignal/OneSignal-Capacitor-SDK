@@ -370,8 +370,17 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin {
             call.reject("Could not find notification will display event")
             return
         }
+        let discard = call.getBool("discard") ?? false
         event.preventDefault()
-        preventDefaultCache.insert(notificationId)
+        // iOS preventDefault() takes no discard flag, unlike Android, so
+        // discard only drops our cache entry. The notification still never
+        // displays, but the SDK holds its completion handler until timeout.
+        if discard {
+            notificationWillDisplayCache.removeValue(forKey: notificationId)
+            preventDefaultCache.remove(notificationId)
+        } else {
+            preventDefaultCache.insert(notificationId)
+        }
         call.resolve()
     }
 
@@ -381,16 +390,20 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
         // JS always dispatches this after the listener loop, even when a
-        // listener already called display(). Missing entry = already handled.
-        guard let event = notificationWillDisplayCache.removeValue(forKey: notificationId) else {
+        // listener already called display(). Missing entry = already handled
+        // or evicted.
+        guard let event = notificationWillDisplayCache[notificationId] else {
             preventDefaultCache.remove(notificationId)
             call.resolve()
             return
         }
-        let wasPrevented = preventDefaultCache.remove(notificationId) != nil
-        if !wasPrevented {
-            event.notification.display()
+        // Prevented events stay cached so a delayed display() still works.
+        if preventDefaultCache.contains(notificationId) {
+            call.resolve()
+            return
         }
+        notificationWillDisplayCache.removeValue(forKey: notificationId)
+        event.notification.display()
         call.resolve()
     }
 

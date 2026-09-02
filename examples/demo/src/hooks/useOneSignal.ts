@@ -221,7 +221,7 @@ export function useOneSignal(): UseOneSignalReturn {
       // uncomment to test preventing the default display behavior
       // e.preventDefault();
 
-      // can call this after preventDefault to force display of notification
+      // can call this after preventDefault (within ~25 seconds) to force display of notification
       // e.getNotification().display();
     };
 
