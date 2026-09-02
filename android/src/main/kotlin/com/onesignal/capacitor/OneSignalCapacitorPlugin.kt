@@ -115,10 +115,9 @@ class OneSignalCapacitorPlugin : Plugin(),
             OneSignal.InAppMessages.removeLifecycleListener(this)
             OneSignal.InAppMessages.removeClickListener(this)
         }
+        notificationWillDisplayCache.clear()
+        preventDefaultCache.clear()
         pluginScope.cancel()
-        // Caches aren't explicitly cleared: GC reclaims them with this
-        // instance once the listener removals above run, and runtime size is
-        // bounded by consume-on-read in proceedWithWillDisplay/displayNotification.
         super.handleOnDestroy()
     }
 
@@ -509,8 +508,14 @@ class OneSignalCapacitorPlugin : Plugin(),
             call.reject("Could not find notification will display event")
             return
         }
-        event.preventDefault()
-        preventDefaultCache.add(notificationId)
+        val discard = call.getBoolean("discard") ?: false
+        event.preventDefault(discard)
+        if (discard) {
+            notificationWillDisplayCache.remove(notificationId)
+            preventDefaultCache.remove(notificationId)
+        } else {
+            preventDefaultCache.add(notificationId)
+        }
         call.resolve()
     }
 
@@ -522,16 +527,21 @@ class OneSignalCapacitorPlugin : Plugin(),
             return
         }
         // JS always dispatches this after the listener loop, even when a
-        // listener already called display(). Missing entry = already handled.
-        val event = notificationWillDisplayCache.remove(notificationId)
+        // listener already called display(). Missing entry = already handled
+        // or evicted.
+        val event = notificationWillDisplayCache[notificationId]
         if (event == null) {
             preventDefaultCache.remove(notificationId)
             call.resolve()
             return
         }
-        if (!preventDefaultCache.remove(notificationId)) {
-            event.notification.display()
+        // Prevented events stay cached so a delayed display() still works.
+        if (preventDefaultCache.contains(notificationId)) {
+            call.resolve()
+            return
         }
+        notificationWillDisplayCache.remove(notificationId)
+        event.notification.display()
         call.resolve()
     }
 
