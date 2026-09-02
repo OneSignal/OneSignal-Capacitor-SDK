@@ -768,7 +768,12 @@ class OneSignalCapacitorPlugin : Plugin(),
         json.put("additionalData", notification.additionalData)
         json.put("groupKey", notification.groupKey)
         json.put("groupMessage", notification.groupMessage)
-        json.put("groupedNotifications", notification.groupedNotifications)
+        notification.groupedNotifications?.let { groupedNotifications ->
+            json.put(
+                "groupedNotifications",
+                JSONArray(groupedNotifications.map(::serializeNotification)),
+            )
+        }
         json.put("ledColor", notification.ledColor)
         json.put("priority", notification.priority)
         json.put("smallIcon", notification.smallIcon)
