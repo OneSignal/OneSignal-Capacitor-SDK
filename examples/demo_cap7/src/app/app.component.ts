@@ -97,6 +97,7 @@ export class AppComponent {
         include_subscription_ids: [subscriptionId],
         headings: { en: 'Simple Notification' },
         contents: { en: 'This is a simple push notification' },
+        android_group: 'demo-group',
       };
       const maxAttempts = 3;
 
