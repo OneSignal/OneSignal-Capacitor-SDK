@@ -8,13 +8,7 @@ SDK_ROOT=$(cd "$ORIGINAL_DIR/../.." && pwd)
 info() { echo -e "\033[0;32m[setup]\033[0m $*"; }
 
 # ── Plugin tarball cache ─────────────────────────────────────────────────────
-# Two stamps: the SDK build is shared across demos (one tarball serves all),
-# but the `vp add` install is per-demo. Without the split, running setup in
-# `demo` first would leave the shared stamp at the new hash, and a follow-up
-# `demo_pods` setup would short-circuit the install and keep stale sources in
-# `demo_pods/node_modules/@onesignal/capacitor-plugin/` — which is what
-# CocoaPods path-references, so the native pod stays pre-fix.
-SDK_BUILD_STAMP="$SDK_ROOT/.capacitor-sdk-source.stamp"
+# The packed archive is shared, but each demo tracks which archive it installed.
 INSTALLED_STAMP="$ORIGINAL_DIR/.capacitor-sdk-installed.stamp"
 INSTALLED_DIR="$ORIGINAL_DIR/node_modules/@onesignal/capacitor-plugin"
 TARBALL="$SDK_ROOT/onesignal-capacitor-plugin.tgz"
@@ -30,17 +24,25 @@ SDK_SRC_HASH=$(find "$SDK_ROOT/src" "$SDK_ROOT/android" "$SDK_ROOT/ios" \
                | shasum \
                | awk '{print $1}')
 
-if [[ -f "$TARBALL" ]] && [[ -f "$SDK_BUILD_STAMP" ]] && [[ "$(cat "$SDK_BUILD_STAMP")" == "$SDK_SRC_HASH" ]]; then
-  info "Capacitor SDK tarball is up-to-date, skipping rebuild + repack"
-else
-  info "Building Capacitor plugin & packing tarball..."
-  (cd "$SDK_ROOT" && vp run build)
-  (cd "$SDK_ROOT" && rm -f onesignal-capacitor-plugin*.tgz && vp pm pack && mv onesignal-capacitor-plugin-*.tgz onesignal-capacitor-plugin.tgz)
-  echo "$SDK_SRC_HASH" > "$SDK_BUILD_STAMP"
-fi
+info "Building Capacitor plugin & packing tarball..."
+(cd "$SDK_ROOT" && vp run build)
+(
+  cd "$SDK_ROOT"
+  rm -f onesignal-capacitor-plugin-*.tgz
+  vp pm pack
+  new_tarball=(onesignal-capacitor-plugin-*.tgz)
+  if [[ -f "$TARBALL" ]] && cmp -s "${new_tarball[0]}" "$TARBALL"; then
+    rm "${new_tarball[0]}"
+    info "Capacitor SDK package is unchanged, keeping cached tarball"
+  else
+    mv "${new_tarball[0]}" "$TARBALL"
+    info "Capacitor SDK package changed, refreshed tarball"
+  fi
+)
 
-if [[ -d "$INSTALLED_DIR" ]] && [[ -f "$INSTALLED_STAMP" ]] && [[ "$(cat "$INSTALLED_STAMP")" == "$SDK_SRC_HASH" ]]; then
-  info "Plugin already installed at current SDK hash, skipping vp add"
+TARBALL_HASH=$(shasum "$TARBALL" | awk '{print $1}')
+if [[ -d "$INSTALLED_DIR" ]] && [[ -f "$INSTALLED_STAMP" ]] && [[ "$(cat "$INSTALLED_STAMP")" == "$TARBALL_HASH" ]]; then
+  info "Plugin already installed from the current tarball, skipping vp add"
 else
   # Remove before add so bun.lock's integrity hash refreshes against the new
   # tarball; otherwise `vp add` hits a dependency-loop error under bun 1.3+.
@@ -48,7 +50,7 @@ else
   info "Registering tarball with vp (refreshes bun.lock integrity hash)..."
   vp remove @onesignal/capacitor-plugin 2>/dev/null || true
   vp add file:../../onesignal-capacitor-plugin.tgz
-  echo "$SDK_SRC_HASH" > "$INSTALLED_STAMP"
+  echo "$TARBALL_HASH" > "$INSTALLED_STAMP"
 fi
 
 # ── Vite prebundle staleness check ───────────────────────────────────────────
