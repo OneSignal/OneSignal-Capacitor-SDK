@@ -772,7 +772,7 @@ class OneSignalCapacitorPlugin : Plugin(),
                         JSObject().apply {
                             put("id", button.id)
                             put("text", button.text)
-                            put("icon", button.icon)
+                            put("icon", button.icon ?: JSONObject.NULL)
                         }
                     },
                 ),
