@@ -82,6 +82,7 @@ export default function App() {
           include_subscription_ids: [pushSubscriptionId],
           headings: { en: 'OneSignal No-Location Demo' },
           contents: { en: 'This test push was sent without linking the location module.' },
+          android_group: 'demo-group',
         }),
       });
 

@@ -32,7 +32,9 @@ class OneSignalApiService {
   async sendNotification(type: NotificationType, subscriptionId: string): Promise<boolean> {
     let headings: Record<string, string>;
     let contents: Record<string, string>;
-    const extra: Record<string, unknown> = {};
+    const extra: Record<string, unknown> = {
+      android_group: 'demo-group',
+    };
 
     switch (type) {
       case NotificationType.Simple:
@@ -66,7 +68,10 @@ class OneSignalApiService {
     body: string,
     subscriptionId: string,
   ): Promise<boolean> {
-    return this.postNotification({ en: title }, { en: body }, subscriptionId, {});
+    const extra: Record<string, unknown> = {
+      android_group: 'demo-group',
+    };
+    return this.postNotification({ en: title }, { en: body }, subscriptionId, extra);
   }
 
   private async postNotification(
