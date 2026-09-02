@@ -13,17 +13,6 @@ INSTALLED_STAMP="$ORIGINAL_DIR/.capacitor-sdk-installed.stamp"
 INSTALLED_DIR="$ORIGINAL_DIR/node_modules/@onesignal/capacitor-plugin"
 TARBALL="$SDK_ROOT/onesignal-capacitor-plugin.tgz"
 
-SDK_SRC_HASH=$(find "$SDK_ROOT/src" "$SDK_ROOT/android" "$SDK_ROOT/ios" \
-                    "$SDK_ROOT/package.json" \
-                    "$SDK_ROOT/OneSignalCapacitorPlugin.podspec" \
-                    "$SDK_ROOT/Package.swift" \
-                    "$SDK_ROOT/vite.config.ts" \
-               -type f 2>/dev/null \
-               | sort \
-               | xargs shasum 2>/dev/null \
-               | shasum \
-               | awk '{print $1}')
-
 info "Building Capacitor plugin & packing tarball..."
 (cd "$SDK_ROOT" && vp run build)
 (
@@ -106,7 +95,7 @@ SYNC_HASH=$(find "$ORIGINAL_DIR/src" "$ORIGINAL_DIR/index.html" \
             | xargs shasum 2>/dev/null \
             | shasum \
             | awk '{print $1}')
-SYNC_HASH="${SYNC_HASH}-${SDK_SRC_HASH}"
+SYNC_HASH="${SYNC_HASH}-${TARBALL_HASH}"
 
 if [[ -d "$ORIGINAL_DIR/ios/App/App/public" ]] && [[ -f "$SYNC_STAMP" ]] && [[ "$(cat "$SYNC_STAMP")" == "$SYNC_HASH" ]]; then
   info "Capacitor sync inputs unchanged, skipping cap sync"
