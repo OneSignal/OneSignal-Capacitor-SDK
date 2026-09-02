@@ -110,7 +110,7 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin {
         initialized = true
 
         OneSignalWrapper.sdkType = "capacitor"
-        OneSignalWrapper.sdkVersion = "010108"
+        OneSignalWrapper.sdkVersion = "010109"
         // OSCapacitorLaunchOptions's +load captures the dictionary from
         // UIApplicationDidFinishLaunchingNotification at process start (before
         // main()), so cold-start notification taps that arrive via launchOptions
