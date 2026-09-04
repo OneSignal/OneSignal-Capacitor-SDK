@@ -4,12 +4,16 @@ import type { OneSignalNotificationsAPI } from './api';
 import type { OneSignalCapacitorPlugin } from './definitions';
 import { removeListener } from './helpers';
 import { NotificationWillDisplayEvent } from './NotificationReceivedEvent';
-import type { OSNotification } from './OSNotification';
+import { OSNotification, type ReceivedEvent } from './OSNotification';
 import type {
   NotificationClickEvent,
   NotificationEventName,
   NotificationEventTypeMap,
 } from './types/NotificationClicked';
+
+type ReceivedNotificationClickEvent = Omit<NotificationClickEvent, 'notification'> & {
+  notification: ReceivedEvent;
+};
 
 export const OSNotificationPermission = {
   NotDetermined: 0,
@@ -115,9 +119,16 @@ export default class Notifications implements OneSignalNotificationsAPI {
         // The native plugin emits notificationClick with retainUntilConsumed
         // so any click delivered before this addListener call (e.g. a cold
         // start from a notification tap) is held until we attach here.
-        void this._plugin.addListener('notificationClick', (json: NotificationClickEvent) => {
-          this._processFunctionList(this._notificationClickedListeners, json);
-        });
+        void this._plugin.addListener(
+          'notificationClick',
+          (json: ReceivedNotificationClickEvent) => {
+            if (this._notificationClickedListeners.length === 0) return;
+            this._processFunctionList(this._notificationClickedListeners, {
+              ...json,
+              notification: new OSNotification(json.notification),
+            });
+          },
+        );
       }
     } else if (event === 'foregroundWillDisplay') {
       this._notificationWillDisplayListeners.push(
