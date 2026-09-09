@@ -224,7 +224,7 @@ export function useOneSignal(): UseOneSignalReturn {
       );
 
       // uncomment to see the full event object
-      // console.log('[OneSignal] foregroundWillDisplay event: ', e);
+      // console.log('[OneSignal] foregroundWillDisplay event: ', e.getNotification());
 
       // uncomment to test preventing the default display behavior
       // e.preventDefault();
