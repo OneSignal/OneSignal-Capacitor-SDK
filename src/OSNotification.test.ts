@@ -36,7 +36,7 @@ describe('OSNotification', () => {
       collapseId: 'collapse-123',
       fromProjectNumber: '123456789',
       smallIconAccentColor: 'FF0000FF',
-      lockScreenVisibility: '1',
+      lockScreenVisibility: 1,
       androidNotificationId: 987654321,
       // ios only
       badge: '5',
@@ -102,6 +102,19 @@ describe('OSNotification', () => {
       }
 
       expect(notification.rawPayload).toEqual(JSON.parse(rawPayload));
+    });
+
+    test('should preserve zero-valued Android properties and empty grouped notifications', () => {
+      const notification = new OSNotification({
+        ...props,
+        lockScreenVisibility: 0,
+        androidNotificationId: 0,
+        groupedNotifications: [],
+      });
+
+      expect(notification.lockScreenVisibility).toBe(0);
+      expect(notification.androidNotificationId).toBe(0);
+      expect(notification.groupedNotifications).toEqual([]);
     });
 
     describe('display', () => {
