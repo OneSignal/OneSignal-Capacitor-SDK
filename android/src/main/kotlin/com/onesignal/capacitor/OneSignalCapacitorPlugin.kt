@@ -763,7 +763,7 @@ class OneSignalCapacitorPlugin : Plugin(),
         json.put("body", notification.body)
         json.put("sound", notification.sound)
         json.put("launchURL", notification.launchURL)
-        json.put("rawPayload", notification.rawPayload)
+        json.put("rawPayload", JSONObject(notification.rawPayload))
         notification.actionButtons?.let { actionButtons ->
             json.put(
                 "actionButtons",
