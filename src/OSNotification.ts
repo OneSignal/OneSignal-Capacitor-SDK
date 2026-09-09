@@ -31,7 +31,7 @@ export class OSNotification {
   collapseId?: string;
   fromProjectNumber?: string;
   smallIconAccentColor?: string;
-  lockScreenVisibility?: string;
+  lockScreenVisibility?: number;
   androidNotificationId?: number;
   // ios only
   badge?: string;
@@ -97,13 +97,13 @@ export class OSNotification {
     if (receivedEvent.smallIconAccentColor) {
       this.smallIconAccentColor = receivedEvent.smallIconAccentColor;
     }
-    if (receivedEvent.lockScreenVisibility) {
+    if (typeof receivedEvent.lockScreenVisibility !== 'undefined') {
       this.lockScreenVisibility = receivedEvent.lockScreenVisibility;
     }
-    if (receivedEvent.androidNotificationId) {
+    if (typeof receivedEvent.androidNotificationId !== 'undefined') {
       this.androidNotificationId = receivedEvent.androidNotificationId;
     }
-    if (receivedEvent.groupedNotifications && receivedEvent.groupedNotifications.length) {
+    if (receivedEvent.groupedNotifications) {
       this.groupedNotifications = receivedEvent.groupedNotifications;
     }
 
