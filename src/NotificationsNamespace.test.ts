@@ -5,6 +5,7 @@ import { mockNotification, mockNotificationClickEvent } from '../mocks/data';
 import * as helpers from './helpers';
 import { NotificationWillDisplayEvent } from './NotificationReceivedEvent';
 import Notifications, { OSNotificationPermission } from './NotificationsNamespace';
+import { OSNotification } from './OSNotification';
 
 describe('Notifications', () => {
   let mockPlugin: ReturnType<typeof createMockPlugin>;
@@ -167,8 +168,37 @@ describe('Notifications', () => {
       const callback = mockPlugin.addListener.mock.calls[0][1];
       callback(clickData);
 
-      expect(mockListener1).toHaveBeenCalledWith(clickData);
-      expect(mockListener2).toHaveBeenCalledWith(clickData);
+      expect(mockListener1).toHaveBeenCalledWith({
+        ...clickData,
+        notification: expect.any(OSNotification),
+      });
+      expect(mockListener2).toHaveBeenCalledWith({
+        ...clickData,
+        notification: expect.any(OSNotification),
+      });
+    });
+
+    test('should parse rawPayload for click events', () => {
+      const mockListener = vi.fn();
+      notifications.addEventListener('click', mockListener);
+
+      const clickData = mockNotificationClickEvent();
+      const callback = mockPlugin.addListener.mock.calls[0][1];
+      callback({
+        ...clickData,
+        notification: {
+          notificationId: clickData.notification.notificationId,
+          body: clickData.notification.body,
+          title: clickData.notification.title,
+          additionalData: clickData.notification.additionalData,
+          rawPayload: JSON.stringify({ key: 'value', nested: { data: true } }),
+        },
+      });
+
+      expect(mockListener.mock.calls[0][0].notification.rawPayload).toEqual({
+        key: 'value',
+        nested: { data: true },
+      });
     });
 
     test('should call addListener for foregroundWillDisplay event', () => {
