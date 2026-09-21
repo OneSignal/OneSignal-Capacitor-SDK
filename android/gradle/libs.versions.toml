@@ -25,11 +25,13 @@ compileSdk = "36"
 junit = "4.13.2"
 kotlin = "2.2.20"
 minSdk = "24"
-onesignal = "5.10.2"
+firebaseMessaging = "25.1.0"
+onesignal = "5.11.0-rc"
 
 [libraries]
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidxAppCompat" }
 androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidxEspresso" }
 androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidxTestJunit" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebaseMessaging" }
 junit = { module = "junit:junit", version.ref = "junit" }
 onesignal = { module = "com.onesignal:OneSignal", version.ref = "onesignal" }

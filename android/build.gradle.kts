@@ -125,6 +125,7 @@ configure<com.android.build.api.dsl.LibraryExtension> {
 }
 
 repositories {
+    mavenLocal()
     google()
     mavenCentral()
 }
@@ -132,6 +133,7 @@ repositories {
 dependencies {
     "implementation"(project(":capacitor-android"))
     "implementation"("androidx.appcompat:appcompat:$androidxAppCompatVersion")
+    "implementation"("com.google.firebase:firebase-messaging:${catalogVersion("firebaseMessaging")}")
     if (oneSignalDisableLocation) {
         "implementation"("com.onesignal:core:$oneSignalVersion")
         "implementation"("com.onesignal:notifications:$oneSignalVersion")
