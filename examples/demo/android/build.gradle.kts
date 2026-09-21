@@ -25,6 +25,7 @@ val cordovaAndroidVersion = libs.versions.cordovaAndroid.get()
 
 allprojects {
     repositories {
+        mavenLocal()
         google()
         mavenCentral()
     }
