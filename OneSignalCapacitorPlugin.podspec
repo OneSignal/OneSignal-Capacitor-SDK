@@ -1,7 +1,7 @@
 require 'json'
 
 package = JSON.parse(File.read(File.join(__dir__, 'package.json')))
-onesignal_xcframework_version = '5.6.3'
+onesignal_xcframework_version = '5.7.0'
 onesignal_disable_location_env = ENV['ONESIGNAL_DISABLE_LOCATION'].to_s.strip.downcase
 onesignal_disable_location = ['true', '1'].include?(onesignal_disable_location_env)
 
@@ -19,7 +19,7 @@ Pod::Spec.new do |s|
   ]
   s.public_header_files = 'ios/Sources/OSCapacitorLaunchOptions/include/*.h'
 
-  s.ios.deployment_target = '14.0'
+  s.ios.deployment_target = '15.0'
   s.swift_version = '5.9'
 
   s.dependency 'Capacitor'

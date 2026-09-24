@@ -32,7 +32,7 @@ capacitorPluginDependencies.append("OSCapacitorLaunchOptions")
 
 let package = Package(
     name: "OnesignalCapacitorPlugin",
-    platforms: [.iOS(.v14)],
+    platforms: [.iOS(.v15)],
     products: [
         .library(
             name: "OnesignalCapacitorPlugin",
