@@ -362,7 +362,6 @@ describe('User', () => {
 
   describe('empty inputs', () => {
     test('does not call native for missing strings', async () => {
-      await user.setLanguage('');
       await user.addAlias('', 'id');
       await user.addAlias('label', '');
       await user.addAliases({ '': 'id' });
@@ -381,7 +380,6 @@ describe('User', () => {
       await user.removeTags(['']);
       await user.trackEvent('');
 
-      expect(mockPlugin.setLanguage).not.toHaveBeenCalled();
       expect(mockPlugin.addAliases).not.toHaveBeenCalled();
       expect(mockPlugin.removeAliases).not.toHaveBeenCalled();
       expect(mockPlugin.addEmail).not.toHaveBeenCalled();
@@ -397,6 +395,18 @@ describe('User', () => {
       await user.addTags({ level: '' });
 
       expect(mockPlugin.addTags).toHaveBeenCalledWith({ tags: { level: '' } });
+    });
+
+    test('forwards an empty language so native can reset', async () => {
+      await user.setLanguage('');
+
+      expect(mockPlugin.setLanguage).toHaveBeenCalledWith({ language: '' });
+    });
+
+    test('does not set a null language', async () => {
+      await user.setLanguage(null as unknown as string);
+
+      expect(mockPlugin.setLanguage).not.toHaveBeenCalled();
     });
   });
 });
