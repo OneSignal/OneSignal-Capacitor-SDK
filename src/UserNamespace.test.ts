@@ -139,6 +139,12 @@ describe('User', () => {
         tags: { [key]: value },
       });
     });
+
+    test('should not add a tag with an empty key', async () => {
+      await user.addTag('', 'premium');
+
+      expect(mockPlugin.addTags).not.toHaveBeenCalled();
+    });
   });
 
   describe('addTags', () => {
@@ -351,6 +357,56 @@ describe('User', () => {
       expect(consoleSpy).toHaveBeenCalledWith('Properties must be a JSON-serializable object');
       expect(mockPlugin.trackEvent).not.toHaveBeenCalled();
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe('empty inputs', () => {
+    test('does not call native for missing strings', async () => {
+      await user.addAlias('', 'id');
+      await user.addAlias('label', '');
+      await user.addAliases({ '': 'id' });
+      await user.addAliases({ label: '' });
+      await user.removeAlias('');
+      await user.removeAliases(['']);
+      await user.addEmail('');
+      await user.removeEmail('');
+      await user.addSms('');
+      await user.removeSms('');
+      await user.addTag('', 'value');
+      await user.addTag('key', null as unknown as string);
+      await user.addTags({ '': 'value' });
+      await user.addTags(null as unknown as object);
+      await user.removeTag('');
+      await user.removeTags(['']);
+      await user.trackEvent('');
+
+      expect(mockPlugin.addAliases).not.toHaveBeenCalled();
+      expect(mockPlugin.removeAliases).not.toHaveBeenCalled();
+      expect(mockPlugin.addEmail).not.toHaveBeenCalled();
+      expect(mockPlugin.removeEmail).not.toHaveBeenCalled();
+      expect(mockPlugin.addSms).not.toHaveBeenCalled();
+      expect(mockPlugin.removeSms).not.toHaveBeenCalled();
+      expect(mockPlugin.addTags).not.toHaveBeenCalled();
+      expect(mockPlugin.removeTags).not.toHaveBeenCalled();
+      expect(mockPlugin.trackEvent).not.toHaveBeenCalled();
+    });
+
+    test('allows an empty tag value', async () => {
+      await user.addTags({ level: '' });
+
+      expect(mockPlugin.addTags).toHaveBeenCalledWith({ tags: { level: '' } });
+    });
+
+    test('forwards an empty language so native can reset', async () => {
+      await user.setLanguage('');
+
+      expect(mockPlugin.setLanguage).toHaveBeenCalledWith({ language: '' });
+    });
+
+    test('does not set a null language', async () => {
+      await user.setLanguage(null as unknown as string);
+
+      expect(mockPlugin.setLanguage).not.toHaveBeenCalled();
     });
   });
 });

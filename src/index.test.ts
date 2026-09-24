@@ -33,11 +33,29 @@ describe('OneSignalPlugin', () => {
     expect(mockPlugin.initialize).toHaveBeenCalledWith({ appId: APP_ID });
   });
 
+  test('should not initialize with an empty appId', async () => {
+    await plugin.initialize('');
+
+    expect(mockPlugin.initialize).not.toHaveBeenCalled();
+  });
+
   test('should call plugin for login', async () => {
     const externalId = 'test-user-123';
     await plugin.login(externalId);
 
     expect(mockPlugin.login).toHaveBeenCalledWith({ externalId });
+  });
+
+  test('should not login with an empty externalId', async () => {
+    await plugin.login('');
+
+    expect(mockPlugin.login).not.toHaveBeenCalled();
+  });
+
+  test('should not login with a null externalId', async () => {
+    await plugin.login(null as unknown as string);
+
+    expect(mockPlugin.login).not.toHaveBeenCalled();
   });
 
   test('should call plugin for logout', async () => {
