@@ -512,11 +512,8 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin {
             call.reject("activityId and token are required")
             return
         }
-        OneSignal.LiveActivities.enter(activityId, withToken: token, withSuccess: { _ in
-            call.resolve()
-        }, withFailure: { error in
-            call.reject(error?.localizedDescription ?? "Unknown error")
-        })
+        OneSignal.LiveActivities.enter(activityId, withToken: token)
+        call.resolve()
     }
 
     @objc func exitLiveActivity(_ call: CAPPluginCall) {
@@ -524,11 +521,8 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin {
             call.reject("activityId is required")
             return
         }
-        OneSignal.LiveActivities.exit(activityId, withSuccess: { _ in
-            call.resolve()
-        }, withFailure: { error in
-            call.reject(error?.localizedDescription ?? "Unknown error")
-        })
+        OneSignal.LiveActivities.exit(activityId)
+        call.resolve()
     }
 
     @objc func setPushToStartToken(_ call: CAPPluginCall) {
