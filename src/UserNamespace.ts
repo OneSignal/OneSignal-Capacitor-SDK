@@ -1,11 +1,6 @@
 import type { OneSignalUserAPI } from './api';
 import type { OneSignalCapacitorPlugin } from './definitions';
-import {
-  isObjectSerializable,
-  rejectNullOrEmpty,
-  rejectNullOrEmptyKeys,
-  removeListener,
-} from './helpers';
+import { isObjectSerializable, isMissing, hasMissingEntries, removeListener } from './helpers';
 import PushSubscription from './PushSubscriptionNamespace';
 
 export interface UserState {
@@ -59,7 +54,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   addAlias(label: string, id: string): Promise<void> {
-    if (rejectNullOrEmpty(label, 'addAlias: label') || rejectNullOrEmpty(id, 'addAlias: id')) {
+    if (isMissing(label, 'addAlias: label') || isMissing(id, 'addAlias: id')) {
       return Promise.resolve();
     }
     return this._plugin.addAliases({ aliases: { [label]: id } });
@@ -71,7 +66,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   addAliases(aliases: Record<string, string>): Promise<void> {
-    if (rejectNullOrEmptyKeys(aliases, 'addAliases')) return Promise.resolve();
+    if (hasMissingEntries(aliases, 'addAliases')) return Promise.resolve();
     return this._plugin.addAliases({ aliases });
   }
 
@@ -81,7 +76,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   removeAlias(label: string): Promise<void> {
-    if (rejectNullOrEmpty(label, 'removeAlias: label')) return Promise.resolve();
+    if (isMissing(label, 'removeAlias: label')) return Promise.resolve();
     return this._plugin.removeAliases({ labels: [label] });
   }
 
@@ -91,7 +86,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   removeAliases(labels: string[]): Promise<void> {
-    if (labels.some((label) => rejectNullOrEmpty(label, 'removeAliases: label'))) {
+    if (labels.some((label) => isMissing(label, 'removeAliases: label'))) {
       return Promise.resolve();
     }
     return this._plugin.removeAliases({ labels });
@@ -103,7 +98,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   addEmail(email: string): Promise<void> {
-    if (rejectNullOrEmpty(email, 'addEmail: email')) return Promise.resolve();
+    if (isMissing(email, 'addEmail: email')) return Promise.resolve();
     return this._plugin.addEmail({ email });
   }
 
@@ -113,7 +108,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   removeEmail(email: string): Promise<void> {
-    if (rejectNullOrEmpty(email, 'removeEmail: email')) return Promise.resolve();
+    if (isMissing(email, 'removeEmail: email')) return Promise.resolve();
     return this._plugin.removeEmail({ email });
   }
 
@@ -123,7 +118,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   addSms(smsNumber: string): Promise<void> {
-    if (rejectNullOrEmpty(smsNumber, 'addSms: smsNumber')) return Promise.resolve();
+    if (isMissing(smsNumber, 'addSms: smsNumber')) return Promise.resolve();
     return this._plugin.addSms({ smsNumber });
   }
 
@@ -133,7 +128,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   removeSms(smsNumber: string): Promise<void> {
-    if (rejectNullOrEmpty(smsNumber, 'removeSms: smsNumber')) return Promise.resolve();
+    if (isMissing(smsNumber, 'removeSms: smsNumber')) return Promise.resolve();
     return this._plugin.removeSms({ smsNumber });
   }
 
@@ -144,7 +139,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   addTag(key: string, value: string): Promise<void> {
-    if (rejectNullOrEmpty(key, 'addTag: key')) return Promise.resolve();
+    if (isMissing(key, 'addTag: key')) return Promise.resolve();
     if (value == null) {
       console.error('OneSignal: addTag: value is required');
       return Promise.resolve();
@@ -159,7 +154,7 @@ export default class User implements OneSignalUserAPI {
    */
   addTags(tags: object): Promise<void> {
     const convertedTags = tags as { [key: string]: unknown };
-    if (rejectNullOrEmptyKeys(convertedTags, 'addTags', true)) return Promise.resolve();
+    if (hasMissingEntries(convertedTags, 'addTags', true)) return Promise.resolve();
     Object.keys(tags).forEach(function (key) {
       if (typeof convertedTags[key] !== 'string') {
         convertedTags[key] = JSON.stringify(convertedTags[key]);
@@ -176,7 +171,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   removeTag(key: string): Promise<void> {
-    if (rejectNullOrEmpty(key, 'removeTag: key')) return Promise.resolve();
+    if (isMissing(key, 'removeTag: key')) return Promise.resolve();
     return this._plugin.removeTags({ keys: [key] });
   }
 
@@ -186,7 +181,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   removeTags(keys: string[]): Promise<void> {
-    if (keys.some((key) => rejectNullOrEmpty(key, 'removeTags: key'))) return Promise.resolve();
+    if (keys.some((key) => isMissing(key, 'removeTags: key'))) return Promise.resolve();
     return this._plugin.removeTags({ keys });
   }
 
@@ -249,7 +244,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   trackEvent(name: string, properties?: object): Promise<void> {
-    if (rejectNullOrEmpty(name, 'trackEvent: name')) return Promise.resolve();
+    if (isMissing(name, 'trackEvent: name')) return Promise.resolve();
     if (properties !== undefined && !isObjectSerializable(properties)) {
       console.error('Properties must be a JSON-serializable object');
       return Promise.resolve();

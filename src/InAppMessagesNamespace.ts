@@ -1,6 +1,6 @@
 import type { OneSignalInAppMessagesAPI } from './api';
 import type { OneSignalCapacitorPlugin } from './definitions';
-import { rejectNullOrEmpty, rejectNullOrEmptyKeys, removeListener } from './helpers';
+import { isMissing, hasMissingEntries, removeListener } from './helpers';
 import type {
   InAppMessageClickEvent,
   InAppMessageDidDismissEvent,
@@ -138,7 +138,7 @@ export default class InAppMessages implements OneSignalInAppMessagesAPI {
    * @returns Promise<void>
    */
   addTrigger(key: string, value: string): Promise<void> {
-    if (rejectNullOrEmpty(key, 'addTrigger: key')) return Promise.resolve();
+    if (isMissing(key, 'addTrigger: key')) return Promise.resolve();
     if (value == null) {
       console.error('OneSignal: addTrigger: value is required');
       return Promise.resolve();
@@ -152,7 +152,7 @@ export default class InAppMessages implements OneSignalInAppMessagesAPI {
    * @returns Promise<void>
    */
   addTriggers(triggers: { [key: string]: string }): Promise<void> {
-    if (rejectNullOrEmptyKeys(triggers, 'addTriggers', true)) return Promise.resolve();
+    if (hasMissingEntries(triggers, 'addTriggers', true)) return Promise.resolve();
     Object.keys(triggers).forEach(function (key) {
       if (typeof triggers[key] !== 'string') {
         triggers[key] = JSON.stringify(triggers[key]);
@@ -168,7 +168,7 @@ export default class InAppMessages implements OneSignalInAppMessagesAPI {
    * @returns Promise<void>
    */
   removeTrigger(key: string): Promise<void> {
-    if (rejectNullOrEmpty(key, 'removeTrigger: key')) return Promise.resolve();
+    if (isMissing(key, 'removeTrigger: key')) return Promise.resolve();
     return this.removeTriggers([key]);
   }
 
@@ -182,7 +182,7 @@ export default class InAppMessages implements OneSignalInAppMessagesAPI {
       console.error('OneSignal: removeTriggers: argument must be of type Array');
       return Promise.resolve();
     }
-    if (keys.some((key) => rejectNullOrEmpty(key, 'removeTrigger: key'))) return Promise.resolve();
+    if (keys.some((key) => isMissing(key, 'removeTrigger: key'))) return Promise.resolve();
 
     return this._plugin.removeTriggers({ keys });
   }

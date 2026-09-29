@@ -1,7 +1,7 @@
 import type { OneSignalAPI } from './api';
 import Debug from './DebugNamespace';
 import type { OneSignalCapacitorPlugin } from './definitions';
-import { rejectNullOrEmpty } from './helpers';
+import { isMissing } from './helpers';
 import InAppMessages from './InAppMessagesNamespace';
 import LiveActivities from './LiveActivitiesNamespace';
 import Location from './LocationNamespace';
@@ -43,7 +43,7 @@ export class OneSignalPlugin implements OneSignalAPI {
    * @returns Promise<void>
    */
   initialize(appId: string): Promise<void> {
-    if (rejectNullOrEmpty(appId, 'initialize: appId')) return Promise.resolve();
+    if (isMissing(appId, 'initialize: appId')) return Promise.resolve();
     this._appID = appId;
 
     return this._plugin.initialize({ appId: this._appID });
@@ -55,7 +55,7 @@ export class OneSignalPlugin implements OneSignalAPI {
    * @returns Promise<void>
    */
   login(externalId: string): Promise<void> {
-    if (rejectNullOrEmpty(externalId, 'login: externalId')) return Promise.resolve();
+    if (isMissing(externalId, 'login: externalId')) return Promise.resolve();
     return this._plugin.login({ externalId });
   }
 
