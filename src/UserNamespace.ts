@@ -140,7 +140,7 @@ export default class User implements OneSignalUserAPI {
    */
   addTag(key: string, value: string): Promise<void> {
     if (isMissing(key, 'addTag: key')) return Promise.resolve();
-    if (value == null) {
+    if (value === null || value === undefined) {
       console.error('OneSignal: addTag: value is required');
       return Promise.resolve();
     }

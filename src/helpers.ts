@@ -9,11 +9,11 @@ export function hasMissingEntries(
   api: string,
   allowEmptyValue = false,
 ): boolean {
-  if (values == null) return isMissing(values, api);
+  if (values === null || values === undefined) return isMissing(values, api);
   for (const key of Object.keys(values)) {
     if (isMissing(key, `${api}: key`)) return true;
     const item = values[key];
-    if (item == null || (!allowEmptyValue && item === '')) {
+    if (item === null || item === undefined || (!allowEmptyValue && item === '')) {
       console.error(`OneSignal: ${api}: value is required`);
       return true;
     }

@@ -139,7 +139,7 @@ export default class InAppMessages implements OneSignalInAppMessagesAPI {
    */
   addTrigger(key: string, value: string): Promise<void> {
     if (isMissing(key, 'addTrigger: key')) return Promise.resolve();
-    if (value == null) {
+    if (value === null || value === undefined) {
       console.error('OneSignal: addTrigger: value is required');
       return Promise.resolve();
     }
