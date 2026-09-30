@@ -147,9 +147,31 @@ describe('InAppMessages', () => {
     });
 
     test('should not add a trigger with an empty key', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
       await inAppMessages.addTrigger('', 'value');
 
+      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addTriggers: key is required');
       expect(mockPlugin.addTriggers).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
+
+    test.each([null, undefined])('should not add a trigger with a %s value', async (value) => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await inAppMessages.addTrigger('key', value as unknown as string);
+
+      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addTriggers: value is required');
+      expect(mockPlugin.addTriggers).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
+
+    test('should allow an empty value', async () => {
+      await inAppMessages.addTrigger('key', '');
+
+      expect(mockPlugin.addTriggers).toHaveBeenCalledWith({ triggers: { key: '' } });
     });
   });
 
@@ -204,7 +226,7 @@ describe('InAppMessages', () => {
       await inAppMessages.removeTriggers('not-an-array' as any);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        'OneSignal: removeTriggers: argument must be of type Array',
+        'OneSignal: removeTriggers: keys must be an array of strings',
       );
       expect(mockPlugin.removeTriggers).not.toHaveBeenCalled();
 

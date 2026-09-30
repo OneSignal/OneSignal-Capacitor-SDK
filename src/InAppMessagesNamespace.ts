@@ -138,11 +138,6 @@ export default class InAppMessages implements OneSignalInAppMessagesAPI {
    * @returns Promise<void>
    */
   addTrigger(key: string, value: string): Promise<void> {
-    if (isMissing(key, 'addTrigger: key')) return Promise.resolve();
-    if (value === null || value === undefined) {
-      console.error('OneSignal: addTrigger: value is required');
-      return Promise.resolve();
-    }
     return this.addTriggers({ [key]: value });
   }
 
@@ -162,7 +157,6 @@ export default class InAppMessages implements OneSignalInAppMessagesAPI {
    * @returns Promise<void>
    */
   removeTrigger(key: string): Promise<void> {
-    if (isMissing(key, 'removeTrigger: key')) return Promise.resolve();
     return this.removeTriggers([key]);
   }
 
@@ -173,7 +167,7 @@ export default class InAppMessages implements OneSignalInAppMessagesAPI {
    */
   removeTriggers(keys: string[]): Promise<void> {
     if (!Array.isArray(keys)) {
-      console.error('OneSignal: removeTriggers: argument must be of type Array');
+      console.error('OneSignal: removeTriggers: keys must be an array of strings');
       return Promise.resolve();
     }
     if (keys.some((key) => isMissing(key, 'removeTrigger: key'))) return Promise.resolve();
