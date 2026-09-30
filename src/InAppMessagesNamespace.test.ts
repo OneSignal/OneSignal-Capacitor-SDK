@@ -161,17 +161,6 @@ describe('InAppMessages', () => {
       expect(mockPlugin.addTriggers).toHaveBeenCalledWith({ triggers });
     });
 
-    test('should convert non-string values to JSON strings', async () => {
-      const triggers = { key1: 'value1', key2: 123, key3: true };
-
-      // @ts-expect-error - testing non-string values
-      await inAppMessages.addTriggers(triggers);
-
-      expect(mockPlugin.addTriggers).toHaveBeenCalledWith({
-        triggers: { key1: 'value1', key2: '123', key3: 'true' },
-      });
-    });
-
     test('should not add triggers with an empty key', async () => {
       await inAppMessages.addTriggers({ '': 'value' });
 

@@ -153,12 +153,6 @@ export default class InAppMessages implements OneSignalInAppMessagesAPI {
    */
   addTriggers(triggers: { [key: string]: string }): Promise<void> {
     if (hasMissingEntries(triggers, 'addTriggers', true)) return Promise.resolve();
-    Object.keys(triggers).forEach(function (key) {
-      if (typeof triggers[key] !== 'string') {
-        triggers[key] = JSON.stringify(triggers[key]);
-      }
-    });
-
     return this._plugin.addTriggers({ triggers });
   }
 
