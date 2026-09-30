@@ -41,7 +41,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", "7.0.0"..<"9.0.0"),
-        .package(url: "https://github.com/OneSignal/OneSignal-XCFramework", from: "5.0.0")
+        .package(url: "https://github.com/OneSignal/OneSignal-XCFramework", from: "5.2.0")
     ],
     targets: [
         // Obj-C helper that captures the iOS launchOptions dictionary at
