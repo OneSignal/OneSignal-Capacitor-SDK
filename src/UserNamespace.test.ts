@@ -402,11 +402,5 @@ describe('User', () => {
 
       expect(mockPlugin.setLanguage).toHaveBeenCalledWith({ language: '' });
     });
-
-    test('does not set a null language', async () => {
-      await user.setLanguage(null as unknown as string);
-
-      expect(mockPlugin.setLanguage).not.toHaveBeenCalled();
-    });
   });
 });

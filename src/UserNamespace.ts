@@ -39,11 +39,6 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   setLanguage(language: string): Promise<void> {
-    // Empty string is the reset to the device language. Null is not.
-    if (typeof language !== 'string') {
-      console.error('OneSignal: setLanguage: language is required');
-      return Promise.resolve();
-    }
     return this._plugin.setLanguage({ language });
   }
 
