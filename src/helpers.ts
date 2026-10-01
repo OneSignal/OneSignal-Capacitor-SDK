@@ -12,17 +12,11 @@ export function hasMissingEntries(
   if (typeof values !== 'object' || values === null || Array.isArray(values)) {
     return isMissing(undefined, api);
   }
-  for (const key of Object.keys(values)) {
+  return Object.entries(values).some(([key, item]) => {
     if (isMissing(key, `${api}: key`)) return true;
-    const item = values[key];
-    if (!allowEmptyValue) {
-      if (isMissing(item, `${api}: value`)) return true;
-    } else if (item === null || item === undefined) {
-      console.error(`OneSignal: ${api}: value is required`);
-      return true;
-    }
-  }
-  return false;
+    if (!allowEmptyValue) return isMissing(item, `${api}: value`);
+    return (item === null || item === undefined) && isMissing(item, `${api}: value`);
+  });
 }
 
 export function hasMissingItems(values: unknown, api: string, item: string): boolean {
