@@ -77,8 +77,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   removeAlias(label: string): Promise<void> {
-    if (isMissing(label, 'removeAlias: label')) return Promise.resolve();
-    return this._plugin.removeAliases({ labels: [label] });
+    return this.removeAliases([label]);
   }
 
   /**
@@ -170,8 +169,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   removeTag(key: string): Promise<void> {
-    if (isMissing(key, 'removeTag: key')) return Promise.resolve();
-    return this._plugin.removeTags({ keys: [key] });
+    return this.removeTags([key]);
   }
 
   /**
