@@ -1,6 +1,12 @@
 import type { OneSignalUserAPI } from './api';
 import type { OneSignalCapacitorPlugin } from './definitions';
-import { isObjectSerializable, isMissing, hasMissingEntries, removeListener } from './helpers';
+import {
+  isObjectSerializable,
+  isMissing,
+  hasMissingEntries,
+  hasMissingItems,
+  removeListener,
+} from './helpers';
 import PushSubscription from './PushSubscriptionNamespace';
 
 export interface UserState {
@@ -81,9 +87,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   removeAliases(labels: string[]): Promise<void> {
-    if (labels.some((label) => isMissing(label, 'removeAliases: label'))) {
-      return Promise.resolve();
-    }
+    if (hasMissingItems(labels, 'removeAliases', 'label')) return Promise.resolve();
     return this._plugin.removeAliases({ labels });
   }
 
@@ -176,7 +180,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   removeTags(keys: string[]): Promise<void> {
-    if (keys.some((key) => isMissing(key, 'removeTags: key'))) return Promise.resolve();
+    if (hasMissingItems(keys, 'removeTags', 'key')) return Promise.resolve();
     return this._plugin.removeTags({ keys });
   }
 

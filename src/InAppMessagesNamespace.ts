@@ -1,6 +1,6 @@
 import type { OneSignalInAppMessagesAPI } from './api';
 import type { OneSignalCapacitorPlugin } from './definitions';
-import { isMissing, hasMissingEntries, removeListener } from './helpers';
+import { hasMissingEntries, hasMissingItems, removeListener } from './helpers';
 import type {
   InAppMessageClickEvent,
   InAppMessageDidDismissEvent,
@@ -166,12 +166,7 @@ export default class InAppMessages implements OneSignalInAppMessagesAPI {
    * @returns Promise<void>
    */
   removeTriggers(keys: string[]): Promise<void> {
-    if (!Array.isArray(keys)) {
-      console.error('OneSignal: removeTriggers: keys must be an array of strings');
-      return Promise.resolve();
-    }
-    if (keys.some((key) => isMissing(key, 'removeTrigger: key'))) return Promise.resolve();
-
+    if (hasMissingItems(keys, 'removeTriggers', 'key')) return Promise.resolve();
     return this._plugin.removeTriggers({ keys });
   }
 

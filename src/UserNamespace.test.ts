@@ -391,6 +391,24 @@ describe('User', () => {
       expect(mockPlugin.trackEvent).not.toHaveBeenCalled();
     });
 
+    test('does not call native for non-array removals', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await user.removeAliases(null as unknown as string[]);
+      await user.removeTags('key' as unknown as string[]);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'OneSignal: removeAliases: labels must be an array of strings',
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'OneSignal: removeTags: keys must be an array of strings',
+      );
+      expect(mockPlugin.removeAliases).not.toHaveBeenCalled();
+      expect(mockPlugin.removeTags).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
+
     test('allows an empty tag value', async () => {
       await user.addTags({ level: '' });
 

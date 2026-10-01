@@ -21,6 +21,14 @@ export function hasMissingEntries(
   return false;
 }
 
+export function hasMissingItems(values: unknown, api: string, item: string): boolean {
+  if (!Array.isArray(values)) {
+    console.error(`OneSignal: ${api}: ${item}s must be an array of strings`);
+    return true;
+  }
+  return values.some((value) => isMissing(value, `${api}: ${item}`));
+}
+
 /**
  * Removes a listener from an array of listeners.
  * @param array The array of listeners
