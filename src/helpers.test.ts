@@ -23,6 +23,8 @@ describe('hasMissingEntries', () => {
 
     expect(hasMissingEntries(null, 'addAliases')).toBe(true);
     expect(hasMissingEntries(undefined, 'addAliases')).toBe(true);
+    expect(hasMissingEntries('abc' as unknown as Record<string, unknown>, 'addTags')).toBe(true);
+    expect(hasMissingEntries(['x'] as unknown as Record<string, unknown>, 'addAliases')).toBe(true);
     expect(hasMissingEntries({ '': 'id' }, 'addAliases')).toBe(true);
     expect(hasMissingEntries({ label: '' }, 'addAliases')).toBe(true);
     expect(hasMissingEntries({ label: 5 }, 'addAliases')).toBe(true);

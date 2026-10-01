@@ -9,7 +9,9 @@ export function hasMissingEntries(
   api: string,
   allowEmptyValue = false,
 ): boolean {
-  if (values === null || values === undefined) return isMissing(values, api);
+  if (typeof values !== 'object' || values === null || Array.isArray(values)) {
+    return isMissing(undefined, api);
+  }
   for (const key of Object.keys(values)) {
     if (isMissing(key, `${api}: key`)) return true;
     const item = values[key];

@@ -381,7 +381,9 @@ describe('User', () => {
 
       await user.trackEvent(eventName, circularObj);
 
-      expect(consoleSpy).toHaveBeenCalledWith('Properties must be a JSON-serializable object');
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'OneSignal: trackEvent: properties must be a JSON-serializable object',
+      );
       expect(mockPlugin.trackEvent).not.toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
@@ -392,7 +394,9 @@ describe('User', () => {
 
       await user.trackEvent(eventName, ['item1', 'item2'] as unknown as object);
 
-      expect(consoleSpy).toHaveBeenCalledWith('Properties must be a JSON-serializable object');
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'OneSignal: trackEvent: properties must be a JSON-serializable object',
+      );
       expect(mockPlugin.trackEvent).not.toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
@@ -427,6 +431,21 @@ describe('User', () => {
       expect(mockPlugin.addTags).not.toHaveBeenCalled();
       expect(mockPlugin.removeTags).not.toHaveBeenCalled();
       expect(mockPlugin.trackEvent).not.toHaveBeenCalled();
+    });
+
+    test('does not call native for non-object maps', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await user.addTags('abc' as unknown as object);
+      await user.addTags(['a'] as unknown as object);
+      await user.addAliases(['x'] as unknown as Record<string, string>);
+
+      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addTags is required');
+      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addAliases is required');
+      expect(mockPlugin.addTags).not.toHaveBeenCalled();
+      expect(mockPlugin.addAliases).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
     });
 
     test('does not call native for non-array removals', async () => {
