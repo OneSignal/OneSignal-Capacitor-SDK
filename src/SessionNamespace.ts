@@ -1,5 +1,6 @@
 import type { OneSignalSessionAPI } from './api';
 import type { OneSignalCapacitorPlugin } from './definitions';
+import { isMissing } from './helpers';
 
 export default class Session implements OneSignalSessionAPI {
   private _plugin: OneSignalCapacitorPlugin;
@@ -14,6 +15,7 @@ export default class Session implements OneSignalSessionAPI {
    * @returns Promise<void>
    */
   addOutcome(name: string): Promise<void> {
+    if (isMissing(name, 'addOutcome: name')) return Promise.resolve();
     return this._plugin.addOutcome({ name });
   }
 
@@ -23,6 +25,7 @@ export default class Session implements OneSignalSessionAPI {
    * @returns Promise<void>
    */
   addUniqueOutcome(name: string): Promise<void> {
+    if (isMissing(name, 'addUniqueOutcome: name')) return Promise.resolve();
     return this._plugin.addUniqueOutcome({ name });
   }
 
@@ -33,6 +36,7 @@ export default class Session implements OneSignalSessionAPI {
    * @returns Promise<void>
    */
   addOutcomeWithValue(name: string, value: number): Promise<void> {
+    if (isMissing(name, 'addOutcomeWithValue: name')) return Promise.resolve();
     return this._plugin.addOutcomeWithValue({ name, value });
   }
 }
