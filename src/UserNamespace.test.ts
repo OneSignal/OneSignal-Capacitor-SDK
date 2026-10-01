@@ -141,9 +141,14 @@ describe('User', () => {
     });
 
     test('should not add a tag with an empty key', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
       await user.addTag('', 'premium');
 
+      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addTags: key is required');
       expect(mockPlugin.addTags).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
     });
   });
 
@@ -171,6 +176,17 @@ describe('User', () => {
       await user.removeTag(key);
 
       expect(mockPlugin.removeTags).toHaveBeenCalledWith({ keys: [key] });
+    });
+
+    test('should not remove a tag with an empty key', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await user.removeTag('');
+
+      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: removeTags: key is required');
+      expect(mockPlugin.removeTags).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
     });
   });
 
