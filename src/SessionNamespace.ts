@@ -37,6 +37,11 @@ export default class Session implements OneSignalSessionAPI {
    */
   addOutcomeWithValue(name: string, value: number): Promise<void> {
     if (isMissing(name, 'addOutcomeWithValue: name')) return Promise.resolve();
+    // The native bridge defaults a non-number value to 0; NaN and Infinity also arrive as null.
+    if (!Number.isFinite(value)) {
+      console.error('OneSignal: addOutcomeWithValue: value must be a finite number');
+      return Promise.resolve();
+    }
     return this._plugin.addOutcomeWithValue({ name, value });
   }
 }

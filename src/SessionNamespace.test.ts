@@ -54,6 +54,30 @@ describe('Session', () => {
     });
   });
 
+  describe('addOutcomeWithValue value', () => {
+    test.each([-5, 0, 0.5])('should allow value %s', async (value) => {
+      await session.addOutcomeWithValue('purchase', value);
+
+      expect(mockPlugin.addOutcomeWithValue).toHaveBeenCalledWith({ name: 'purchase', value });
+    });
+
+    test.each([NaN, Infinity, -Infinity, '5', null, undefined])(
+      'should not call plugin for value %s',
+      async (value) => {
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        await session.addOutcomeWithValue('purchase', value as unknown as number);
+
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'OneSignal: addOutcomeWithValue: value must be a finite number',
+        );
+        expect(mockPlugin.addOutcomeWithValue).not.toHaveBeenCalled();
+
+        consoleSpy.mockRestore();
+      },
+    );
+  });
+
   describe('empty names', () => {
     test.each(['', null, undefined])('should not call plugin for name %s', async (name) => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
