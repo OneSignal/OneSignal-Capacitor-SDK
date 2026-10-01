@@ -49,6 +49,28 @@ describe('User', () => {
         aliases: { [LABEL]: id },
       });
     });
+
+    test('should not add an alias with an empty label', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await user.addAlias('', '12345');
+
+      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addAliases: key is required');
+      expect(mockPlugin.addAliases).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
+
+    test('should not add an alias with an empty id', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await user.addAlias(LABEL, '');
+
+      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addAliases: value is required');
+      expect(mockPlugin.addAliases).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
   });
 
   describe('addAliases', () => {

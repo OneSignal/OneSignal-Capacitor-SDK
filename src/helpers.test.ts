@@ -25,6 +25,8 @@ describe('hasMissingEntries', () => {
     expect(hasMissingEntries(undefined, 'addAliases')).toBe(true);
     expect(hasMissingEntries({ '': 'id' }, 'addAliases')).toBe(true);
     expect(hasMissingEntries({ label: '' }, 'addAliases')).toBe(true);
+    expect(hasMissingEntries({ label: 5 }, 'addAliases')).toBe(true);
+    expect(hasMissingEntries({ label: 5 }, 'addTags', true)).toBe(false);
     expect(hasMissingEntries({ label: null }, 'addAliases', true)).toBe(true);
     expect(hasMissingEntries({ label: '' }, 'addTags', true)).toBe(false);
     expect(hasMissingEntries({ label: 'id' }, 'addAliases')).toBe(false);

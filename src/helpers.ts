@@ -13,7 +13,9 @@ export function hasMissingEntries(
   for (const key of Object.keys(values)) {
     if (isMissing(key, `${api}: key`)) return true;
     const item = values[key];
-    if (item === null || item === undefined || (!allowEmptyValue && item === '')) {
+    if (!allowEmptyValue) {
+      if (isMissing(item, `${api}: value`)) return true;
+    } else if (item === null || item === undefined) {
       console.error(`OneSignal: ${api}: value is required`);
       return true;
     }

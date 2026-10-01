@@ -55,10 +55,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   addAlias(label: string, id: string): Promise<void> {
-    if (isMissing(label, 'addAlias: label') || isMissing(id, 'addAlias: id')) {
-      return Promise.resolve();
-    }
-    return this._plugin.addAliases({ aliases: { [label]: id } });
+    return this.addAliases({ [label]: id });
   }
 
   /**
