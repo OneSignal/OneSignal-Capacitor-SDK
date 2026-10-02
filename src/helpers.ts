@@ -1,3 +1,33 @@
+export function isMissing(value: unknown, api: string): boolean {
+  if (typeof value === 'string' && value.length > 0) return false;
+  console.error(`OneSignal: ${api} is required`);
+  return true;
+}
+
+export function hasMissingEntries(
+  values: Record<string, unknown> | null | undefined,
+  api: string,
+  allowEmptyValue = false,
+): boolean {
+  if (typeof values !== 'object' || values === null || Array.isArray(values)) {
+    console.error(`OneSignal: ${api}: argument must be an object`);
+    return true;
+  }
+  return Object.entries(values).some(([key, item]) => {
+    if (isMissing(key, `${api}: key`)) return true;
+    if (!allowEmptyValue) return isMissing(item, `${api}: value`);
+    return (item === null || item === undefined) && isMissing(item, `${api}: value`);
+  });
+}
+
+export function hasMissingItems(values: unknown, api: string, item: string): boolean {
+  if (!Array.isArray(values)) {
+    console.error(`OneSignal: ${api}: ${item}s must be an array of strings`);
+    return true;
+  }
+  return values.some((value) => isMissing(value, `${api}: ${item}`));
+}
+
 /**
  * Removes a listener from an array of listeners.
  * @param array The array of listeners

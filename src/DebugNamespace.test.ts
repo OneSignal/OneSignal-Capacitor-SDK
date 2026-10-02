@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'vite-plus/test';
+import { describe, test, expect, beforeEach, vi } from 'vite-plus/test';
 
 import { createMockPlugin } from '../mocks/capacitor';
 import Debug, { LogLevel } from './DebugNamespace';
@@ -47,4 +47,25 @@ describe('Debug', () => {
       logLevel: logLevelValue,
     });
   });
+
+  test.each([-1, 7, 99, 2.5, '2', null, undefined, NaN])(
+    'should not call plugin for invalid log level %s',
+    (level) => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      debug.setLogLevel(level as unknown as LogLevel);
+      debug.setAlertLevel(level as unknown as LogLevel);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'OneSignal: setLogLevel: level must be a LogLevel value',
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'OneSignal: setAlertLevel: level must be a LogLevel value',
+      );
+      expect(mockPlugin.setLogLevel).not.toHaveBeenCalled();
+      expect(mockPlugin.setAlertLevel).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    },
+  );
 });

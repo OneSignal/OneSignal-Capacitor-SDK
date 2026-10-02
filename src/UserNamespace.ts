@@ -1,6 +1,12 @@
 import type { OneSignalUserAPI } from './api';
 import type { OneSignalCapacitorPlugin } from './definitions';
-import { isObjectSerializable, removeListener } from './helpers';
+import {
+  isObjectSerializable,
+  isMissing,
+  hasMissingEntries,
+  hasMissingItems,
+  removeListener,
+} from './helpers';
 import PushSubscription from './PushSubscriptionNamespace';
 
 export interface UserState {
@@ -49,7 +55,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   addAlias(label: string, id: string): Promise<void> {
-    return this._plugin.addAliases({ aliases: { [label]: id } });
+    return this.addAliases({ [label]: id });
   }
 
   /**
@@ -58,6 +64,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   addAliases(aliases: Record<string, string>): Promise<void> {
+    if (hasMissingEntries(aliases, 'addAliases')) return Promise.resolve();
     return this._plugin.addAliases({ aliases });
   }
 
@@ -67,7 +74,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   removeAlias(label: string): Promise<void> {
-    return this._plugin.removeAliases({ labels: [label] });
+    return this.removeAliases([label]);
   }
 
   /**
@@ -76,6 +83,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   removeAliases(labels: string[]): Promise<void> {
+    if (hasMissingItems(labels, 'removeAliases', 'label')) return Promise.resolve();
     return this._plugin.removeAliases({ labels });
   }
 
@@ -85,6 +93,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   addEmail(email: string): Promise<void> {
+    if (isMissing(email, 'addEmail: email')) return Promise.resolve();
     return this._plugin.addEmail({ email });
   }
 
@@ -94,6 +103,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   removeEmail(email: string): Promise<void> {
+    if (isMissing(email, 'removeEmail: email')) return Promise.resolve();
     return this._plugin.removeEmail({ email });
   }
 
@@ -103,6 +113,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   addSms(smsNumber: string): Promise<void> {
+    if (isMissing(smsNumber, 'addSms: smsNumber')) return Promise.resolve();
     return this._plugin.addSms({ smsNumber });
   }
 
@@ -112,6 +123,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   removeSms(smsNumber: string): Promise<void> {
+    if (isMissing(smsNumber, 'removeSms: smsNumber')) return Promise.resolve();
     return this._plugin.removeSms({ smsNumber });
   }
 
@@ -122,7 +134,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   addTag(key: string, value: string): Promise<void> {
-    return this._plugin.addTags({ tags: { [key]: value } });
+    return this.addTags({ [key]: value });
   }
 
   /**
@@ -132,6 +144,7 @@ export default class User implements OneSignalUserAPI {
    */
   addTags(tags: object): Promise<void> {
     const convertedTags = tags as { [key: string]: unknown };
+    if (hasMissingEntries(convertedTags, 'addTags', true)) return Promise.resolve();
     Object.keys(tags).forEach(function (key) {
       if (typeof convertedTags[key] !== 'string') {
         convertedTags[key] = JSON.stringify(convertedTags[key]);
@@ -148,7 +161,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   removeTag(key: string): Promise<void> {
-    return this._plugin.removeTags({ keys: [key] });
+    return this.removeTags([key]);
   }
 
   /**
@@ -157,6 +170,7 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   removeTags(keys: string[]): Promise<void> {
+    if (hasMissingItems(keys, 'removeTags', 'key')) return Promise.resolve();
     return this._plugin.removeTags({ keys });
   }
 
@@ -219,8 +233,9 @@ export default class User implements OneSignalUserAPI {
    * @returns Promise<void>
    */
   trackEvent(name: string, properties?: object): Promise<void> {
+    if (isMissing(name, 'trackEvent: name')) return Promise.resolve();
     if (properties !== undefined && !isObjectSerializable(properties)) {
-      console.error('Properties must be a JSON-serializable object');
+      console.error('OneSignal: trackEvent: properties must be a JSON-serializable object');
       return Promise.resolve();
     }
     return this._plugin.trackEvent({

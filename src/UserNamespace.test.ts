@@ -49,6 +49,28 @@ describe('User', () => {
         aliases: { [LABEL]: id },
       });
     });
+
+    test('should not add an alias with an empty label', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await user.addAlias('', '12345');
+
+      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addAliases: key is required');
+      expect(mockPlugin.addAliases).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
+
+    test('should not add an alias with an empty id', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await user.addAlias(LABEL, '');
+
+      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addAliases: value is required');
+      expect(mockPlugin.addAliases).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
   });
 
   describe('addAliases', () => {
@@ -139,6 +161,17 @@ describe('User', () => {
         tags: { [key]: value },
       });
     });
+
+    test('should not add a tag with an empty key', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await user.addTag('', 'premium');
+
+      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addTags: key is required');
+      expect(mockPlugin.addTags).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
   });
 
   describe('addTags', () => {
@@ -165,6 +198,17 @@ describe('User', () => {
       await user.removeTag(key);
 
       expect(mockPlugin.removeTags).toHaveBeenCalledWith({ keys: [key] });
+    });
+
+    test('should not remove a tag with an empty key', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await user.removeTag('');
+
+      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: removeTags: key is required');
+      expect(mockPlugin.removeTags).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
     });
   });
 
@@ -337,7 +381,9 @@ describe('User', () => {
 
       await user.trackEvent(eventName, circularObj);
 
-      expect(consoleSpy).toHaveBeenCalledWith('Properties must be a JSON-serializable object');
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'OneSignal: trackEvent: properties must be a JSON-serializable object',
+      );
       expect(mockPlugin.trackEvent).not.toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
@@ -348,9 +394,88 @@ describe('User', () => {
 
       await user.trackEvent(eventName, ['item1', 'item2'] as unknown as object);
 
-      expect(consoleSpy).toHaveBeenCalledWith('Properties must be a JSON-serializable object');
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'OneSignal: trackEvent: properties must be a JSON-serializable object',
+      );
       expect(mockPlugin.trackEvent).not.toHaveBeenCalled();
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe('empty inputs', () => {
+    test('does not call native for missing strings', async () => {
+      await user.addAlias('', 'id');
+      await user.addAlias('label', '');
+      await user.addAliases({ '': 'id' });
+      await user.addAliases({ label: '' });
+      await user.removeAlias('');
+      await user.removeAliases(['']);
+      await user.addEmail('');
+      await user.removeEmail('');
+      await user.addSms('');
+      await user.removeSms('');
+      await user.addTag('', 'value');
+      await user.addTag('key', null as unknown as string);
+      await user.addTags({ '': 'value' });
+      await user.addTags(null as unknown as object);
+      await user.removeTag('');
+      await user.removeTags(['']);
+      await user.trackEvent('');
+
+      expect(mockPlugin.addAliases).not.toHaveBeenCalled();
+      expect(mockPlugin.removeAliases).not.toHaveBeenCalled();
+      expect(mockPlugin.addEmail).not.toHaveBeenCalled();
+      expect(mockPlugin.removeEmail).not.toHaveBeenCalled();
+      expect(mockPlugin.addSms).not.toHaveBeenCalled();
+      expect(mockPlugin.removeSms).not.toHaveBeenCalled();
+      expect(mockPlugin.addTags).not.toHaveBeenCalled();
+      expect(mockPlugin.removeTags).not.toHaveBeenCalled();
+      expect(mockPlugin.trackEvent).not.toHaveBeenCalled();
+    });
+
+    test('does not call native for non-object maps', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await user.addTags('abc' as unknown as object);
+      await user.addTags(['a'] as unknown as object);
+      await user.addAliases(['x'] as unknown as Record<string, string>);
+
+      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addTags: argument must be an object');
+      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addAliases: argument must be an object');
+      expect(mockPlugin.addTags).not.toHaveBeenCalled();
+      expect(mockPlugin.addAliases).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
+
+    test('does not call native for non-array removals', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await user.removeAliases(null as unknown as string[]);
+      await user.removeTags('key' as unknown as string[]);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'OneSignal: removeAliases: labels must be an array of strings',
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'OneSignal: removeTags: keys must be an array of strings',
+      );
+      expect(mockPlugin.removeAliases).not.toHaveBeenCalled();
+      expect(mockPlugin.removeTags).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
+
+    test('allows an empty tag value', async () => {
+      await user.addTags({ level: '' });
+
+      expect(mockPlugin.addTags).toHaveBeenCalledWith({ tags: { level: '' } });
+    });
+
+    test('forwards an empty language so native can reset', async () => {
+      await user.setLanguage('');
+
+      expect(mockPlugin.setLanguage).toHaveBeenCalledWith({ language: '' });
     });
   });
 });
