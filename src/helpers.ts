@@ -10,7 +10,8 @@ export function hasMissingEntries(
   allowEmptyValue = false,
 ): boolean {
   if (typeof values !== 'object' || values === null || Array.isArray(values)) {
-    return isMissing(undefined, api);
+    console.error(`OneSignal: ${api}: argument must be an object`);
+    return true;
   }
   return Object.entries(values).some(([key, item]) => {
     if (isMissing(key, `${api}: key`)) return true;

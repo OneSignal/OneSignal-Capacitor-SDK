@@ -440,8 +440,8 @@ describe('User', () => {
       await user.addTags(['a'] as unknown as object);
       await user.addAliases(['x'] as unknown as Record<string, string>);
 
-      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addTags is required');
-      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addAliases is required');
+      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addTags: argument must be an object');
+      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addAliases: argument must be an object');
       expect(mockPlugin.addTags).not.toHaveBeenCalled();
       expect(mockPlugin.addAliases).not.toHaveBeenCalled();
 
