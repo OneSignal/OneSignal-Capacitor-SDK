@@ -235,7 +235,7 @@ export default class User implements OneSignalUserAPI {
   trackEvent(name: string, properties?: object): Promise<void> {
     if (isMissing(name, 'trackEvent: name')) return Promise.resolve();
     if (properties !== undefined && !isObjectSerializable(properties)) {
-      console.error('OneSignal: trackEvent: properties must be a JSON-serializable object');
+      console.error('[OneSignal] trackEvent: properties must be a JSON-serializable object');
       return Promise.resolve();
     }
     return this._plugin.trackEvent({

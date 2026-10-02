@@ -16,7 +16,7 @@ export type LogLevel = (typeof LogLevel)[keyof typeof LogLevel];
 // iOS force-unwraps the native enum, so an out-of-range level crashes the app.
 function isValidLogLevel(level: unknown, api: string): boolean {
   if (Object.values(LogLevel).some((valid) => valid === level)) return true;
-  console.error(`OneSignal: ${api}: level must be a LogLevel value`);
+  console.error(`[OneSignal] ${api}: level must be a LogLevel value`);
   return false;
 }
 

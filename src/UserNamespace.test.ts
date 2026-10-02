@@ -55,7 +55,7 @@ describe('User', () => {
 
       await user.addAlias('', '12345');
 
-      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addAliases: key is required');
+      expect(consoleSpy).toHaveBeenCalledWith('[OneSignal] addAliases: key is required');
       expect(mockPlugin.addAliases).not.toHaveBeenCalled();
 
       consoleSpy.mockRestore();
@@ -66,7 +66,7 @@ describe('User', () => {
 
       await user.addAlias(LABEL, '');
 
-      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addAliases: value is required');
+      expect(consoleSpy).toHaveBeenCalledWith('[OneSignal] addAliases: value is required');
       expect(mockPlugin.addAliases).not.toHaveBeenCalled();
 
       consoleSpy.mockRestore();
@@ -167,7 +167,7 @@ describe('User', () => {
 
       await user.addTag('', 'premium');
 
-      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addTags: key is required');
+      expect(consoleSpy).toHaveBeenCalledWith('[OneSignal] addTags: key is required');
       expect(mockPlugin.addTags).not.toHaveBeenCalled();
 
       consoleSpy.mockRestore();
@@ -205,7 +205,7 @@ describe('User', () => {
 
       await user.removeTag('');
 
-      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: removeTags: key is required');
+      expect(consoleSpy).toHaveBeenCalledWith('[OneSignal] removeTags: key is required');
       expect(mockPlugin.removeTags).not.toHaveBeenCalled();
 
       consoleSpy.mockRestore();
@@ -382,7 +382,7 @@ describe('User', () => {
       await user.trackEvent(eventName, circularObj);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        'OneSignal: trackEvent: properties must be a JSON-serializable object',
+        '[OneSignal] trackEvent: properties must be a JSON-serializable object',
       );
       expect(mockPlugin.trackEvent).not.toHaveBeenCalled();
       consoleSpy.mockRestore();
@@ -395,7 +395,7 @@ describe('User', () => {
       await user.trackEvent(eventName, ['item1', 'item2'] as unknown as object);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        'OneSignal: trackEvent: properties must be a JSON-serializable object',
+        '[OneSignal] trackEvent: properties must be a JSON-serializable object',
       );
       expect(mockPlugin.trackEvent).not.toHaveBeenCalled();
       consoleSpy.mockRestore();
@@ -440,8 +440,8 @@ describe('User', () => {
       await user.addTags(['a'] as unknown as object);
       await user.addAliases(['x'] as unknown as Record<string, string>);
 
-      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addTags: argument must be an object');
-      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addAliases: argument must be an object');
+      expect(consoleSpy).toHaveBeenCalledWith('[OneSignal] addTags: argument must be an object');
+      expect(consoleSpy).toHaveBeenCalledWith('[OneSignal] addAliases: argument must be an object');
       expect(mockPlugin.addTags).not.toHaveBeenCalled();
       expect(mockPlugin.addAliases).not.toHaveBeenCalled();
 
@@ -455,10 +455,10 @@ describe('User', () => {
       await user.removeTags('key' as unknown as string[]);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        'OneSignal: removeAliases: labels must be an array of strings',
+        '[OneSignal] removeAliases: labels must be an array of strings',
       );
       expect(consoleSpy).toHaveBeenCalledWith(
-        'OneSignal: removeTags: keys must be an array of strings',
+        '[OneSignal] removeTags: keys must be an array of strings',
       );
       expect(mockPlugin.removeAliases).not.toHaveBeenCalled();
       expect(mockPlugin.removeTags).not.toHaveBeenCalled();

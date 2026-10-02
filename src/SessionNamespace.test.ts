@@ -69,7 +69,7 @@ describe('Session', () => {
         await session.addOutcomeWithValue('purchase', value as unknown as number);
 
         expect(consoleSpy).toHaveBeenCalledWith(
-          'OneSignal: addOutcomeWithValue: value must be a finite number',
+          '[OneSignal] addOutcomeWithValue: value must be a finite number',
         );
         expect(mockPlugin.addOutcomeWithValue).not.toHaveBeenCalled();
 
@@ -87,9 +87,9 @@ describe('Session', () => {
       await session.addUniqueOutcome(missing);
       await session.addOutcomeWithValue(missing, 1);
 
-      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addOutcome: name is required');
-      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addUniqueOutcome: name is required');
-      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addOutcomeWithValue: name is required');
+      expect(consoleSpy).toHaveBeenCalledWith('[OneSignal] addOutcome: name is required');
+      expect(consoleSpy).toHaveBeenCalledWith('[OneSignal] addUniqueOutcome: name is required');
+      expect(consoleSpy).toHaveBeenCalledWith('[OneSignal] addOutcomeWithValue: name is required');
       expect(mockPlugin.addOutcome).not.toHaveBeenCalled();
       expect(mockPlugin.addUniqueOutcome).not.toHaveBeenCalled();
       expect(mockPlugin.addOutcomeWithValue).not.toHaveBeenCalled();

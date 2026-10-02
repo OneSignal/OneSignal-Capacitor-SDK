@@ -151,7 +151,7 @@ describe('InAppMessages', () => {
 
       await inAppMessages.addTrigger('', 'value');
 
-      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addTriggers: key is required');
+      expect(consoleSpy).toHaveBeenCalledWith('[OneSignal] addTriggers: key is required');
       expect(mockPlugin.addTriggers).not.toHaveBeenCalled();
 
       consoleSpy.mockRestore();
@@ -162,7 +162,7 @@ describe('InAppMessages', () => {
 
       await inAppMessages.addTrigger('key', value as unknown as string);
 
-      expect(consoleSpy).toHaveBeenCalledWith('OneSignal: addTriggers: value is required');
+      expect(consoleSpy).toHaveBeenCalledWith('[OneSignal] addTriggers: value is required');
       expect(mockPlugin.addTriggers).not.toHaveBeenCalled();
 
       consoleSpy.mockRestore();
@@ -226,7 +226,7 @@ describe('InAppMessages', () => {
       await inAppMessages.removeTriggers('not-an-array' as any);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        'OneSignal: removeTriggers: keys must be an array of strings',
+        '[OneSignal] removeTriggers: keys must be an array of strings',
       );
       expect(mockPlugin.removeTriggers).not.toHaveBeenCalled();
 
