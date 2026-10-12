@@ -119,22 +119,22 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin {
         OneSignal.initialize(appId, withLaunchOptions: OSCapacitorLaunchOptions.launchOptions)
 
         // The OneSignal iOS SDK drops cold-start UNNotificationResponse objects
-        // inside processNotificationResponse: when no appId is set yet, which
-        // is always true on cold start because iOS delivers the response before
-        // OneSignal.initialize() runs from JS. OSCapacitorLaunchOptions's
-        // delegate wrap queues every response that arrives in that window so we
-        // can replay them here, in arrival order, after initialize has set the
-        // appId. The queue can hold more than one entry if the user tapped a
-        // second notification from the shade while the JS bundle was loading.
-        for response in OSCapacitorLaunchOptions.pendingColdStartResponses {
-            OSNotificationsManager.processNotificationResponse(response)
+        // when no appId is set yet, which is always true on cold start because
+        // iOS delivers the response before OneSignal.initialize() runs from JS.
+        // OSCapacitorLaunchOptions queues every response that arrives in that
+        // window so we can replay them here, in arrival order. Always drain,
+        // even if the queue is empty: draining also stops further capture.
+        //
+        // Replay on main: Capacitor runs plugin methods on its bridge GCD
+        // queue, and the SDK opens the launch URL with
+        // performSelector:afterDelay:, which never fires on a thread without
+        // a run loop. iOS delivers real taps on main.
+        let coldStartResponses = OSCapacitorLaunchOptions.drainColdStartResponses()
+        DispatchQueue.main.async {
+            for response in coldStartResponses {
+                OSNotificationsManager.processNotificationResponse(response)
+            }
         }
-        // Always consume, even if the queue was empty. consumeColdStartResponses
-        // also flips a one-way flag that tells the swizzle to stop capturing
-        // future taps; without this unconditional call, sessions that cold-start
-        // without a notification tap would never flip the flag and any later
-        // warm/background taps would accumulate in the static array forever.
-        OSCapacitorLaunchOptions.consumeColdStartResponses()
 
         let proxy = OneSignalListenerProxy()
         proxy.owner = self
