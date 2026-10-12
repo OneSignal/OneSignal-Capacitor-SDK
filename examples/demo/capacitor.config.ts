@@ -6,6 +6,8 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   loggingBehavior: 'debug',
   ios: {
+    // Documented OneSignal setup. Otherwise Capacitor's NotificationRouter
+    // becomes the notification delegate and suppresses foreground display.
     handleApplicationNotifications: false,
     // Force WKWebView.isInspectable = true so Appium's XCUITest driver can
     // enumerate the WebView context in Release builds on iOS 16.4+. Without
