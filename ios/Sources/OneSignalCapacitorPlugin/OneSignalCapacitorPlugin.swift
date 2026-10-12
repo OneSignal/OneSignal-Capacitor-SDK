@@ -1,4 +1,5 @@
 import Foundation
+import UserNotifications
 import Capacitor
 import OneSignalFramework
 import OneSignalLiveActivities
@@ -126,6 +127,10 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin {
         // can replay them here, in arrival order, after initialize has set the
         // appId. The queue can hold more than one entry if the user tapped a
         // second notification from the shade while the JS bundle was loading.
+        NSLog("[Repro] initialize: replaying %d response(s), isMainThread=%d, current UN delegate=%@",
+              OSCapacitorLaunchOptions.pendingColdStartResponses.count,
+              Thread.isMainThread ? 1 : 0,
+              String(describing: UNUserNotificationCenter.current().delegate.map { type(of: $0) }))
         for response in OSCapacitorLaunchOptions.pendingColdStartResponses {
             OSNotificationsManager.processNotificationResponse(response)
         }

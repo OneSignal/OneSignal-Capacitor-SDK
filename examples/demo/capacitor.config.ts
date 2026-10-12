@@ -6,7 +6,6 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   loggingBehavior: 'debug',
   ios: {
-    handleApplicationNotifications: false,
     // Force WKWebView.isInspectable = true so Appium's XCUITest driver can
     // enumerate the WebView context in Release builds on iOS 16.4+. Without
     // this, Capacitor's bridge leaves isInspectable=false in Release and

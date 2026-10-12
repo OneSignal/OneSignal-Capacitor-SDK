@@ -40,6 +40,7 @@ static BOOL _coldStartResponsesConsumed = NO;
     // captured response after initialize() so the SDK can fire its click
     // listeners normally.
     id unDelegate = [UNUserNotificationCenter currentNotificationCenter].delegate;
+    NSLog(@"[Repro] didFinishLaunching: wrapping UN delegate %@", unDelegate ? NSStringFromClass([unDelegate class]) : @"nil");
     if (!unDelegate) return;
 
     SEL didReceiveSel = NSSelectorFromString(@"userNotificationCenter:didReceiveNotificationResponse:withCompletionHandler:");
@@ -57,6 +58,7 @@ static BOOL _coldStartResponsesConsumed = NO;
         // _coldStartResponsesConsumed flag once initialize() has handed every
         // response to OSNotificationsManager; from that point on, taps fall
         // straight through to the host delegate so the array can't grow.
+        NSLog(@"[Repro] captured response on %@ (consumed=%d)", NSStringFromClass([self_ class]), _coldStartResponsesConsumed);
         if (!_coldStartResponsesConsumed) {
             [_capturedColdStartResponses addObject:response];
         }
