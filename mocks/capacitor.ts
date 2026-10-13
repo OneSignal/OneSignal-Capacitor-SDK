@@ -10,6 +10,7 @@ export function createMockPlugin(): MockPlugin {
   return {
     initialize: vi.fn().mockResolvedValue(undefined),
     login: vi.fn().mockResolvedValue(undefined),
+    loginWithProfile: vi.fn().mockResolvedValue(undefined),
     logout: vi.fn().mockResolvedValue(undefined),
     setConsentRequired: vi.fn().mockResolvedValue(undefined),
     setConsentGiven: vi.fn().mockResolvedValue(undefined),

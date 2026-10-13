@@ -2,6 +2,7 @@ import OneSignal, {
   LogLevel,
   type NotificationClickEvent,
   type NotificationWillDisplayEvent,
+  type OneSignalUserProfile,
   type PushSubscriptionChangedState,
   type UserChangedState,
 } from '@onesignal/capacitor-plugin';
@@ -103,6 +104,11 @@ export type UseOneSignalReturn = {
   isLoading: boolean;
   isReady: boolean;
   loginUser: (externalUserId: string) => Promise<void>;
+  loginUserWithProfile: (
+    externalUserId: string,
+    profile: OneSignalUserProfile,
+    jwt?: string,
+  ) => Promise<void>;
   logoutUser: () => Promise<void>;
   setConsentRequired: (required: boolean) => Promise<void>;
   setConsentGiven: (granted: boolean) => Promise<void>;
@@ -350,6 +356,28 @@ export function useOneSignal(): UseOneSignalReturn {
     }
   };
 
+  const loginUserWithProfile = async (
+    nextExternalUserId: string,
+    profile: OneSignalUserProfile,
+    jwt?: string,
+  ) => {
+    requestSequenceRef.current++;
+    clearUserData();
+    setIsLoading(true);
+
+    const result = await OneSignal.loginWithProfile(nextExternalUserId, profile, jwt);
+    if (!result.success) {
+      console.error(`Login with profile error: ${JSON.stringify(result.error)}`);
+      setIsLoading(false);
+      return;
+    }
+    preferences.setExternalUserId(nextExternalUserId);
+    setExternalUserId(nextExternalUserId);
+    console.log(`Logged in with profile as: ${nextExternalUserId}`);
+    // The user 'change' listener does not fire when the external id is unchanged.
+    await fetchUserDataFromApi();
+  };
+
   const logoutUser = async () => {
     requestSequenceRef.current++;
     setIsLoading(false);
@@ -573,6 +601,7 @@ export function useOneSignal(): UseOneSignalReturn {
     isLoading,
     isReady,
     loginUser,
+    loginUserWithProfile,
     logoutUser,
     setConsentRequired,
     setConsentGiven,

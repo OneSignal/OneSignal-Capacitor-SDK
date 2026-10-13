@@ -1,3 +1,5 @@
+import { Capacitor } from '@capacitor/core';
+
 import type { OneSignalAPI } from './api';
 import Debug from './DebugNamespace';
 import type { OneSignalCapacitorPlugin } from './definitions';
@@ -5,10 +7,17 @@ import { isMissing } from './helpers';
 import InAppMessages from './InAppMessagesNamespace';
 import LiveActivities from './LiveActivitiesNamespace';
 import Location from './LocationNamespace';
+import {
+  loginFailure,
+  normalizeProfile,
+  parseLoginResult,
+  validateLoginWithProfile,
+} from './LoginWithProfile';
 import { _setNotificationEventPlugin } from './NotificationReceivedEvent';
 import Notifications from './NotificationsNamespace';
 import { _setOSNotificationPlugin } from './OSNotification';
 import Session from './SessionNamespace';
+import type { LoginResult, OneSignalUserProfile } from './types/LoginWithProfile';
 import User from './UserNamespace';
 
 export class OneSignalPlugin implements OneSignalAPI {
@@ -57,6 +66,33 @@ export class OneSignalPlugin implements OneSignalAPI {
   login(externalId: string): Promise<void> {
     if (isMissing(externalId, 'login: externalId')) return Promise.resolve();
     return this._plugin.login({ externalId });
+  }
+
+  /**
+   * Login as [externalId] and attach the given profile, resolving once the backend confirms.
+   * Android only for now: on iOS this resolves with an UNKNOWN failure. Never rejects.
+   */
+  async loginWithProfile(
+    externalId: string,
+    profile: OneSignalUserProfile,
+    jwtBearerToken?: string,
+  ): Promise<LoginResult> {
+    if (Capacitor.getPlatform() !== 'android') {
+      return loginFailure('loginWithProfile is only supported on Android');
+    }
+    const invalid = validateLoginWithProfile(externalId, profile, jwtBearerToken);
+    if (invalid) return loginFailure(`loginWithProfile: ${invalid}`, 'INVALID_ARGUMENT');
+
+    try {
+      const raw = await this._plugin.loginWithProfile({
+        externalId,
+        profile: normalizeProfile(profile),
+        jwtBearerToken: jwtBearerToken || undefined,
+      });
+      return parseLoginResult(raw);
+    } catch (err) {
+      return loginFailure(err instanceof Error ? err.message : String(err));
+    }
   }
 
   /**
