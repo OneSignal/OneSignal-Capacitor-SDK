@@ -6,6 +6,7 @@ import { useHistory } from 'react-router-dom';
 
 import oneSignalLogo from '../assets/onesignal_logo.svg';
 import ActionButton from '../components/ActionButton';
+import LogView from '../components/LogView';
 import TooltipModal from '../components/modals/TooltipModal';
 import AliasesSection from '../components/sections/AliasesSection';
 import AppSection from '../components/sections/AppSection';
@@ -73,6 +74,8 @@ const HomeScreen: React.FC = () => {
               <span className="brand-subtitle">Capacitor</span>
             </div>
           </header>
+
+          <LogView />
 
           <main className="content" data-testid="main_scroll_view">
             <AppSection
