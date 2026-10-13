@@ -7,13 +7,11 @@
 
 static NSDictionary *_capturedLaunchOptions = nil;
 static NSMutableArray<UNNotificationResponse *> *_capturedColdStartResponses = nil;
-// Flips to YES the first time consumeColdStartResponses runs (i.e. after the JS
-// layer has called OneSignal.initialize and drained whatever was queued). The
-// swizzle stays installed for the process lifetime, so without this flag every
-// subsequent warm/background tap would be retained in the array forever and
-// _capturedColdStartResponses would grow monotonically. Once consumed, new
-// taps fall through to the host delegate without being captured.
-static BOOL _coldStartResponsesConsumed = NO;
+// Flips to YES once drainColdStartResponses runs (i.e. after the JS layer has
+// called OneSignal.initialize). The hook stays installed for the process
+// lifetime, so without this flag every later tap would be retained forever.
+// Once drained, taps fall straight through to the OneSignal iOS SDK.
+static BOOL _coldStartResponsesDrained = NO;
 
 + (void)load {
     _capturedColdStartResponses = [NSMutableArray array];
@@ -22,6 +20,7 @@ static BOOL _coldStartResponsesConsumed = NO;
            selector:@selector(applicationDidFinishLaunching:)
                name:UIApplicationDidFinishLaunchingNotification
              object:nil];
+    [self hookProcessNotificationResponse];
 }
 
 + (void)applicationDidFinishLaunching:(NSNotification *)notification {
@@ -31,59 +30,50 @@ static BOOL _coldStartResponsesConsumed = NO;
         removeObserver:self
                   name:UIApplicationDidFinishLaunchingNotification
                 object:nil];
+}
 
-    // Wrap the UN delegate's didReceiveNotificationResponse so we can hold on
-    // to the UNNotificationResponse iOS hands us on cold start. The OneSignal
-    // iOS SDK drops cold-start responses inside processNotificationResponse:
-    // when no appId is set yet, which is always true on cold start because the
-    // JS layer has not called OneSignal.initialize yet. The plugin replays the
-    // captured response after initialize() so the SDK can fire its click
-    // listeners normally.
-    id unDelegate = [UNUserNotificationCenter currentNotificationCenter].delegate;
-    if (!unDelegate) return;
-
-    SEL didReceiveSel = NSSelectorFromString(@"userNotificationCenter:didReceiveNotificationResponse:withCompletionHandler:");
-    Class delegateClass = [unDelegate class];
-    Method original = class_getInstanceMethod(delegateClass, didReceiveSel);
-    if (!original) return;
+// The OneSignal iOS SDK drops UNNotificationResponses inside
+// +[OSNotificationsManager processNotificationResponse:] when no appId is set
+// yet, which is always true on cold start because the JS layer has not called
+// OneSignal.initialize yet. Every tap reaches that method: the SDK's swizzle
+// re-hooks whichever UNUserNotificationCenter delegate is current (including
+// one installed after launch, like Capacitor's NotificationRouter in the
+// scene-based template), and apps with swizzling disabled forward to it
+// manually. Hooking it here, rather than a specific delegate class, captures
+// cold-start taps regardless of who owns the delegate. The plugin replays the
+// captured responses after initialize() so the SDK fires its click listeners.
++ (void)hookProcessNotificationResponse {
+    Class managerClass = NSClassFromString(@"OSNotificationsManager");
+    SEL processSel = NSSelectorFromString(@"processNotificationResponse:");
+    Method original = managerClass ? class_getClassMethod(managerClass, processSel) : NULL;
+    if (!original) {
+        NSLog(@"[OneSignal] Capacitor: OSNotificationsManager.processNotificationResponse: not found; cold-start notification taps will not be replayed.");
+        return;
+    }
 
     __block IMP originalIMP = method_getImplementation(original);
-    IMP newIMP = imp_implementationWithBlock(^(id self_, UNUserNotificationCenter *center, UNNotificationResponse *response, void (^completionHandler)(void)) {
-        // Queue every response that arrives before the JS layer drains us.
-        // The JS bundle can take multiple seconds to load on cold start (worse
-        // in dev builds), and the user can tap a second notification from the
-        // shade in that window. Overwriting would silently lose the earlier
-        // tap. consumeColdStartResponses clears the queue and flips the
-        // _coldStartResponsesConsumed flag once initialize() has handed every
-        // response to OSNotificationsManager; from that point on, taps fall
-        // straight through to the host delegate so the array can't grow.
-        if (!_coldStartResponsesConsumed) {
-            [_capturedColdStartResponses addObject:response];
+    IMP newIMP = imp_implementationWithBlock(^(id self_, UNNotificationResponse *response) {
+        @synchronized (_capturedColdStartResponses) {
+            if (!_coldStartResponsesDrained) {
+                [_capturedColdStartResponses addObject:response];
+            }
         }
-        ((void(*)(id, SEL, UNUserNotificationCenter*, UNNotificationResponse*, void(^)(void)))originalIMP)(self_, didReceiveSel, center, response, completionHandler);
+        ((void(*)(id, SEL, UNNotificationResponse *))originalIMP)(self_, processSel, response);
     });
-
-    // Try to add the method to the delegate's exact class first. If it succeeds,
-    // the IMP came from a parent class (inherited) and we've safely shadowed it
-    // on this subclass only, leaving sibling subclasses untouched. If it fails,
-    // the method is owned by this exact class and method_setImplementation is
-    // safe — it won't leak the wrap up the inheritance chain.
-    if (!class_addMethod(delegateClass, didReceiveSel, newIMP, method_getTypeEncoding(original))) {
-        method_setImplementation(original, newIMP);
-    }
+    method_setImplementation(original, newIMP);
 }
 
 + (NSDictionary *)launchOptions {
     return _capturedLaunchOptions;
 }
 
-+ (NSArray<UNNotificationResponse *> *)pendingColdStartResponses {
-    return [_capturedColdStartResponses copy];
-}
-
-+ (void)consumeColdStartResponses {
-    _coldStartResponsesConsumed = YES;
-    [_capturedColdStartResponses removeAllObjects];
++ (NSArray<UNNotificationResponse *> *)drainColdStartResponses {
+    @synchronized (_capturedColdStartResponses) {
+        _coldStartResponsesDrained = YES;
+        NSArray<UNNotificationResponse *> *responses = [_capturedColdStartResponses copy];
+        [_capturedColdStartResponses removeAllObjects];
+        return responses;
+    }
 }
 
 @end
