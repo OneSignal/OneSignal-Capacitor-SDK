@@ -13,6 +13,8 @@
   --os-divider: #e8eaed;
   --os-warning-background: #fff8e1;
   --os-backdrop: rgba(0, 0, 0, 0.54);
+  --os-log-background: #1e1e1e;
+  --os-log-text: #d4d4d4;
 
   /* Spacing */
   --space-card-gap: 8px;
@@ -548,8 +550,8 @@
   position: sticky;
   top: var(--demo-header-height);
   z-index: 29;
-  background: #1e1e1e;
-  color: #d4d4d4;
+  background: var(--os-log-background);
+  color: var(--os-log-text);
   font-family: ui-monospace, Menlo, monospace;
   font-size: var(--font-size-label-small);
 }
@@ -558,7 +560,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px var(--space-page-padding);
+  height: 24px;
+  padding: 0 var(--space-page-padding);
   color: var(--os-grey-500);
   font-weight: 700;
   letter-spacing: 0.5px;
