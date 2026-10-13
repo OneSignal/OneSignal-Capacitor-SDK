@@ -140,27 +140,30 @@ describe('OneSignalPlugin', () => {
       expect(result.error?.[0].code).toBe('UNKNOWN');
     });
 
-    test('returns the Android-only failure envelope on iOS without calling native', async () => {
-      vi.spyOn(Capacitor, 'getPlatform').mockReturnValue('ios');
+    test.each(['ios', 'web'])(
+      'returns the Android-only failure envelope on %s without calling native',
+      async (platform) => {
+        vi.spyOn(Capacitor, 'getPlatform').mockReturnValue(platform);
 
-      const result = await plugin.loginWithProfile('user-1', { email: 'a@b.co' });
+        const result = await plugin.loginWithProfile('user-1', { email: 'a@b.co' });
 
-      expect(mockPlugin.loginWithProfile).not.toHaveBeenCalled();
-      expect(result).toEqual({
-        success: false,
-        data: null,
-        error: [
-          {
-            code: 'UNKNOWN',
-            source: 'CLIENT',
-            backendCode: null,
-            httpStatus: null,
-            message: 'loginWithProfile is only supported on Android',
-            meta: null,
-          },
-        ],
-      });
-    });
+        expect(mockPlugin.loginWithProfile).not.toHaveBeenCalled();
+        expect(result).toEqual({
+          success: false,
+          data: null,
+          error: [
+            {
+              code: 'UNKNOWN',
+              source: 'CLIENT',
+              backendCode: null,
+              httpStatus: null,
+              message: 'loginWithProfile is only supported on Android',
+              meta: null,
+            },
+          ],
+        });
+      },
+    );
   });
 
   test('should call plugin for logout', async () => {

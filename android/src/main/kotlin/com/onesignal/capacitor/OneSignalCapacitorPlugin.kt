@@ -194,6 +194,7 @@ class OneSignalCapacitorPlugin : Plugin(),
             } catch (e: CancellationException) {
                 throw e
             } catch (t: Throwable) {
+                Logging.error("loginWithProfile failed", t)
                 call.reject(t.message ?: t.toString())
                 return@launch
             }

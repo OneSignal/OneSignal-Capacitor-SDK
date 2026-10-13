@@ -109,6 +109,14 @@ describe('parseLoginResult', () => {
     ['non-boolean success', { success: 'true', data: { onesignalId: 'a', externalId: 'b' } }],
     ['success without data', { success: true, data: null }],
     ['success with partial data', { success: true, data: { onesignalId: 'os-1' } }],
+    [
+      'success with errors',
+      {
+        success: true,
+        data: { onesignalId: 'a', externalId: 'b' },
+        error: [{ code: 'BACKEND_ERROR', source: 'BACKEND', message: 'x' }],
+      },
+    ],
     ['failure without errors', { success: false, error: null }],
     ['failure with empty errors', { success: false, error: [] }],
   ])('treats %s as an UNKNOWN failure', (_label, raw) => {

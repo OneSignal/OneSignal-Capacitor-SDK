@@ -112,6 +112,7 @@ export function parseLoginResult(raw: unknown): LoginResult {
   if (!isRecord(raw)) return loginFailure(MALFORMED_MESSAGE);
 
   if (raw.success === true) {
+    if (Array.isArray(raw.error) && raw.error.length > 0) return loginFailure(MALFORMED_MESSAGE);
     const data = parseData(raw.data);
     return data ? { success: true, data, error: null } : loginFailure(MALFORMED_MESSAGE);
   }
