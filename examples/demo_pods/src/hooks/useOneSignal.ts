@@ -172,6 +172,8 @@ export function useOneSignal(): UseOneSignalReturn {
 
   const requestSequenceRef = useRef(0);
 
+  const loginSequenceRef = useRef(0);
+
   const fetchUserDataFromApi = useCallback(async () => {
     const requestId = requestSequenceRef.current + 1;
     requestSequenceRef.current = requestId;
@@ -339,6 +341,7 @@ export function useOneSignal(): UseOneSignalReturn {
   };
 
   const loginUser = async (nextExternalUserId: string) => {
+    loginSequenceRef.current++;
     requestSequenceRef.current++;
     clearUserData();
     setIsLoading(true);
@@ -361,13 +364,14 @@ export function useOneSignal(): UseOneSignalReturn {
     profile: OneSignalUserProfile,
     jwt?: string,
   ) => {
-    const requestId = ++requestSequenceRef.current;
+    const loginId = ++loginSequenceRef.current;
+    requestSequenceRef.current++;
     clearUserData();
     setIsLoading(true);
 
     const result = await OneSignal.loginWithProfile(nextExternalUserId, profile, jwt);
     // A logout or another login during the await owns the state now.
-    if (requestSequenceRef.current !== requestId) return;
+    if (loginSequenceRef.current !== loginId) return;
     if (!result.success) {
       console.error(`Login with profile error: ${JSON.stringify(result.error)}`);
       setIsLoading(false);
@@ -381,6 +385,7 @@ export function useOneSignal(): UseOneSignalReturn {
   };
 
   const logoutUser = async () => {
+    loginSequenceRef.current++;
     requestSequenceRef.current++;
     setIsLoading(false);
     void OneSignal.logout();
