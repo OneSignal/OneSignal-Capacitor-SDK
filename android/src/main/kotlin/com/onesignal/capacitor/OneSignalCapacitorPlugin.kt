@@ -180,12 +180,12 @@ class OneSignalCapacitorPlugin : Plugin(),
         // Blank externalId is passed through so the native SDK reports INVALID_ARGUMENT.
         val externalId = call.getString("externalId") ?: ""
         val profileObj = call.getObject("profile") ?: JSObject()
-        val profile = OneSignalUserProfile(
-            email = profileObj.optStringOrNull("email"),
-            sms = profileObj.optStringOrNull("sms"),
-            tags = profileObj.optJSONObject("tags")?.let(::jsonObjectToStringMap) ?: emptyMap(),
-            aliases = profileObj.optJSONObject("aliases")?.let(::jsonObjectToStringMap) ?: emptyMap(),
-        )
+        val profile = OneSignalUserProfile.builder()
+            .setEmail(profileObj.optStringOrNull("email"))
+            .setSms(profileObj.optStringOrNull("sms"))
+            .setTags(profileObj.optJSONObject("tags")?.let(::jsonObjectToStringMap) ?: emptyMap())
+            .setAliases(profileObj.optJSONObject("aliases")?.let(::jsonObjectToStringMap) ?: emptyMap())
+            .build()
         val jwt = call.getString("jwtBearerToken")?.takeIf { it.isNotEmpty() }
 
         pluginScope.launch {
