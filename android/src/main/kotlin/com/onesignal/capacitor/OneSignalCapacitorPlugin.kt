@@ -6,6 +6,7 @@ import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import com.onesignal.OneSignal
+import com.onesignal.OneSignalUserProfile
 import com.onesignal.common.OneSignalWrapper
 import com.onesignal.debug.internal.logging.Logging
 import com.onesignal.inAppMessages.IInAppMessageClickEvent
@@ -172,6 +173,33 @@ class OneSignalCapacitorPlugin : Plugin(),
         }
         OneSignal.login(externalId)
         call.resolve()
+    }
+
+    @PluginMethod
+    fun loginWithProfile(call: PluginCall) {
+        // Blank externalId is passed through so the native SDK reports INVALID_ARGUMENT.
+        val externalId = call.getString("externalId") ?: ""
+        val profileObj = call.getObject("profile") ?: JSObject()
+        val profile = OneSignalUserProfile.builder()
+            .setEmail(profileObj.optStringOrNull("email"))
+            .setSms(profileObj.optStringOrNull("sms"))
+            .setTags(profileObj.optJSONObject("tags")?.let(::jsonObjectToStringMap) ?: emptyMap())
+            .setAliases(profileObj.optJSONObject("aliases")?.let(::jsonObjectToStringMap) ?: emptyMap())
+            .build()
+        val jwt = call.getString("jwtBearerToken")?.takeIf { it.isNotEmpty() }
+
+        pluginScope.launch {
+            val result = try {
+                OneSignal.login(externalId, profile, jwt)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (t: Throwable) {
+                Logging.error("loginWithProfile failed", t)
+                call.reject(t.message ?: t.toString())
+                return@launch
+            }
+            call.resolve(mapToJSObject(result.toMap()))
+        }
     }
 
     @PluginMethod
@@ -373,6 +401,28 @@ class OneSignalCapacitorPlugin : Plugin(),
             list.add(convertJsonValue(jsonArray.get(i)))
         }
         return list
+    }
+
+    private fun JSONObject.optStringOrNull(key: String): String? =
+        if (isNull(key)) null else opt(key) as? String
+
+    private fun jsonObjectToStringMap(jsonObject: JSONObject): Map<String, String> {
+        val map = mutableMapOf<String, String>()
+        jsonObject.keys().forEach { key -> jsonObject.optStringOrNull(key)?.let { map[key] = it } }
+        return map
+    }
+
+    private fun mapToJSObject(map: Map<*, *>): JSObject {
+        val obj = JSObject()
+        map.forEach { (key, value) -> obj.put(key.toString(), toJsonValue(value)) }
+        return obj
+    }
+
+    private fun toJsonValue(value: Any?): Any = when (value) {
+        null -> JSONObject.NULL
+        is Map<*, *> -> mapToJSObject(value)
+        is Iterable<*> -> JSONArray().apply { value.forEach { put(toJsonValue(it)) } }
+        else -> value
     }
 
     private fun convertJsonValue(value: Any): Any? {

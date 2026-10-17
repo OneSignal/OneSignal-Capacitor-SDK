@@ -2,11 +2,17 @@ import type { Plugin } from '@capacitor/core';
 
 import type { LogLevel } from './DebugNamespace';
 import type { OSNotificationPermission } from './NotificationsNamespace';
+import type { OneSignalUserProfile } from './types/LoginWithProfile';
 
 export interface OneSignalCapacitorPlugin extends Plugin {
   // Core
   initialize(options: { appId: string }): Promise<void>;
   login(options: { externalId: string }): Promise<void>;
+  loginWithProfile(options: {
+    externalId: string;
+    profile: OneSignalUserProfile;
+    jwtBearerToken?: string;
+  }): Promise<unknown>;
   logout(): Promise<void>;
   setConsentRequired(options: { required: boolean }): Promise<void>;
   setConsentGiven(options: { granted: boolean }): Promise<void>;

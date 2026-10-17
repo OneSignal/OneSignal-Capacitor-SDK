@@ -3,6 +3,7 @@ import type { OSNotificationPermission } from './NotificationsNamespace';
 import type { PushSubscriptionChangedState } from './PushSubscriptionNamespace';
 import type { InAppMessageEventName, InAppMessageEventTypeMap } from './types/InAppMessage';
 import type { LiveActivitySetupOptions } from './types/LiveActivities';
+import type { LoginResult, OneSignalUserProfile } from './types/LoginWithProfile';
 import type { NotificationEventName, NotificationEventTypeMap } from './types/NotificationClicked';
 import type { UserChangedState } from './UserNamespace';
 
@@ -291,6 +292,16 @@ export interface OneSignalAPI {
 
   /** Log in to OneSignal as the user identified by `externalId`, switching the user context. */
   login(externalId: string): Promise<void>;
+
+  /**
+   * Log in as `externalId` and attach `profile`, resolving with the backend result. Never rejects.
+   * Android only for now: on iOS this resolves with an UNKNOWN failure.
+   */
+  loginWithProfile(
+    externalId: string,
+    profile: OneSignalUserProfile,
+    jwtBearerToken?: string,
+  ): Promise<LoginResult>;
 
   /** Log out the current user. The SDK will reference a new device-scoped user. */
   logout(): Promise<void>;

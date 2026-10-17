@@ -89,6 +89,9 @@ const HomeScreen: React.FC = () => {
             <UserSection
               externalUserId={os.externalUserId}
               onLogin={(value) => os.loginUser(value)}
+              onLoginWithProfile={(value, profile, jwt) =>
+                os.loginUserWithProfile(value, profile, jwt)
+              }
               onLogout={() => os.logoutUser()}
             />
 

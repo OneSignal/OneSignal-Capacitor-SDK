@@ -31,6 +31,15 @@ export type {
   OSInAppMessage,
 } from './types/InAppMessage';
 
+export type {
+  LoginData,
+  LoginError,
+  LoginErrorCode,
+  LoginErrorSource,
+  LoginResult,
+  OneSignalUserProfile,
+} from './types/LoginWithProfile';
+
 export type { UserChangedState, UserState } from './UserNamespace';
 
 export type { OneSignalCapacitorPlugin } from './definitions';
