@@ -341,6 +341,13 @@ export function useOneSignal(): UseOneSignalReturn {
     setTriggersList([]);
   };
 
+  // Clears only the cached choice. setLanguage('') would send the device
+  // language and overwrite the user's backend value.
+  const resetLanguagePicker = () => {
+    preferences.setLanguage('');
+    setLanguageState('');
+  };
+
   const loginUser = async (nextExternalUserId: string) => {
     requestSequenceRef.current++;
     clearUserData();
@@ -350,6 +357,7 @@ export function useOneSignal(): UseOneSignalReturn {
       void OneSignal.login(nextExternalUserId);
       preferences.setExternalUserId(nextExternalUserId);
       setExternalUserId(nextExternalUserId);
+      resetLanguagePicker();
       console.log(`Logged in as: ${nextExternalUserId}`);
       // The user 'change' listener runs fetchUserDataFromApi once the new
       // onesignalId is assigned; that call clears isLoading in its finally.
@@ -373,7 +381,7 @@ export function useOneSignal(): UseOneSignalReturn {
     void OneSignal.logout();
     preferences.setExternalUserId(null);
     setExternalUserId(undefined);
-    setLanguage('');
+    resetLanguagePicker();
     clearUserData();
     console.log('Logged out');
   };
