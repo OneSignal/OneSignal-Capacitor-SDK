@@ -1,4 +1,5 @@
 import { IonSelect, IonSelectOption } from '@ionic/react';
+import { chevronDown } from 'ionicons/icons';
 import type { FC } from 'react';
 import { useState } from 'react';
 
@@ -98,6 +99,7 @@ const UserSection: FC<UserSectionProps> = ({
           <IonSelect
             className="language-select"
             interface="popover"
+            toggleIcon={chevronDown}
             justify="end"
             interfaceOptions={{ cssClass: 'language-popover' }}
             value={language}
