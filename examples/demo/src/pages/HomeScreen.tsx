@@ -88,12 +88,15 @@ const HomeScreen: React.FC = () => {
 
             <UserSection
               externalUserId={os.externalUserId}
+              language={os.language}
+              onLanguageChange={(value) => os.setLanguage(value)}
               onLogin={(value) => os.loginUser(value)}
               onLogout={() => os.logoutUser()}
             />
 
             <PushSection
               pushSubscriptionId={os.pushSubscriptionId ?? null}
+              pushSubscriptionToken={os.pushSubscriptionToken ?? null}
               isPushEnabled={os.isPushEnabled}
               hasNotificationPermission={os.hasNotificationPermission}
               onTogglePush={(checked) => os.setPushEnabled(checked)}
