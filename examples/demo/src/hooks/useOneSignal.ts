@@ -90,8 +90,10 @@ export type UseOneSignalReturn = {
   consentRequired: boolean;
   privacyConsentGiven: boolean;
   externalUserId: string | undefined;
+  language: string;
   oneSignalId: string | undefined;
   pushSubscriptionId: string | undefined;
+  pushSubscriptionToken: string | undefined;
   isPushEnabled: boolean;
   hasNotificationPermission: boolean;
   inAppMessagesPaused: boolean;
@@ -105,6 +107,7 @@ export type UseOneSignalReturn = {
   isReady: boolean;
   loginUser: (externalUserId: string) => Promise<void>;
   logoutUser: () => Promise<void>;
+  setLanguage: (language: string) => void;
   setConsentRequired: (required: boolean) => Promise<void>;
   setConsentGiven: (granted: boolean) => Promise<void>;
   promptPush: () => Promise<boolean>;
@@ -152,7 +155,9 @@ export function useOneSignal(): UseOneSignalReturn {
   );
   const [externalUserId, setExternalUserId] = useState<string | undefined>(undefined);
   const [oneSignalId, setOneSignalId] = useState<string | undefined>(undefined);
+  const [language, setLanguageState] = useState(() => preferences.getLanguage());
   const [pushSubscriptionId, setPushSubscriptionId] = useState<string | undefined>(undefined);
+  const [pushSubscriptionToken, setPushSubscriptionToken] = useState<string | undefined>(undefined);
   const [isPushEnabled, setIsPushEnabled] = useState(false);
   const [hasNotificationPermission, setHasNotificationPermission] = useState(false);
   const [inAppMessagesPaused, setInAppMessagesPaused] = useState(() => preferences.getIamPaused());
@@ -258,6 +263,7 @@ export function useOneSignal(): UseOneSignalReturn {
         `Push subscription changed: id=${previous.id ?? 'null'} → ${current.id ?? 'null'}, optedIn=${previous.optedIn} → ${current.optedIn}, token=${fmtToken(previous.token)} → ${fmtToken(current.token)}`,
       );
       setPushSubscriptionId(current.id ?? undefined);
+      setPushSubscriptionToken(current.token ?? undefined);
       setIsPushEnabled(current.optedIn);
     };
 
@@ -297,13 +303,15 @@ export function useOneSignal(): UseOneSignalReturn {
     OneSignal.User.addEventListener('change', userChangeHandler);
 
     const load = async () => {
-      const [externalId, pushId, pushOptedIn, hasPerm, initialOnesignalId] = await Promise.all([
-        OneSignal.User.getExternalId(),
-        OneSignal.User.pushSubscription.getIdAsync(),
-        OneSignal.User.pushSubscription.getOptedInAsync(),
-        OneSignal.Notifications.hasPermission(),
-        OneSignal.User.getOnesignalId(),
-      ]);
+      const [externalId, pushId, pushToken, pushOptedIn, hasPerm, initialOnesignalId] =
+        await Promise.all([
+          OneSignal.User.getExternalId(),
+          OneSignal.User.pushSubscription.getIdAsync(),
+          OneSignal.User.pushSubscription.getTokenAsync(),
+          OneSignal.User.pushSubscription.getOptedInAsync(),
+          OneSignal.Notifications.hasPermission(),
+          OneSignal.User.getOnesignalId(),
+        ]);
       if (cancelled) return;
 
       if (!userChanged) {
@@ -312,6 +320,7 @@ export function useOneSignal(): UseOneSignalReturn {
       }
       if (!pushChanged) {
         setPushSubscriptionId(pushId ?? undefined);
+        setPushSubscriptionToken(pushToken ?? undefined);
         setIsPushEnabled(pushOptedIn);
       }
       if (!permissionChanged) setHasNotificationPermission(hasPerm);
@@ -373,12 +382,21 @@ export function useOneSignal(): UseOneSignalReturn {
     }
   };
 
+  // An empty code resets the SDK to the device locale language.
+  const setLanguage = (nextLanguage: string) => {
+    void OneSignal.User.setLanguage(nextLanguage);
+    preferences.setLanguage(nextLanguage);
+    setLanguageState(nextLanguage);
+    log.info(`Language set to: ${nextLanguage || 'device default'}`);
+  };
+
   const logoutUser = async () => {
     requestSequenceRef.current++;
     setIsLoading(false);
     void OneSignal.logout();
     preferences.setExternalUserId(null);
     setExternalUserId(undefined);
+    setLanguage('');
     clearUserData();
     log.info('Logged out');
   };
@@ -582,8 +600,10 @@ export function useOneSignal(): UseOneSignalReturn {
     consentRequired,
     privacyConsentGiven,
     externalUserId,
+    language,
     oneSignalId,
     pushSubscriptionId,
+    pushSubscriptionToken,
     isPushEnabled,
     hasNotificationPermission,
     inAppMessagesPaused,
@@ -597,6 +617,7 @@ export function useOneSignal(): UseOneSignalReturn {
     isReady,
     loginUser,
     logoutUser,
+    setLanguage,
     setConsentRequired,
     setConsentGiven,
     promptPush,

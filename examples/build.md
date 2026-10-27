@@ -140,7 +140,7 @@ if (storedExternalUserId) void OneSignal.login(storedExternalUserId);
 
 ### Preferences
 
-`PreferencesService` (singleton, `src/services/PreferencesService.ts`) wraps `localStorage` for consent, IAM paused, location shared, and external user id. App ID is read from `.env` (`VITE_ONESIGNAL_APP_ID`), not from preferences.
+`PreferencesService` (singleton, `src/services/PreferencesService.ts`) wraps `localStorage` for consent, IAM paused, location shared, external user id, and language. The language code is cached for display only; it is not re-sent at launch because the SDK keeps its own language across launches. App ID is read from `.env` (`VITE_ONESIGNAL_APP_ID`), not from preferences.
 
 ### List merging
 
@@ -162,6 +162,18 @@ The demo reads three Vite env vars at build time:
 
 - `useOneSignal` exposes `isReady` (set after the initial load completes) and `promptPush()`
 - `HomeScreen` calls `promptPush()` in a `useEffect` gated by `isReady`
+
+### User Section
+
+- Rows: Status (Logged In / Anonymous), External ID, Language.
+- Language is an `IonSelect` (`interface="popover"`, test id `user_language_dropdown`) with "Device Default" (code `''`) first, then the same language list as the Android/iOS demos. Selecting calls `OneSignal.User.setLanguage(code)`; the empty code resets the SDK to the device locale language. The selected value is right-aligned next to the arrow and the popover is capped at half the viewport height (`.language-popover`).
+- Logout resets the language to Device Default.
+
+### Push Section
+
+- Rows: Push ID, Status, Opted In toggle.
+- Status (test id `push_subscription_status`) is read-only: "Subscribed" when opted in AND notification permission is granted AND a push token is present, otherwise "Unsubscribed". It is derived from hook state seeded in `load()` (`getTokenAsync`) and updated by the push subscription `change` and `permissionChange` listeners.
+- Opted In toggle keeps test id `push_enabled_toggle` and is disabled until permission is granted.
 
 ### Loading State
 
@@ -372,7 +384,7 @@ A second variant lives at `examples/demo_pods/` that mirrors `demo/` but uses Co
 ## Capacitor Best Practices
 
 - Run `bunx cap sync` after every native dependency or web-asset change to push `dist/` into the platform projects and regenerate `CapApp-SPM/Package.swift`
-- Prefer the async getters (`getIdAsync`, `getOptedInAsync`, `hasPermission`) over the deprecated sync property accessors
+- Prefer the async getters (`getIdAsync`, `getTokenAsync`, `getOptedInAsync`, `hasPermission`) over the deprecated sync property accessors
 - Keep `handleApplicationNotifications: false` in `capacitor.config.ts` so OneSignal owns the iOS notification lifecycle
 - Use `CapacitorHttp` for REST calls so the same code path works on iOS, Android, and the dev browser without CORS workarounds
 - Name the iOS SPM product `OnesignalCapacitorPlugin` (Capacitor's `fixName` derivation) — renaming will break `cap sync`

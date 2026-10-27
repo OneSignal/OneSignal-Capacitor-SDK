@@ -159,6 +159,22 @@
   font-family: monospace;
 }
 
+.kv-card .language-select {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  font-size: var(--font-size-body-small);
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 0;
+  --padding-end: 0;
+}
+
+/* Popovers mount outside the card, so this can't be scoped under .kv-card. */
+.language-popover {
+  --max-height: 50vh;
+}
+
 .divider {
   height: 1px;
   margin: 8px 0;
