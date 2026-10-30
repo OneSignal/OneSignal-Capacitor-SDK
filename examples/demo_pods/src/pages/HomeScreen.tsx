@@ -107,10 +107,7 @@ const HomeScreen: React.FC = () => {
 
             <SendIamSection
               onInfoTap={() => showTooltipModal('sendInAppMessage')}
-              onSendTopBanner={() => os.sendIamTrigger('top_banner')}
-              onSendBottomBanner={() => os.sendIamTrigger('bottom_banner')}
-              onSendCenterModal={() => os.sendIamTrigger('center_modal')}
-              onSendFullScreen={() => os.sendIamTrigger('full_screen')}
+              onSendIam={os.sendIamTrigger}
             />
 
             <AliasesSection
