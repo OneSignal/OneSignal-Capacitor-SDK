@@ -243,15 +243,16 @@
   font-size: 18px;
 }
 
-.action-btn.iam-btn {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 0 18px;
+.iam-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--space-card-gap);
 }
 
-.action-btn.iam-btn .action-btn-content {
-  justify-content: flex-start;
+.iam-grid .action-btn {
+  padding: 0 8px;
+  white-space: nowrap;
+  font-size: clamp(11px, 3.4vw, 13px);
 }
 
 .action-btn:disabled {
