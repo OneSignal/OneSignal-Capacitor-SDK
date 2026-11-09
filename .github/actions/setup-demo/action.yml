@@ -25,8 +25,8 @@ runs:
 
     # Must precede `vp run setup`: the demo's setup.sh runs `vp run build`,
     # which inlines `import.meta.env.VITE_*` into the web bundle at build time.
-    # Writing .env afterward leaves the bundle (and therefore the APK/IPA) with
-    # fallback values like the default APP_ID.
+    # Writing .env afterward fails the build, since vite.config.ts requires
+    # VITE_ONESIGNAL_APP_ID.
     - name: Create demo .env
       shell: bash
       working-directory: examples/demo

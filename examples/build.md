@@ -27,6 +27,8 @@ bunx cap add ios
 bunx cap add android
 ```
 
+`cap init` sets `com.onesignal.example`, which stays the iOS bundle id. Then set the Android `namespace` and `applicationId` in `android/app/build.gradle.kts` to `com.onesignal.sdkdemo` to match the shared `google-services.json`.
+
 - TypeScript strict mode enabled
 - React + Ionic React for component-based UI with React Router for navigation
 - Build chain uses the `vp` CLI (see `demo/README.md`); `vite-plus` is imported by `vite.config.ts` but not declared in package.json. Output goes to `dist/` (`webDir` for Capacitor).
@@ -88,6 +90,7 @@ A `setup.sh` script in `examples/` builds the SDK from the repo root, packs it t
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
+  // iOS bundle id. Android overrides it with `com.onesignal.sdkdemo` in android/app/build.gradle.kts.
   appId: 'com.onesignal.example',
   appName: 'OneSignal Demo',
   webDir: 'dist',
@@ -150,7 +153,7 @@ if (storedExternalUserId) void OneSignal.login(storedExternalUserId);
 
 The demo reads three Vite env vars at build time:
 
-- `VITE_ONESIGNAL_APP_ID` -- defaults to `77e32082-ea27-42e3-a898-c72e141824ef` if unset.
+- `VITE_ONESIGNAL_APP_ID` -- required. A Vite plugin in `vite.config.ts` fails `vp build` and `vp dev` when it's unset.
 - `VITE_ONESIGNAL_API_KEY` -- REST auth for Live Activity update/end via `Authorization: Key ...`. `LiveActivitySection` is gated UI-wise when missing.
 - `VITE_ONESIGNAL_ANDROID_CHANNEL_ID` -- channel id used by the WITH SOUND push payload on Android.
 

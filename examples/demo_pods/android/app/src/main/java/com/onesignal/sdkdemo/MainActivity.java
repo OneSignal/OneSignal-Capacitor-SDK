@@ -1,4 +1,4 @@
-package com.onesignal.example;
+package com.onesignal.sdkdemo;
 
 import android.os.Bundle;
 import android.view.View;

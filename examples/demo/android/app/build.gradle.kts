@@ -2,16 +2,27 @@ plugins {
     id("com.android.application")
 }
 
+val hasGoogleServices = file("google-services.json").exists()
+
+// Off by default so local builds keep the legacy token path. E2E opts in with
+// `-PFIREBASE_INSTALLATION_ID_ENABLED=true`; the flag does nothing without the default FirebaseApp.
+val firebaseInstallationIdEnabled =
+    (findProperty("FIREBASE_INSTALLATION_ID_ENABLED") as? String)?.trim()?.toBoolean() ?: false
+if (firebaseInstallationIdEnabled && !hasGoogleServices) {
+    throw GradleException("FIREBASE_INSTALLATION_ID_ENABLED requires examples/demo/android/app/google-services.json")
+}
+
 android {
-    namespace = "com.onesignal.example"
+    namespace = "com.onesignal.sdkdemo"
     compileSdk = rootProject.extra["compileSdkVersion"] as Int
     defaultConfig {
-        applicationId = "com.onesignal.example"
+        applicationId = "com.onesignal.sdkdemo"
         minSdk = rootProject.extra["minSdkVersion"] as Int
         targetSdk = rootProject.extra["targetSdkVersion"] as Int
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["firebaseInstallationIdEnabled"] = firebaseInstallationIdEnabled.toString()
         androidResources {
             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
@@ -54,6 +65,8 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.coordinatorlayout)
     implementation(libs.androidx.core.splashscreen)
+    // OneSignal resolves firebase-messaging 24.x; Installation ID registration needs 25.1.2+.
+    implementation(libs.firebase.messaging)
     implementation(project(":capacitor-android"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.junit)
@@ -63,11 +76,6 @@ dependencies {
 
 apply(from = "capacitor.build.gradle")
 
-try {
-    val servicesJSON = file("google-services.json")
-    if (servicesJSON.readText().isNotEmpty()) {
-        apply(plugin = "com.google.gms.google-services")
-    }
-} catch (e: Exception) {
-    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+if (hasGoogleServices) {
+    apply(plugin = "com.google.gms.google-services")
 }

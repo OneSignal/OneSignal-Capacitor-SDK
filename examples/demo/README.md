@@ -39,9 +39,11 @@ VITE_ONESIGNAL_API_KEY=<your_rest_api_key>
 VITE_ONESIGNAL_ANDROID_CHANNEL_ID=
 ```
 
-The `VITE_*` values are built into the web bundle, so rerun setup after changing `.env`. Empty `VITE_ONESIGNAL_APP_ID` and `VITE_ONESIGNAL_ANDROID_CHANNEL_ID` values fall back to built-in defaults. Sending notifications from the demo doesn't need the API key.
+The `VITE_*` values are built into the web bundle, so rerun setup after changing `.env`. `VITE_ONESIGNAL_APP_ID` is required; the build fails without it. An empty `VITE_ONESIGNAL_ANDROID_CHANNEL_ID` falls back to a built-in default. Sending notifications from the demo doesn't need the API key.
 
-The OneSignal app needs FCM credentials for Android and APNs credentials for the `com.onesignal.example` bundle ID on iOS.
+The OneSignal app needs FCM credentials for the `com.onesignal.sdkdemo` Android package and APNs credentials for the `com.onesignal.example` bundle ID on iOS.
+
+Firebase Installation ID registration is off by default. To turn it on, add a `google-services.json` with a client for `com.onesignal.sdkdemo` to `android/app/` (gitignored) and build with `-PFIREBASE_INSTALLATION_ID_ENABLED=true`. The E2E workflow does both, writing the file from the `APPIUM_GOOGLE_SERVICES_JSON` secret.
 
 ---
 
