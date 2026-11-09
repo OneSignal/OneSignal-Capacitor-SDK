@@ -3,10 +3,10 @@ plugins {
 }
 
 android {
-    namespace = "com.onesignal.example"
+    namespace = "com.onesignal.sdkdemo"
     compileSdk = rootProject.extra["compileSdkVersion"] as Int
     defaultConfig {
-        applicationId = "com.onesignal.example"
+        applicationId = "com.onesignal.sdkdemo"
         minSdk = rootProject.extra["minSdkVersion"] as Int
         targetSdk = rootProject.extra["targetSdkVersion"] as Int
         versionCode = 1
