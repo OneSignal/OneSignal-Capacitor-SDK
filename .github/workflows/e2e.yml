@@ -45,6 +45,7 @@ jobs:
         with:
           onesignal-app-id: ${{ vars.APPIUM_ONESIGNAL_APP_ID }}
           onesignal-api-key: ${{ secrets.APPIUM_ONESIGNAL_API_KEY }}
+          google-services-json: ${{ secrets.APPIUM_GOOGLE_SERVICES_JSON }}
 
       - name: Build debug APK
         working-directory: examples/demo/android
@@ -55,7 +56,9 @@ jobs:
         # "Failed to get sockets matching: @webview_devtools_remote_.*".
         # -PciSingleAbi → arm64-v8a-only APK; BrowserStack devices are all
         # arm64-v8a, so dropping other ABIs trims size with no test impact.
-        run: ./gradlew assembleDebug -PciSingleAbi --quiet --console=plain --warning-mode=summary
+        # FIREBASE_INSTALLATION_ID_ENABLED turns on Firebase Installation ID registration,
+        # which needs the google-services.json written by setup-demo.
+        run: ./gradlew assembleDebug -PciSingleAbi -PFIREBASE_INSTALLATION_ID_ENABLED=true --quiet --console=plain --warning-mode=summary
 
       - name: Upload APK
         uses: actions/upload-artifact@v7
@@ -151,6 +154,7 @@ jobs:
       app-artifact: demo-apk
       app-filename: app-arm64-v8a-debug.apk
       sdk-type: capacitor
+      bundle-id: com.onesignal.sdkdemo
       build-name: capacitor-android-${{ github.ref_name }}-${{ github.run_number }}
 
   e2e-ios:
