@@ -22,12 +22,12 @@ bun add @capacitor/keyboard @capacitor/status-bar @capacitor/splash-screen
 bun add react react-dom @ionic/react @ionic/react-router ionicons react-icons
 bun add react-router react-router-dom
 bun add -d @vitejs/plugin-react @types/react @types/react-dom @types/react-router @types/react-router-dom typescript
-bunx cap init "OneSignal Demo" com.onesignal.example --web-dir dist
+bunx cap init "OneSignal Demo" com.onesignal.sdkdemo --web-dir dist
 bunx cap add ios
 bunx cap add android
 ```
 
-`cap init` sets `com.onesignal.example`, which stays the iOS bundle id. Then set the Android `namespace` and `applicationId` in `android/app/build.gradle.kts` to `com.onesignal.sdkdemo` to match the shared `google-services.json`.
+`cap init` sets `com.onesignal.sdkdemo` as the iOS bundle id. Set the Android `namespace` and `applicationId` in `android/app/build.gradle.kts` to the same value to match the shared `google-services.json`.
 
 - TypeScript strict mode enabled
 - React + Ionic React for component-based UI with React Router for navigation
@@ -90,8 +90,7 @@ A `setup.sh` script in `examples/` builds the SDK from the repo root, packs it t
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  // iOS bundle id. Android overrides it with `com.onesignal.sdkdemo` in android/app/build.gradle.kts.
-  appId: 'com.onesignal.example',
+  appId: 'com.onesignal.sdkdemo',
   appName: 'OneSignal Demo',
   webDir: 'dist',
   loggingBehavior: 'debug',
@@ -380,7 +379,7 @@ examples/
                 └── Sources/CapApp-SPM/CapApp-SPM.swift
 ```
 
-A second variant lives at `examples/demo_pods/` that mirrors `demo/` but uses CocoaPods for iOS instead of SPM. The TypeScript / React source is kept in sync with `demo/`.
+A second variant lives at `examples/demo_pods/` that mirrors `demo/` but uses CocoaPods for iOS instead of SPM. Its TypeScript / React source may lag behind `demo/`; treat `demo/` as the reference.
 
 ---
 

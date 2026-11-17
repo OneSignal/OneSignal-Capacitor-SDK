@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
 import ActionButton from '../ActionButton';
+import ButtonGrid from '../ButtonGrid';
 import SectionCard from '../SectionCard';
 import { useSnackbar } from '../ToastProvider';
 import ToggleRow from '../ToggleRow';
@@ -36,16 +37,18 @@ const LocationSection: FC<LocationSectionProps> = ({
         onToggle={onToggleLocationShared}
         testId="location_shared_toggle"
       />
-      <ActionButton type="button" onClick={onPromptLocation} data-testid="prompt_location_button">
-        PROMPT LOCATION
-      </ActionButton>
-      <ActionButton
-        type="button"
-        onClick={() => void handleCheckLocation()}
-        data-testid="check_location_button"
-      >
-        CHECK LOCATION SHARED
-      </ActionButton>
+      <ButtonGrid>
+        <ActionButton type="button" onClick={onPromptLocation} data-testid="prompt_location_button">
+          PROMPT LOCATION
+        </ActionButton>
+        <ActionButton
+          type="button"
+          onClick={() => void handleCheckLocation()}
+          data-testid="check_location_button"
+        >
+          CHECK LOCATION
+        </ActionButton>
+      </ButtonGrid>
     </SectionCard>
   );
 };
