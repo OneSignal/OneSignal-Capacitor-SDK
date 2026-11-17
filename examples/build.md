@@ -90,7 +90,6 @@ A `setup.sh` script in `examples/` builds the SDK from the repo root, packs it t
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  // iOS bundle id. Android overrides it with `com.onesignal.sdkdemo` in android/app/build.gradle.kts.
   appId: 'com.onesignal.sdkdemo',
   appName: 'OneSignal Demo',
   webDir: 'dist',
@@ -380,7 +379,7 @@ examples/
                 └── Sources/CapApp-SPM/CapApp-SPM.swift
 ```
 
-A second variant lives at `examples/demo_pods/` that mirrors `demo/` but uses CocoaPods for iOS instead of SPM. The TypeScript / React source is kept in sync with `demo/`.
+A second variant lives at `examples/demo_pods/` that mirrors `demo/` but uses CocoaPods for iOS instead of SPM. Its TypeScript / React source may lag behind `demo/`; treat `demo/` as the reference.
 
 ---
 

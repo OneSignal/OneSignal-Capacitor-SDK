@@ -115,7 +115,7 @@ const LiveActivitySection: FC<LiveActivitySectionProps> = ({
         onClick={handleUpdate}
         data-testid="update_live_activity_button"
       >
-        {`UPDATE → ${nextStatus.status.replace('_', ' ').toUpperCase()}`}
+        {`UPDATE → ${nextStatus.status.replaceAll('_', ' ').toUpperCase()}`}
       </ActionButton>
       <ActionButton
         variant="outline"
