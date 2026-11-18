@@ -2,6 +2,7 @@ import type { FC } from 'react';
 import { useState } from 'react';
 
 import ActionButton from '../ActionButton';
+import ButtonGrid from '../ButtonGrid';
 import SectionCard from '../SectionCard';
 
 const ORDER_STATUSES = [
@@ -101,31 +102,33 @@ const LiveActivitySection: FC<LiveActivitySectionProps> = ({
           />
         </div>
       </div>
-      <ActionButton
-        type="button"
-        disabled={!activityId.trim()}
-        onClick={handleStart}
-        data-testid="start_live_activity_button"
-      >
-        START LIVE ACTIVITY
-      </ActionButton>
-      <ActionButton
-        type="button"
-        disabled={!activityId.trim() || updating || !hasApiKey}
-        onClick={handleUpdate}
-        data-testid="update_live_activity_button"
-      >
-        {`UPDATE → ${nextStatus.status.replaceAll('_', ' ').toUpperCase()}`}
-      </ActionButton>
-      <ActionButton
-        variant="outline"
-        type="button"
-        disabled={!activityId.trim() || !hasApiKey}
-        onClick={() => onEnd(activityId)}
-        data-testid="end_live_activity_button"
-      >
-        END LIVE ACTIVITY
-      </ActionButton>
+      <ButtonGrid>
+        <ActionButton
+          type="button"
+          disabled={!activityId.trim()}
+          onClick={handleStart}
+          data-testid="start_live_activity_button"
+        >
+          START ACTIVITY
+        </ActionButton>
+        <ActionButton
+          type="button"
+          disabled={!activityId.trim() || updating || !hasApiKey}
+          onClick={handleUpdate}
+          data-testid="update_live_activity_button"
+        >
+          {`UPDATE → ${nextStatus.status.replaceAll('_', ' ').toUpperCase()}`}
+        </ActionButton>
+        <ActionButton
+          variant="outline"
+          type="button"
+          disabled={!activityId.trim() || !hasApiKey}
+          onClick={() => onEnd(activityId)}
+          data-testid="end_live_activity_button"
+        >
+          END ACTIVITY
+        </ActionButton>
+      </ButtonGrid>
       {!hasApiKey && (
         <p className="hint-text">Set VITE_ONESIGNAL_API_KEY in .env to enable update &amp; end</p>
       )}

@@ -4,7 +4,10 @@ const config: CapacitorConfig = {
   appId: 'com.onesignal.sdkdemo',
   appName: 'OneSignal Demo',
   webDir: 'dist',
+  loggingBehavior: 'debug',
   ios: {
+    // Documented OneSignal setup. Otherwise Capacitor's NotificationRouter
+    // becomes the notification delegate and suppresses foreground display.
     handleApplicationNotifications: false,
     // Force WKWebView.isInspectable = true so Appium's XCUITest driver can
     // enumerate the WebView context in Release builds on iOS 16.4+. Without
@@ -15,7 +18,12 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
+      launchShowDuration: 2000,
+      // Hide the splash manually so we can ensure native permission dialogs
+      // (e.g. push on Android 13+) don't appear behind/over the splash.
+      launchAutoHide: false,
       backgroundColor: '#ffffff',
+      showSpinner: false,
     },
   },
 };

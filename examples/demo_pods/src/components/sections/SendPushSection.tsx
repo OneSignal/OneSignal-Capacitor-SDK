@@ -2,6 +2,7 @@ import type { FC } from 'react';
 import { useState } from 'react';
 
 import ActionButton from '../ActionButton';
+import ButtonGrid from '../ButtonGrid';
 import CustomNotificationModal from '../modals/CustomNotificationModal';
 import SectionCard from '../SectionCard';
 
@@ -31,30 +32,32 @@ const SendPushSection: FC<SendPushSectionProps> = ({
 
   return (
     <SectionCard title="SEND PUSH NOTIFICATION" sectionKey="send_push" onInfoTap={onInfoTap}>
-      <ActionButton type="button" onClick={onSendSimple} data-testid="send_simple_button">
-        SIMPLE
-      </ActionButton>
-      <ActionButton type="button" onClick={onSendImage} data-testid="send_image_button">
-        WITH IMAGE
-      </ActionButton>
-      <ActionButton type="button" onClick={onSendSound} data-testid="send_sound_button">
-        WITH SOUND
-      </ActionButton>
-      <ActionButton
-        type="button"
-        onClick={() => setCustomOpen(true)}
-        data-testid="send_custom_button"
-      >
-        CUSTOM
-      </ActionButton>
-      <ActionButton
-        variant="outline"
-        type="button"
-        onClick={onClearAll}
-        data-testid="clear_all_button"
-      >
-        CLEAR ALL
-      </ActionButton>
+      <ButtonGrid>
+        <ActionButton type="button" onClick={onSendSimple} data-testid="send_simple_button">
+          SIMPLE
+        </ActionButton>
+        <ActionButton type="button" onClick={onSendImage} data-testid="send_image_button">
+          WITH IMAGE
+        </ActionButton>
+        <ActionButton type="button" onClick={onSendSound} data-testid="send_sound_button">
+          WITH SOUND
+        </ActionButton>
+        <ActionButton
+          type="button"
+          onClick={() => setCustomOpen(true)}
+          data-testid="send_custom_button"
+        >
+          CUSTOM
+        </ActionButton>
+        <ActionButton
+          variant="outline"
+          type="button"
+          onClick={onClearAll}
+          data-testid="clear_all_button"
+        >
+          CLEAR ALL
+        </ActionButton>
+      </ButtonGrid>
       <CustomNotificationModal
         open={customOpen}
         onClose={() => setCustomOpen(false)}
