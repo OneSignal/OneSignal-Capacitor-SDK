@@ -11,9 +11,9 @@ let package = Package(
             targets: ["CapApp-SPM"])
     ],
     dependencies: [
-        .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.4.0"),
-        .package(name: "CapawesomeCapacitorAppUpdate", path: "../../../../../node_modules/.pnpm/@capawesome+capacitor-app-update@8.0.3_@capacitor+core@8.4.0/node_modules/@capawesome/capacitor-app-update"),
-        .package(name: "OnesignalCapacitorPlugin", path: "../../../../../node_modules/.pnpm/@onesignal+capacitor-plugin@file+..+..+onesignal-capacitor-plugin.tgz_@capacitor+core@8.4.0/node_modules/@onesignal/capacitor-plugin")
+        .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.6.2"),
+        .package(name: "CapawesomeCapacitorAppUpdate", path: "../../../../../node_modules/.pnpm/@capawesome+capacitor-app-update@8.0.3_@capacitor+core@8.6.2/node_modules/@capawesome/capacitor-app-update"),
+        .package(name: "OnesignalCapacitorPlugin", path: "../../../../../node_modules/.pnpm/@onesignal+capacitor-plugin@file+..+..+onesignal-capacitor-plugin.tgz_@capacitor+core@8.6.2/node_modules/@onesignal/capacitor-plugin")
     ],
     targets: [
         .target(
