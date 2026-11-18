@@ -106,10 +106,10 @@ Notes:
 
 ## Other demos
 
-- [`demo_pods`](../demo_pods): same app using CocoaPods for iOS
+- [`demo-pods`](../demo-pods): same app using CocoaPods for iOS
 - [`demo-no-location`](../demo-no-location): app without the native location module
 - [`demo-nx`](../demo-nx): Nx + pnpm monorepo repro
-- [`demo_cap7`](../demo_cap7): minimal Capacitor 7 + Angular app
+- [`demo-cap7`](../demo-cap7): minimal Capacitor 7 + Angular app
 
 ---
 

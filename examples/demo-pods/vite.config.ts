@@ -11,7 +11,7 @@ function requireAppId(): Plugin {
     },
     buildStart() {
       if (!appId?.trim()) {
-        throw new Error('VITE_ONESIGNAL_APP_ID is not set. Add it to examples/demo_pods/.env.');
+        throw new Error('VITE_ONESIGNAL_APP_ID is not set. Add it to examples/demo-pods/.env.');
       }
     },
   };

@@ -26,7 +26,7 @@ vp run build
 vp pm pack && mv onesignal-capacitor-plugin-*.tgz onesignal-capacitor-plugin.tgz
 
 # in this folder: install deps and the local plugin tarball
-cd examples/demo_cap7
+cd examples/demo-cap7
 bun install
 ```
 

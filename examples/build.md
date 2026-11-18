@@ -379,7 +379,7 @@ examples/
                 └── Sources/CapApp-SPM/CapApp-SPM.swift
 ```
 
-A second variant lives at `examples/demo_pods/` that mirrors `demo/` but uses CocoaPods for iOS instead of SPM. Its TypeScript / React source may lag behind `demo/`; treat `demo/` as the reference.
+A second variant lives at `examples/demo-pods/` that mirrors `demo/` but uses CocoaPods for iOS instead of SPM. Its TypeScript / React source may lag behind `demo/`; treat `demo/` as the reference.
 
 ---
 
