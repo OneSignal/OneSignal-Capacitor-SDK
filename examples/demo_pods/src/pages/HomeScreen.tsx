@@ -1,10 +1,12 @@
 import { Capacitor } from '@capacitor/core';
+import { SplashScreen } from '@capacitor/splash-screen';
 import { IonContent, IonPage } from '@ionic/react';
 import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 
 import oneSignalLogo from '../assets/onesignal_logo.svg';
 import ActionButton from '../components/ActionButton';
+import LogView from '../components/LogView';
 import TooltipModal from '../components/modals/TooltipModal';
 import AliasesSection from '../components/sections/AliasesSection';
 import AppSection from '../components/sections/AppSection';
@@ -41,7 +43,17 @@ const HomeScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (os.isReady) void os.promptPush();
+    if (!os.isReady) return;
+    // Hide the splash before prompting so the Android 13+ permission
+    // dialog never races the splash screen.
+    void (async () => {
+      try {
+        await SplashScreen.hide();
+      } catch {
+        // Ignore: web/non-native platforms don't have a splash to hide.
+      }
+      await os.promptPush();
+    })();
   }, [os.isReady, os.promptPush]);
 
   const showTooltipModal = (key: string): void => {
@@ -62,6 +74,8 @@ const HomeScreen: React.FC = () => {
               <span className="brand-subtitle">Capacitor</span>
             </div>
           </header>
+
+          <LogView />
 
           <main className="content" data-testid="main_scroll_view">
             <AppSection

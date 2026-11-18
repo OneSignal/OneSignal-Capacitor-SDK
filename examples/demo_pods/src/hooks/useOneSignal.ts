@@ -8,6 +8,7 @@ import OneSignal, {
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { NotificationType } from '../models/NotificationType';
+import { log } from '../services/LogService';
 import OneSignalApiService from '../services/OneSignalApiService';
 import PreferencesService from '../services/PreferencesService';
 
@@ -207,7 +208,7 @@ export function useOneSignal(): UseOneSignalReturn {
     let userChanged = false;
 
     const logIam = (kind: string) => (e: { message: { messageId: string } }) =>
-      console.log(`IAM ${kind}: ${e.message.messageId}`);
+      log.show(`IAM ${kind}: ${e.message.messageId}`);
 
     const handleIamWillDisplay = logIam('willDisplay');
     const handleIamDidDisplay = logIam('didDisplay');
@@ -216,24 +217,48 @@ export function useOneSignal(): UseOneSignalReturn {
     const handleIamClick = logIam('click');
 
     const handleNotificationClick = (e: NotificationClickEvent) => {
-      console.log(`Notification click: ${e.notification.title ?? ''}`);
+      log.show(
+        `Notification click: ${e.notification.notificationId} ${e.notification.title ?? ''}`,
+      );
+
+      // uncomment to see the full event object
+      // console.log('[OneSignal] click event: ', e);
     };
 
     const handleForegroundWillDisplay = (e: NotificationWillDisplayEvent) => {
-      console.log(`Notification foregroundWillDisplay: ${e.getNotification().title ?? ''}`);
+      const notification = e.getNotification();
+      log.show(
+        `Notification foregroundWillDisplay: ${notification.notificationId} ${notification.title ?? ''}`,
+      );
+
+      // uncomment to see the full event object
+      // console.log('[OneSignal] foregroundWillDisplay event: ', e.getNotification());
 
       // uncomment to test preventing the default display behavior
       // e.preventDefault();
 
       // can call this after preventDefault (within ~25 seconds) to force display of notification
       // e.getNotification().display();
+
+      // example with a delay (assumes preventDefault was called)
+      // console.log('forcing display of notification in x seconds');
+      // let seconds = 24;
+      // const interval = setInterval(() => {
+      //   seconds--;
+      //   console.log(`displaying notification in ${seconds} seconds`);
+      //   if (seconds <= 0) {
+      //     console.log('displaying notification');
+      //     e.getNotification().display();
+      //     clearInterval(interval);
+      //   }
+      // }, 1000);
     };
 
     const pushSubHandler = (event: PushSubscriptionChangedState) => {
       pushChanged = true;
       const { previous, current } = event;
       const fmtToken = (t: string | undefined) => (t ? `${t.slice(0, 8)}…` : 'null');
-      console.log(
+      log.show(
         `Push subscription changed: id=${previous.id ?? 'null'} → ${current.id ?? 'null'}, optedIn=${previous.optedIn} → ${current.optedIn}, token=${fmtToken(previous.token)} → ${fmtToken(current.token)}`,
       );
       setPushSubscriptionId(current.id ?? undefined);
@@ -243,7 +268,7 @@ export function useOneSignal(): UseOneSignalReturn {
 
     const permissionHandler = (granted: boolean) => {
       permissionChanged = true;
-      console.log(`Permission changed: ${granted}`);
+      log.show(`Permission changed: ${granted}`);
       setHasNotificationPermission(granted);
     };
 
@@ -251,7 +276,7 @@ export function useOneSignal(): UseOneSignalReturn {
       userChanged = true;
       requestSequenceRef.current++;
       const nextOnesignalId = event.current.onesignalId ?? null;
-      console.log(
+      log.show(
         `User changed: onesignalId=${nextOnesignalId ?? 'null'}, externalId=${event.current.externalId ?? 'null'}`,
       );
 
@@ -311,11 +336,9 @@ export function useOneSignal(): UseOneSignalReturn {
       setIsLoading(false);
     });
 
-    console.log('Loaded OneSignal');
     return () => {
       cancelled = true;
       requestSequenceRef.current++;
-      console.log('Cleaning up OneSignal listeners');
       OneSignal.InAppMessages.removeEventListener('willDisplay', handleIamWillDisplay);
       OneSignal.InAppMessages.removeEventListener('didDisplay', handleIamDidDisplay);
       OneSignal.InAppMessages.removeEventListener('willDismiss', handleIamWillDismiss);
@@ -357,11 +380,11 @@ export function useOneSignal(): UseOneSignalReturn {
       preferences.setExternalUserId(nextExternalUserId);
       setExternalUserId(nextExternalUserId);
       resetLanguagePicker();
-      console.log(`Logged in as: ${nextExternalUserId}`);
+      log.info(`Logged in as: ${nextExternalUserId}`);
       // The user 'change' listener runs fetchUserDataFromApi once the new
       // onesignalId is assigned; that call clears isLoading in its finally.
     } catch (err) {
-      console.error(`Login error: ${String(err)}`);
+      log.error(`Login error: ${String(err)}`);
       setIsLoading(false);
     }
   };
@@ -371,7 +394,7 @@ export function useOneSignal(): UseOneSignalReturn {
     void OneSignal.User.setLanguage(nextLanguage);
     preferences.setLanguage(nextLanguage);
     setLanguageState(nextLanguage);
-    console.log(`Language set to: ${nextLanguage || 'device default'}`);
+    log.info(`Language set to: ${nextLanguage || 'device default'}`);
   };
 
   const logoutUser = async () => {
@@ -382,7 +405,7 @@ export function useOneSignal(): UseOneSignalReturn {
     setExternalUserId(undefined);
     resetLanguagePicker();
     clearUserData();
-    console.log('Logged out');
+    log.info('Logged out');
   };
 
   const setConsentRequired = async (required: boolean) => {
@@ -408,147 +431,147 @@ export function useOneSignal(): UseOneSignalReturn {
       void OneSignal.User.pushSubscription.optOut();
     }
     setIsPushEnabled(enabled);
-    console.log(enabled ? 'Push enabled' : 'Push disabled');
+    log.info(`${enabled ? 'Push enabled' : 'Push disabled'}`);
   };
 
   const sendNotification = async (type: NotificationType) => {
     const success = await postNotification(type);
-    console.log(success ? `Notification sent: ${type}` : 'Failed to send notification');
+    log.info(`${success ? `Notification sent: ${type}` : 'Failed to send notification'}`);
   };
 
   const sendCustomNotification = async (title: string, body: string) => {
     const success = await postCustomNotification(title, body);
-    console.log(success ? `Notification sent: ${title}` : 'Failed to send notification');
+    log.info(`${success ? `Notification sent: ${title}` : 'Failed to send notification'}`);
   };
 
   const clearAllNotifications = () => {
     void OneSignal.Notifications.clearAll();
-    console.log('All notifications cleared');
+    log.info('All notifications cleared');
   };
 
   const setIamPaused = async (paused: boolean) => {
     setInAppMessagesPaused(paused);
     OneSignal.InAppMessages.setPaused(paused);
     preferences.setIamPaused(paused);
-    console.log(paused ? 'In-app messages paused' : 'In-app messages resumed');
+    log.info(`${paused ? 'In-app messages paused' : 'In-app messages resumed'}`);
   };
 
   const sendIamTrigger = (iamType: string) => {
     void OneSignal.InAppMessages.addTrigger('iam_type', iamType);
     setTriggersList((prev) => mergePairs(prev, { iam_type: iamType }));
-    console.log(`Sent In-App Message: ${iamType}`);
+    log.info(`Sent In-App Message: ${iamType}`);
   };
 
   const addAlias = (label: string, id: string) => {
     void OneSignal.User.addAlias(label, id);
     setAliasesList((prev) => mergePairs(prev, { [label]: id }));
-    console.log(`Alias added: ${label}`);
+    log.info(`Alias added: ${label}`);
   };
 
   const addAliases = (pairs: Record<string, string>) => {
     void OneSignal.User.addAliases(pairs);
     setAliasesList((prev) => mergePairs(prev, pairs));
-    console.log(`${Object.keys(pairs).length} alias(es) added`);
+    log.info(`${Object.keys(pairs).length} alias(es) added`);
   };
 
   const addEmail = (email: string) => {
     void OneSignal.User.addEmail(email);
     setEmailsList((prev) => mergeUnique(prev, [email]));
-    console.log(`Email added: ${email}`);
+    log.info(`Email added: ${email}`);
   };
 
   const removeEmail = (email: string) => {
     void OneSignal.User.removeEmail(email);
     setEmailsList((prev) => prev.filter((value) => value !== email));
-    console.log(`Email removed: ${email}`);
+    log.info(`Email removed: ${email}`);
   };
 
   const addSms = (sms: string) => {
     void OneSignal.User.addSms(sms);
     setSmsNumbersList((prev) => mergeUnique(prev, [sms]));
-    console.log(`SMS added: ${sms}`);
+    log.info(`SMS added: ${sms}`);
   };
 
   const removeSms = (sms: string) => {
     void OneSignal.User.removeSms(sms);
     setSmsNumbersList((prev) => prev.filter((value) => value !== sms));
-    console.log(`SMS removed: ${sms}`);
+    log.info(`SMS removed: ${sms}`);
   };
 
   const addTag = (key: string, value: string) => {
     void OneSignal.User.addTag(key, value);
     setTagsList((prev) => mergePairs(prev, { [key]: value }));
-    console.log(`Tag added: ${key}`);
+    log.info(`Tag added: ${key}`);
   };
 
   const addTags = (pairs: Record<string, string>) => {
     void OneSignal.User.addTags(pairs);
     setTagsList((prev) => mergePairs(prev, pairs));
-    console.log(`${Object.keys(pairs).length} tag(s) added`);
+    log.info(`${Object.keys(pairs).length} tag(s) added`);
   };
 
   const removeSelectedTags = (keys: string[]) => {
     void OneSignal.User.removeTags(keys);
     const keySet = new Set(keys);
     setTagsList((prev) => prev.filter(([k]) => !keySet.has(k)));
-    console.log(`${keys.length} tag(s) removed`);
+    log.info(`${keys.length} tag(s) removed`);
   };
 
   const sendOutcome = (name: string) => {
     void OneSignal.Session.addOutcome(name);
-    console.log(`Outcome sent: ${name}`);
+    log.info(`Outcome sent: ${name}`);
   };
 
   const sendUniqueOutcome = (name: string) => {
     void OneSignal.Session.addUniqueOutcome(name);
-    console.log(`Unique outcome sent: ${name}`);
+    log.info(`Unique outcome sent: ${name}`);
   };
 
   const sendOutcomeWithValue = (name: string, value: number) => {
     void OneSignal.Session.addOutcomeWithValue(name, value);
-    console.log(`Outcome sent: ${name} = ${value}`);
+    log.info(`Outcome sent: ${name} = ${value}`);
   };
 
   const addTrigger = (key: string, value: string) => {
     void OneSignal.InAppMessages.addTrigger(key, value);
     setTriggersList((prev) => mergePairs(prev, { [key]: value }));
-    console.log(`Trigger added: ${key}`);
+    log.info(`Trigger added: ${key}`);
   };
 
   const addTriggers = (pairs: Record<string, string>) => {
     void OneSignal.InAppMessages.addTriggers(pairs);
     setTriggersList((prev) => mergePairs(prev, pairs));
-    console.log(`${Object.keys(pairs).length} trigger(s) added`);
+    log.info(`${Object.keys(pairs).length} trigger(s) added`);
   };
 
   const removeSelectedTriggers = (keys: string[]) => {
     void OneSignal.InAppMessages.removeTriggers(keys);
     const keySet = new Set(keys);
     setTriggersList((prev) => prev.filter(([k]) => !keySet.has(k)));
-    console.log(`${keys.length} trigger(s) removed`);
+    log.info(`${keys.length} trigger(s) removed`);
   };
 
   const clearTriggers = () => {
     void OneSignal.InAppMessages.clearTriggers();
     setTriggersList([]);
-    console.log('All triggers cleared');
+    log.info('All triggers cleared');
   };
 
   const trackEvent = (name: string, properties?: Record<string, unknown>) => {
     void OneSignal.User.trackEvent(name, properties);
-    console.log(`Event tracked: ${name}`);
+    log.info(`Event tracked: ${name}`);
   };
 
   const setLocationShared = async (shared: boolean) => {
     setLocationSharedState(shared);
     OneSignal.Location.setShared(shared);
     preferences.setLocationShared(shared);
-    console.log(shared ? 'Location sharing enabled' : 'Location sharing disabled');
+    log.info(`${shared ? 'Location sharing enabled' : 'Location sharing disabled'}`);
   };
 
   const checkLocationShared = async () => {
     const shared = await OneSignal.Location.isShared();
-    console.log(`Location shared: ${shared}`);
+    log.info(`Location shared: ${shared}`);
     return shared;
   };
 
@@ -562,13 +585,13 @@ export function useOneSignal(): UseOneSignalReturn {
     content: Record<string, unknown>,
   ) => {
     void OneSignal.LiveActivities.startDefault(activityId, attributes, content);
-    console.log(`Started Live Activity: ${activityId}`);
+    log.info(`Started Live Activity: ${activityId}`);
   };
 
   const updateLiveActivity = async (activityId: string, eventUpdates: Record<string, unknown>) => {
     const success = await apiService.updateLiveActivity(activityId, 'update', eventUpdates);
-    console.log(
-      success ? `Updated Live Activity: ${activityId}` : 'Failed to update Live Activity',
+    log.info(
+      `${success ? `Updated Live Activity: ${activityId}` : 'Failed to update Live Activity'}`,
     );
   };
 
@@ -576,7 +599,7 @@ export function useOneSignal(): UseOneSignalReturn {
     const success = await apiService.updateLiveActivity(activityId, 'end', {
       message: 'Ended Live Activity',
     });
-    console.log(success ? `Ended Live Activity: ${activityId}` : 'Failed to end Live Activity');
+    log.info(`${success ? `Ended Live Activity: ${activityId}` : 'Failed to end Live Activity'}`);
   };
 
   return {
