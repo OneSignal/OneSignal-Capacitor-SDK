@@ -27,7 +27,7 @@ Install the SDK's dependencies from the repository root, since setup builds and 
 vp install
 ```
 
-Then, in this directory, copy `.env.example` to `.env` and fill in your app id (and REST API key if you plan to update or end live activities from inside the demo):
+The demo uses a shared OneSignal app (`77e32082-ea27-42e3-a898-c72e141824ef`) by default. To use your own app, or a REST API key to update or end live activities from inside the demo, copy `.env.example` to `.env` in this directory and fill it in:
 
 ```bash
 cp .env.example .env
@@ -39,7 +39,7 @@ VITE_ONESIGNAL_API_KEY=<your_rest_api_key>
 VITE_ONESIGNAL_ANDROID_CHANNEL_ID=
 ```
 
-The `VITE_*` values are built into the web bundle, so rerun setup after changing `.env`. `VITE_ONESIGNAL_APP_ID` is required; the build fails without it. An empty `VITE_ONESIGNAL_ANDROID_CHANNEL_ID` falls back to a built-in default. Sending notifications from the demo doesn't need the API key.
+The `VITE_*` values are built into the web bundle, so rerun setup after changing `.env`. An empty `VITE_ONESIGNAL_APP_ID` falls back to the default app. An empty `VITE_ONESIGNAL_ANDROID_CHANNEL_ID` falls back to a built-in default. Sending notifications from the demo doesn't need the API key.
 
 The OneSignal app needs FCM credentials for the `com.onesignal.sdkdemo` Android package and APNs credentials for the `com.onesignal.example` bundle ID on iOS.
 
