@@ -12,11 +12,20 @@ if (firebaseInstallationIdEnabled && !hasGoogleServices) {
     throw GradleException("FIREBASE_INSTALLATION_ID_ENABLED requires examples/demo/android/app/google-services.json")
 }
 
+// E2E passes `-PDEMO_BUNDLE_ID=com.onesignal.sdkdemo` to match its google-services.json.
+val demoBundleId =
+    (findProperty("DEMO_BUNDLE_ID") as? String)?.trim()?.takeIf { it.isNotEmpty() } ?: "com.onesignal.example"
+
 android {
     namespace = "com.onesignal.sdkdemo"
     compileSdk = rootProject.extra["compileSdkVersion"] as Int
+    buildFeatures {
+        resValues = true
+    }
     defaultConfig {
-        applicationId = "com.onesignal.sdkdemo"
+        applicationId = demoBundleId
+        resValue("string", "package_name", demoBundleId)
+        resValue("string", "custom_url_scheme", demoBundleId)
         minSdk = rootProject.extra["minSdkVersion"] as Int
         targetSdk = rootProject.extra["targetSdkVersion"] as Int
         versionCode = 1

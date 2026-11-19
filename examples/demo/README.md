@@ -41,11 +41,11 @@ VITE_ONESIGNAL_ANDROID_CHANNEL_ID=
 
 The `VITE_*` values are built into the web bundle, so rerun setup after changing `.env`. An empty `VITE_ONESIGNAL_APP_ID` falls back to the default app. An empty `VITE_ONESIGNAL_ANDROID_CHANNEL_ID` falls back to a built-in default. Sending notifications from the demo doesn't need the API key.
 
-The OneSignal app needs FCM credentials for the `com.onesignal.sdkdemo` Android package and APNs credentials for the `com.onesignal.example` bundle ID on iOS.
+The OneSignal app needs FCM credentials for the `com.onesignal.example` Android package and APNs credentials for the `com.onesignal.example` bundle ID on iOS. On Android, build with `-PDEMO_BUNDLE_ID=<package>` to use a different package.
 
-iOS builds use bundle ID `com.onesignal.example` and team `99SW8E36CT` by default, set in `ios/demo.xcconfig`. To sign with your own team, copy `ios/local.xcconfig.example` to `ios/local.xcconfig` (gitignored) and set `DEMO_BUNDLE_ID` and `DEMO_TEAM_ID`. The NSE, widget and app group IDs derive from `DEMO_BUNDLE_ID`. E2E builds pass `DEMO_BUNDLE_ID=com.onesignal.sdkdemo DEMO_TEAM_ID=DL8TF3X4K3` to xcodebuild.
+iOS builds use bundle ID `com.onesignal.example` and team `99SW8E36CT` by default, set in `ios/demo.xcconfig`. To sign with your own team, copy `ios/local.xcconfig.example` to `ios/local.xcconfig` (gitignored) and set `DEMO_BUNDLE_ID` and `DEMO_TEAM_ID`. The NSE, widget and app group IDs derive from `DEMO_BUNDLE_ID`. E2E builds pass `DEMO_BUNDLE_ID=com.onesignal.sdkdemo DEMO_TEAM_ID=DL8TF3X4K3` to xcodebuild and `-PDEMO_BUNDLE_ID=com.onesignal.sdkdemo` to Gradle.
 
-Firebase Installation ID registration is off by default. To turn it on, add a `google-services.json` with a client for `com.onesignal.sdkdemo` to `android/app/` (gitignored) and build with `-PFIREBASE_INSTALLATION_ID_ENABLED=true`. The E2E workflow does both, writing the file from the `APPIUM_GOOGLE_SERVICES_JSON` secret.
+Firebase Installation ID registration is off by default. To turn it on, add a `google-services.json` with a client for your Android package to `android/app/` (gitignored) and build with `-PFIREBASE_INSTALLATION_ID_ENABLED=true`. The E2E workflow does both, writing the file from the `APPIUM_GOOGLE_SERVICES_JSON` secret.
 
 ---
 
