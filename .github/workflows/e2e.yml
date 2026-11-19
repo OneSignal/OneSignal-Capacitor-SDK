@@ -128,6 +128,8 @@ jobs:
             -quiet \
             -hideShellScriptEnvironment \
             CODE_SIGN_STYLE=Manual \
+            DEMO_BUNDLE_ID=com.onesignal.sdkdemo \
+            DEMO_TEAM_ID=DL8TF3X4K3 \
             COMPILER_INDEX_STORE_ENABLE=NO
           xcodebuild -exportArchive \
             -archivePath build/App.xcarchive \
