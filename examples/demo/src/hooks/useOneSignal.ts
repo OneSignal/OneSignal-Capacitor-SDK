@@ -12,7 +12,7 @@ import { log } from '../services/LogService';
 import OneSignalApiService from '../services/OneSignalApiService';
 import PreferencesService from '../services/PreferencesService';
 
-const DEFAULT_APP_ID = '77e32082-ea27-42e3-a898-c72e141824ef';
+const DEFAULT_APP_ID = '1154c350-e715-4b71-a58b-1b84b6745baa';
 const RESOLVED_APP_ID =
   (import.meta.env.VITE_ONESIGNAL_APP_ID as string | undefined)?.trim() || DEFAULT_APP_ID;
 

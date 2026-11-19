@@ -27,7 +27,7 @@ Install the SDK's dependencies from the repository root, since setup builds and 
 vp install
 ```
 
-The demo uses a shared OneSignal app (`77e32082-ea27-42e3-a898-c72e141824ef`) by default. To use your own app, or a REST API key to update or end live activities from inside the demo, copy `.env.example` to `.env` in this directory and fill it in:
+The demo uses a shared OneSignal app (`1154c350-e715-4b71-a58b-1b84b6745baa`) by default. To use your own app, or a REST API key to update or end live activities from inside the demo, copy `.env.example` to `.env` in this directory and fill it in:
 
 ```bash
 cp .env.example .env
