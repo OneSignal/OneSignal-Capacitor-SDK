@@ -1,7 +1,6 @@
 import type { OneSignalAPI } from './api';
 import Debug from './DebugNamespace';
 import type { OneSignalCapacitorPlugin } from './definitions';
-import { isMissing } from './helpers';
 import InAppMessages from './InAppMessagesNamespace';
 import LiveActivities from './LiveActivitiesNamespace';
 import Location from './LocationNamespace';
@@ -21,7 +20,6 @@ export class OneSignalPlugin implements OneSignalAPI {
   LiveActivities: LiveActivities;
 
   private _plugin: OneSignalCapacitorPlugin;
-  private _appID = '';
 
   constructor(plugin: OneSignalCapacitorPlugin) {
     this._plugin = plugin;
@@ -43,10 +41,7 @@ export class OneSignalPlugin implements OneSignalAPI {
    * @returns Promise<void>
    */
   initialize(appId: string): Promise<void> {
-    if (isMissing(appId, 'initialize: appId')) return Promise.resolve();
-    this._appID = appId;
-
-    return this._plugin.initialize({ appId: this._appID });
+    return this._plugin.initialize({ appId });
   }
 
   /**
@@ -55,7 +50,6 @@ export class OneSignalPlugin implements OneSignalAPI {
    * @returns Promise<void>
    */
   login(externalId: string): Promise<void> {
-    if (isMissing(externalId, 'login: externalId')) return Promise.resolve();
     return this._plugin.login({ externalId });
   }
 
