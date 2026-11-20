@@ -39,6 +39,12 @@ describe('OneSignalPlugin', () => {
     expect(mockPlugin.initialize).toHaveBeenCalledWith({ appId: '' });
   });
 
+  test('should forward a null appId to the native bridge', async () => {
+    await plugin.initialize(null as unknown as string);
+
+    expect(mockPlugin.initialize).toHaveBeenCalledWith({ appId: null });
+  });
+
   test('should call plugin for login', async () => {
     const externalId = 'test-user-123';
     await plugin.login(externalId);

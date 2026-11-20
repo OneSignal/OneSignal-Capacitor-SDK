@@ -94,7 +94,9 @@ public class OneSignalCapacitorPlugin: CAPPlugin, CAPBridgedPlugin {
     // MARK: - Core
 
     @objc func initialize(_ call: CAPPluginCall) {
-        guard let appId = call.getString("appId") else {
+        // Empty is rejected alongside nil: native rejects "" without falling back to the cached app
+        // id, and `initialized` below would latch, so a later initialize(realAppId) would no-op.
+        guard let appId = call.getString("appId"), !appId.isEmpty else {
             call.reject("appId is required")
             return
         }

@@ -123,8 +123,10 @@ class OneSignalCapacitorPlugin : Plugin(),
 
     @PluginMethod
     fun initialize(call: PluginCall) {
+        // Empty is rejected alongside null: native would start with it, and `initialized` below
+        // would latch, so a later initialize(realAppId) would no-op for the rest of the session.
         val appId = call.getString("appId")
-        if (appId == null) {
+        if (appId.isNullOrEmpty()) {
             call.reject("appId is required")
             return
         }
