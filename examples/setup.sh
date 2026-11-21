@@ -70,7 +70,7 @@ info "Building web bundle (vite)..."
 vp run build
 
 # ── Capacitor sync cache ─────────────────────────────────────────────────────
-# `cap sync` runs `pod install` + `xcodebuild clean` (~30-60s); skip when
+# `cap sync` resolves SPM packages + runs `xcodebuild clean` (~30-60s); skip when
 # inputs are unchanged. Hash sources (not `dist/`) since bundlers emit
 # content-hashed chunk names that can drift between identical builds.
 SYNC_STAMP="$ORIGINAL_DIR/.cap-sync.stamp"
@@ -80,11 +80,10 @@ SYNC_HASH=$(find "$ORIGINAL_DIR/src" "$ORIGINAL_DIR/index.html" \
                  "$ORIGINAL_DIR/ios/App" \
             -type f \
             ! -path "*/node_modules/*" \
-            ! -path "*/Pods/*" \
             ! -path "*/build/*" \
             ! -path "*/DerivedData/*" \
             ! -path "*/xcuserdata/*" \
-            \( -name "Podfile" -o -name "Package.swift" -o -name "build.gradle" \
+            \( -name "Package.swift" -o -name "build.gradle" \
                -o -name "*.ts" -o -name "*.tsx" \
                -o -name "*.json" -o -name "*.html" -o -name "*.js" \
                -o -name "*.css" -o -name "*.svg" -o -name "*.xml" \
@@ -99,10 +98,8 @@ SYNC_HASH="${SYNC_HASH}-${TARBALL_HASH}"
 
 if [[ -d "$ORIGINAL_DIR/ios/App/App/public" ]] && [[ -f "$SYNC_STAMP" ]] && [[ "$(cat "$SYNC_STAMP")" == "$SYNC_HASH" ]]; then
   info "Capacitor sync inputs unchanged, skipping cap sync"
-elif ! command -v pod >/dev/null 2>&1; then
-  # CI Android jobs run on Linux where CocoaPods isn't installed.
-  # Sync only Android so plain `cap sync` doesn't shell out to pod.
-  info "CocoaPods not found, syncing Android only..."
+elif [[ "$(uname)" != "Darwin" ]]; then
+  info "Not on macOS, syncing Android only..."
   vpx cap sync android
   echo "$SYNC_HASH" > "$SYNC_STAMP"
 else

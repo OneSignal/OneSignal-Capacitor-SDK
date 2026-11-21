@@ -2,7 +2,7 @@
 # DON'T RUN THIS FILE DIRECTLY, USE PACKAGE.JSON SCRIPTS
 set -e
 
-# Run from the calling package's directory (demo or demo-pods) so each
+# Run from the calling package's directory (e.g. demo or demo-no-location) so each
 # project deploys its own native build, not demo's.
 PROJECT_DIR="${INIT_CWD:-$PWD}"
 
