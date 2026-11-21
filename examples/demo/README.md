@@ -95,18 +95,17 @@ Notes:
 
 ## Other scripts
 
-| Script                 | Purpose                                                                                                                                                                                                                |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vp run setup`         | Build the plugin, pack it, install into the demo, `vp build`, `cap sync` (skipped when inputs are unchanged; Android only without CocoaPods). Runs automatically before `android` / `ios` / `dev:android` / `dev:ios`. |
-| `vp build`             | Build the web bundle into `dist/` only.                                                                                                                                                                                |
-| `vp run clean:android` | Wipe Android build outputs (`android/app/build`, `.cxx`, `android/build`).                                                                                                                                             |
-| `vp run clean:ios`     | Wipe iOS build outputs and SPM checkouts.                                                                                                                                                                              |
+| Script                 | Purpose                                                                                                                                                                                                           |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vp run setup`         | Build the plugin, pack it, install into the demo, `vp build`, `cap sync` (skipped when inputs are unchanged; Android only on non-macOS). Runs automatically before `android` / `ios` / `dev:android` / `dev:ios`. |
+| `vp build`             | Build the web bundle into `dist/` only.                                                                                                                                                                           |
+| `vp run clean:android` | Wipe Android build outputs (`android/app/build`, `.cxx`, `android/build`).                                                                                                                                        |
+| `vp run clean:ios`     | Wipe iOS build outputs and SPM checkouts.                                                                                                                                                                         |
 
 ---
 
 ## Other demos
 
-- [`demo-pods`](../demo-pods): same app using CocoaPods for iOS
 - [`demo-no-location`](../demo-no-location): app without the native location module
 - [`demo-nx`](../demo-nx): Nx + pnpm monorepo repro
 - [`demo-cap7`](../demo-cap7): minimal Capacitor 7 + Angular app
