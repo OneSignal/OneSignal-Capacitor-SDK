@@ -27,7 +27,8 @@
     "android/src",
     "android/build.gradle.kts",
     "android/gradle",
-    "Package.swift"
+    "Package.swift",
+    "OneSignalCapacitorPlugin.podspec"
   ],
   "type": "module",
   "main": "./dist/index.js",
