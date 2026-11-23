@@ -27,7 +27,7 @@ Install the SDK's dependencies from the repository root, since setup builds and 
 vp install
 ```
 
-Then, in this directory, copy `.env.example` to `.env` and fill in your app id (and REST API key if you plan to update or end live activities from inside the demo):
+The demo uses a shared OneSignal app (`1154c350-e715-4b71-a58b-1b84b6745baa`) by default. To use your own app, or a REST API key to update or end live activities from inside the demo, copy `.env.example` to `.env` in this directory and fill it in:
 
 ```bash
 cp .env.example .env
@@ -39,11 +39,13 @@ VITE_ONESIGNAL_API_KEY=<your_rest_api_key>
 VITE_ONESIGNAL_ANDROID_CHANNEL_ID=
 ```
 
-The `VITE_*` values are built into the web bundle, so rerun setup after changing `.env`. `VITE_ONESIGNAL_APP_ID` is required; the build fails without it. An empty `VITE_ONESIGNAL_ANDROID_CHANNEL_ID` falls back to a built-in default. Sending notifications from the demo doesn't need the API key.
+The `VITE_*` values are built into the web bundle, so rerun setup after changing `.env`. An empty `VITE_ONESIGNAL_APP_ID` falls back to the default app. An empty `VITE_ONESIGNAL_ANDROID_CHANNEL_ID` falls back to a built-in default. Sending notifications from the demo doesn't need the API key.
 
-The OneSignal app needs FCM credentials for the `com.onesignal.sdkdemo` Android package and APNs credentials for the `com.onesignal.sdkdemo` bundle ID on iOS.
+The OneSignal app needs FCM credentials for the `com.onesignal.example` Android package and APNs credentials for the `com.onesignal.example` bundle ID on iOS. On Android, build with `-PDEMO_BUNDLE_ID=<package>` to use a different package.
 
-Firebase Installation ID registration is off by default. To turn it on, add a `google-services.json` with a client for `com.onesignal.sdkdemo` to `android/app/` (gitignored) and build with `-PFIREBASE_INSTALLATION_ID_ENABLED=true`. The E2E workflow does both, writing the file from the `APPIUM_GOOGLE_SERVICES_JSON` secret.
+iOS builds use bundle ID `com.onesignal.example` and team `99SW8E36CT` by default, set in `ios/demo.xcconfig`. To sign with your own team, copy `ios/local.xcconfig.example` to `ios/local.xcconfig` (gitignored) and set `DEMO_BUNDLE_ID` and `DEMO_TEAM_ID`. The NSE, widget and app group IDs derive from `DEMO_BUNDLE_ID`. E2E builds pass `DEMO_BUNDLE_ID=com.onesignal.sdkdemo DEMO_TEAM_ID=DL8TF3X4K3` to xcodebuild and `-PDEMO_BUNDLE_ID=com.onesignal.sdkdemo` to Gradle.
+
+Firebase Installation ID registration is off by default. To turn it on, add a `google-services.json` with a client for your Android package to `android/app/` (gitignored) and build with `-PFIREBASE_INSTALLATION_ID_ENABLED=true`. The E2E workflow does both, writing the file from the `APPIUM_GOOGLE_SERVICES_JSON` secret.
 
 ---
 

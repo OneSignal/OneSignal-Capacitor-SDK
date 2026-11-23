@@ -4,7 +4,7 @@ import OneSignal, { LogLevel } from '@onesignal/capacitor-plugin';
 
 import { classifyNotificationResponse } from './notification-response';
 
-const ONESIGNAL_APP_ID = '77e32082-ea27-42e3-a898-c72e141824ef';
+const ONESIGNAL_APP_ID = '1154c350-e715-4b71-a58b-1b84b6745baa';
 
 @Component({
   selector: 'app-root',
