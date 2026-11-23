@@ -1,7 +1,8 @@
 import OneSignal, { LogLevel } from '@onesignal/capacitor-plugin';
 import { useCallback, useEffect, useState } from 'react';
 
-const ONESIGNAL_APP_ID = import.meta.env.VITE_ONESIGNAL_APP_ID?.trim() || 'your-onesignal-app-id';
+const ONESIGNAL_APP_ID =
+  import.meta.env.VITE_ONESIGNAL_APP_ID?.trim() || '1154c350-e715-4b71-a58b-1b84b6745baa';
 
 const isPlaceholder = (value: string): boolean => value.toLowerCase().startsWith('your-');
 
