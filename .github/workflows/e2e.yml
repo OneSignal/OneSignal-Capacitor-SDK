@@ -1,9 +1,9 @@
 name: E2E Tests
 
 on:
-  push:
+  pull_request:
     branches:
-      - rel/**
+      - main
   workflow_dispatch:
     inputs:
       platform:
@@ -27,7 +27,7 @@ jobs:
   build-android:
     name: build-android (FID ${{ matrix.fid }})
     if: >-
-      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' && startsWith(github.head_ref, 'rel/')) ||
       github.event.inputs.platform == 'android' ||
       github.event.inputs.platform == 'both'
     runs-on: ubuntu-latest
@@ -80,7 +80,7 @@ jobs:
 
   build-ios:
     if: >-
-      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' && startsWith(github.head_ref, 'rel/')) ||
       github.event.inputs.platform == 'ios' ||
       github.event.inputs.platform == 'both'
     runs-on: macos-latest
@@ -168,7 +168,7 @@ jobs:
       app-filename: app-arm64-v8a-debug.apk
       sdk-type: capacitor
       bundle-id: com.onesignal.sdkdemo
-      build-name: capacitor-android-${{ github.ref_name }}-${{ github.run_number }}
+      build-name: capacitor-android-${{ github.head_ref || github.ref_name }}-${{ github.run_number }}
 
   e2e-ios:
     needs: build-ios
@@ -179,4 +179,27 @@ jobs:
       app-artifact: demo-ipa
       app-filename: App.ipa
       sdk-type: capacitor
-      build-name: capacitor-ios-${{ github.ref_name }}-${{ github.run_number }}
+      build-name: capacitor-ios-${{ github.head_ref || github.ref_name }}-${{ github.run_number }}
+
+  e2e-gate:
+    needs: [e2e-android, e2e-ios]
+    # always() so a failed E2E job fails the gate instead of skipping it,
+    # since a skipped required check counts as passing.
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check E2E results
+        env:
+          IS_RELEASE: ${{ github.event_name == 'pull_request' && startsWith(github.head_ref, 'rel/') }}
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          if [ "$IS_RELEASE" != "true" ]; then
+            echo "Not a release PR, skipping E2E gate"
+            exit 0
+          fi
+          for r in $RESULTS; do
+            if [ "$r" != "success" ]; then
+              echo "::error::E2E result: $r"
+              exit 1
+            fi
+          done
